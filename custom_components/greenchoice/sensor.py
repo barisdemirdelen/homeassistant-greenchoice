@@ -6,12 +6,10 @@ import bs4
 import homeassistant.helpers.config_validation as cv
 import requests
 import voluptuous as vol
-from homeassistant.components.sensor import PLATFORM_SCHEMA
-from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
+from homeassistant.components.sensor import SensorEntity, SensorDeviceClass, SensorStateClass, PLATFORM_SCHEMA
 from homeassistant.const import (CONF_NAME, STATE_UNKNOWN)
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.helpers.entity import Entity
-from homeassistant.util import Throttle
+from homeassistant.util import Throttle, slugify
 
 __version__ = '0.0.2'
 
@@ -105,10 +103,11 @@ class LoginError(Exception):
     pass
 
 
-class GreenchoiceSensor(Entity):
+class GreenchoiceSensor(SensorEntity):
     def __init__(self, greenchoice_api, name, overeenkomst_id, username, password, measurement_type, ):
         self._json_data = greenchoice_api
         self._name = name
+        self._unique_id = f"{slugify(name)}_{measurement_type}"
         self._overeenkomst_id = overeenkomst_id
         self._username = username
         self._password = password
@@ -124,6 +123,11 @@ class GreenchoiceSensor(Entity):
     def name(self):
         """Return the name of the sensor."""
         return self._name
+
+    @property
+    def unique_id(self):
+        """Return the unique id of the sensor."""
+        return self._unique_id
 
     @property
     def overeenkomst_id(self):
