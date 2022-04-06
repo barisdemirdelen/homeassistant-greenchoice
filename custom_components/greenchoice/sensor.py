@@ -61,7 +61,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         raise PlatformNotReady
 
     sensors = [
-        GreenchoiceSensor(greenchoice_api, name, overeenkomst_id, username, password, 'currentGas'),
         GreenchoiceSensor(greenchoice_api, name, overeenkomst_id, username, password, 'energy_consumption_high'),
         GreenchoiceSensor(greenchoice_api, name, overeenkomst_id, username, password, 'energy_consumption_low'),
         GreenchoiceSensor(greenchoice_api, name, overeenkomst_id, username, password, 'energy_consumption_total'),
@@ -106,8 +105,8 @@ class LoginError(Exception):
 class GreenchoiceSensor(SensorEntity):
     def __init__(self, greenchoice_api, name, overeenkomst_id, username, password, measurement_type, ):
         self._json_data = greenchoice_api
-        self._name = name
         self._unique_id = f"{slugify(name)}_{measurement_type}"
+        self._name = self._unique_id
         self._overeenkomst_id = overeenkomst_id
         self._username = username
         self._password = password
