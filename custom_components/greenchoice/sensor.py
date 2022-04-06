@@ -29,7 +29,7 @@ ATTR_NAME = 'name'
 ATTR_UPDATE_CYCLE = 'update_cycle'
 ATTR_ICON = 'icon'
 ATTR_MEASUREMENT_DATE = 'date'
-ATTR_UNIT_OF_MEASUREMENT = 'unit_of_measurement'
+ATTR_NATIVE_UNIT_OF_MEASUREMENT = 'native_unit_of_measurement'
 ATTR_STATE_CLASS = 'state_class'
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3600)
@@ -70,7 +70,6 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
         GreenchoiceSensor(greenchoice_api, name, overeenkomst_id, username, password, 'energy_return_high'),
         GreenchoiceSensor(greenchoice_api, name, overeenkomst_id, username, password, 'energy_return_low'),
         GreenchoiceSensor(greenchoice_api, name, overeenkomst_id, username, password, 'energy_return_total'),
-
         GreenchoiceSensor(greenchoice_api, name, overeenkomst_id, username, password, 'gas_consumption'),
     ]
     add_entities(sensors, True)
@@ -115,7 +114,7 @@ class GreenchoiceSensor(Entity):
         self._password = password
         self._measurement_type = measurement_type
         self._measurement_date = None
-        self._unit_of_measurement = None
+        self._native_unit_of_measurement = None
         self._state = None
         self._icon = None
         self._device_class = SensorDeviceClass.ENERGY
@@ -163,15 +162,15 @@ class GreenchoiceSensor(Entity):
         return self._measurement_date
 
     @property
-    def unit_of_measurement(self):
-        return self._unit_of_measurement
+    def native_unit_of_measurement(self):
+        return self._native_unit_of_measurement
 
     @property
     def device_state_attributes(self):
         """Return the state attributes."""
         return {
             ATTR_MEASUREMENT_DATE: self._measurement_date,
-            ATTR_UNIT_OF_MEASUREMENT: self._unit_of_measurement,
+            ATTR_NATIVE_UNIT_OF_MEASUREMENT: self._native_unit_of_measurement,
             ATTR_STATE_CLASS: self._state_class
         }
 
@@ -197,34 +196,33 @@ class GreenchoiceSensor(Entity):
         if self._measurement_type == 'energy_consumption_high':
             self._icon = 'mdi:weather-sunset-up'
             self._name = 'energy_consumption_high'
-            self._unit_of_measurement = 'kWh'
+            self._native_unit_of_measurement = 'kWh'
         elif self._measurement_type == 'energy_consumption_low':
             self._icon = 'mdi:weather-sunset-down'
             self._name = 'energy_consumption_low'
-            self._unit_of_measurement = 'kWh'
+            self._native_unit_of_measurement = 'kWh'
         elif self._measurement_type == 'energy_consumption_total':
             self._icon = 'mdi:transmission-tower-export'
             self._name = 'energy_consumption_total'
-            self._unit_of_measurement = 'kWh'
+            self._native_unit_of_measurement = 'kWh'
         elif self._measurement_type == 'energy_return_high':
             self._icon = 'mdi:solar-power'
             self._name = 'energy_return_high'
-            self._unit_of_measurement = 'kWh'
+            self._native_unit_of_measurement = 'kWh'
         elif self._measurement_type == 'energy_return_low':
             self._icon = 'mdi:solar-panel'
             self._name = 'energy_return_low'
-            self._unit_of_measurement = 'kWh'
+            self._native_unit_of_measurement = 'kWh'
         elif self._measurement_type == 'energy_return_total':
             self._icon = 'mdi:transmission-tower-import'
             self._name = 'energy_return_total'
-            self._unit_of_measurement = 'kWh'
-
+            self._native_unit_of_measurement = 'kWh'
         elif self._measurement_type == 'gas_consumption':
             self._measurement_date = data['measurement_date_gas']
-
             self._icon = 'mdi:fire'
             self._name = 'gas_consumption'
-            self._unit_of_measurement = 'm3'
+            self._device_class = SensorDeviceClass.GAS
+            self._native_unit_of_measurement = 'm³'
 
 
 class GreenchoiceApiData:
