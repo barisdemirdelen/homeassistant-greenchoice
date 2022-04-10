@@ -323,7 +323,7 @@ class GreenchoiceSensor(SensorEntity):
             self._measurement_date = data["measurement_date_gas"]
             self._icon = "mdi:currency-eur"
             self._device_class = SensorDeviceClass.MONETARY
-            self._native_unit_of_measurement = "€/m³"
+            self._native_unit_of_measurement = "EUR/m³"
         elif self._measurement_type in [
             "electricity_price_single",
             "electricity_price_low",
@@ -331,7 +331,7 @@ class GreenchoiceSensor(SensorEntity):
         ]:
             self._icon = "mdi:currency-eur"
             self._device_class = SensorDeviceClass.MONETARY
-            self._native_unit_of_measurement = "€/kWh"
+            self._native_unit_of_measurement = "EUR/kWh"
 
 
 class GreenchoiceApiData:
