@@ -1,12 +1,7 @@
-import logging
-from datetime import timedelta, datetime
-from urllib.parse import urlparse, parse_qs
-
-import bs4
-import requests
-import voluptuous as vol
+from collections import namedtuple
 
 import homeassistant.helpers.config_validation as cv
+import voluptuous as vol
 from homeassistant.components.sensor import (
     SensorEntity,
     SensorDeviceClass,
@@ -15,12 +10,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_NAME, STATE_UNKNOWN
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.util import Throttle, slugify
+from homeassistant.util import slugify
 
 __version__ = "0.0.3"
 
-_LOGGER = logging.getLogger(__name__)
-_RESOURCE = "https://mijn.greenchoice.nl"
+from custom_components.greenchoice.api import GreenchoiceApiData, _LOGGER
 
 CONF_OVEREENKOMST_ID = "overeenkomst_id"
 CONF_USERNAME = "username"
@@ -36,13 +30,6 @@ ATTR_MEASUREMENT_DATE = "date"
 ATTR_NATIVE_UNIT_OF_MEASUREMENT = "native_unit_of_measurement"
 ATTR_STATE_CLASS = "state_class"
 
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3600)
-MEASUREMENT_TYPES = {
-    1: "consumption_high",
-    2: "consumption_low",
-    3: "return_high",
-    4: "return_low",
-}
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -52,6 +39,50 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
         vol.Optional(CONF_OVEREENKOMST_ID, default=CONF_OVEREENKOMST_ID): cv.string,
     }
 )
+
+
+class Unit:
+    kwh = "kWh"
+    eur_kwh = "EUR/kWh"
+    m3 = "m³"
+    eur_m3 = "EUR/m³"
+
+
+SensorInfo = namedtuple("SensorInfo", ["device_class", "unit", "icon"])
+sensor_infos = {
+    "electricity_consumption_high": SensorInfo(
+        SensorDeviceClass.ENERGY, Unit.kwh, "weather-sunset-up"
+    ),
+    "electricity_consumption_low": SensorInfo(
+        SensorDeviceClass.ENERGY, Unit.kwh, "weather-sunset-down"
+    ),
+    "electricity_consumption_total": SensorInfo(
+        SensorDeviceClass.ENERGY, Unit.kwh, "transmission-tower-export"
+    ),
+    "electricity_return_high": SensorInfo(
+        SensorDeviceClass.ENERGY, Unit.kwh, "solar-power"
+    ),
+    "electricity_return_low": SensorInfo(
+        SensorDeviceClass.ENERGY, Unit.kwh, "solar-power"
+    ),
+    "electricity_return_total": SensorInfo(
+        SensorDeviceClass.ENERGY, Unit.kwh, "transmission-tower-import"
+    ),
+    "electricity_price_low": SensorInfo(
+        SensorDeviceClass.MONETARY, Unit.eur_kwh, "currency-eur"
+    ),
+    "electricity_price_high": SensorInfo(
+        SensorDeviceClass.MONETARY, Unit.eur_kwh, "currency-eur"
+    ),
+    "electricity_price_single": SensorInfo(
+        SensorDeviceClass.MONETARY, Unit.eur_kwh, "currency-eur"
+    ),
+    "electricity_return_price": SensorInfo(
+        SensorDeviceClass.MONETARY, Unit.eur_kwh, "currency-eur"
+    ),
+    "gas_consumption": SensorInfo(SensorDeviceClass.GAS, Unit.m3, "fire"),
+    "gas_price": SensorInfo(SensorDeviceClass.MONETARY, Unit.eur_m3, "currency-eur"),
+}
 
 
 # noinspection PyUnusedLocal
@@ -65,8 +96,10 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
 
     greenchoice_api.update()
 
-    if greenchoice_api is None:
+    if not greenchoice_api.result:
         raise PlatformNotReady
+
+    sensor_names = [sensor_name for sensor_name in sensor_infos.keys()]
 
     sensors = [
         GreenchoiceSensor(
@@ -75,128 +108,12 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             overeenkomst_id,
             username,
             password,
-            "electricity_consumption_high",
-        ),
-        GreenchoiceSensor(
-            greenchoice_api,
-            name,
-            overeenkomst_id,
-            username,
-            password,
-            "electricity_consumption_low",
-        ),
-        GreenchoiceSensor(
-            greenchoice_api,
-            name,
-            overeenkomst_id,
-            username,
-            password,
-            "electricity_consumption_total",
-        ),
-        GreenchoiceSensor(
-            greenchoice_api,
-            name,
-            overeenkomst_id,
-            username,
-            password,
-            "electricity_return_high",
-        ),
-        GreenchoiceSensor(
-            greenchoice_api,
-            name,
-            overeenkomst_id,
-            username,
-            password,
-            "electricity_return_low",
-        ),
-        GreenchoiceSensor(
-            greenchoice_api,
-            name,
-            overeenkomst_id,
-            username,
-            password,
-            "electricity_return_total",
-        ),
-        GreenchoiceSensor(
-            greenchoice_api,
-            name,
-            overeenkomst_id,
-            username,
-            password,
-            "gas_consumption",
-        ),
-        GreenchoiceSensor(
-            greenchoice_api,
-            name,
-            overeenkomst_id,
-            username,
-            password,
-            "electricity_price_low",
-        ),
-        GreenchoiceSensor(
-            greenchoice_api,
-            name,
-            overeenkomst_id,
-            username,
-            password,
-            "electricity_price_high",
-        ),
-        GreenchoiceSensor(
-            greenchoice_api,
-            name,
-            overeenkomst_id,
-            username,
-            password,
-            "electricity_price_single",
-        ),
-        GreenchoiceSensor(
-            greenchoice_api,
-            name,
-            overeenkomst_id,
-            username,
-            password,
-            "electricity_return_price",
-        ),
-        GreenchoiceSensor(
-            greenchoice_api,
-            name,
-            overeenkomst_id,
-            username,
-            password,
-            "gas_price",
-        ),
+            sensor_name,
+        )
+        for sensor_name in sensor_names
     ]
+
     add_entities(sensors, True)
-
-
-def _get_verification_token(html_txt: str):
-    soup = bs4.BeautifulSoup(html_txt, "html.parser")
-    token_elem = soup.find("input", {"name": "__RequestVerificationToken"})
-
-    return token_elem.attrs.get("value")
-
-
-def _get_oidc_params(html_txt: str):
-    soup = bs4.BeautifulSoup(html_txt, "html.parser")
-
-    code_elem = soup.find("input", {"name": "code"})
-    scope_elem = soup.find("input", {"name": "scope"})
-    state_elem = soup.find("input", {"name": "state"})
-    session_state_elem = soup.find("input", {"name": "session_state"})
-
-    if not (code_elem and scope_elem and state_elem and session_state_elem):
-        raise LoginError("Login failed, check your credentials?")
-
-    return {
-        "code": code_elem.attrs.get("value"),
-        "scope": scope_elem.attrs.get("value").replace(" ", "+"),
-        "state": state_elem.attrs.get("value"),
-        "session_state": session_state_elem.attrs.get("value"),
-    }
-
-
-class LoginError(Exception):
-    pass
 
 
 class GreenchoiceSensor(SensorEntity):
@@ -209,7 +126,7 @@ class GreenchoiceSensor(SensorEntity):
         password,
         measurement_type,
     ):
-        self._json_data = greenchoice_api
+        self._api = greenchoice_api
         self._unique_id = f"{slugify(name)}_{measurement_type}"
         self._name = self._unique_id
         self._overeenkomst_id = overeenkomst_id
@@ -217,11 +134,18 @@ class GreenchoiceSensor(SensorEntity):
         self._password = password
         self._measurement_type = measurement_type
         self._measurement_date = None
-        self._native_unit_of_measurement = None
         self._state = None
-        self._icon = None
-        self._device_class = SensorDeviceClass.ENERGY
         self._state_class = SensorStateClass.TOTAL
+
+        sensor_info = sensor_infos[self._measurement_type]
+        self._device_class = sensor_info.device_class
+        self._native_unit_of_measurement = sensor_info.unit
+        self._icon = f"mdi:{sensor_info.icon}"
+        self._measurement_date_key = (
+            "measurement_date_electricity"
+            if "electricity" in self._measurement_type
+            else "measurement_date_gas"
+        )
 
     @property
     def name(self):
@@ -282,246 +206,31 @@ class GreenchoiceSensor(SensorEntity):
             ATTR_STATE_CLASS: self._state_class,
         }
 
-    def update(self):
-        """Get the latest data from the Greenchoice API."""
-        self._json_data.update()
-
-        data = self._json_data.result
-
+    def _check_login(self):
         if self._username == CONF_USERNAME or self._username is None:
             _LOGGER.error("Need a username!")
+            return False
         elif self._password == CONF_PASSWORD or self._password is None:
             _LOGGER.error("Need a password!")
+            return False
         elif (
             self._overeenkomst_id == CONF_OVEREENKOMST_ID
             or self._overeenkomst_id is None
         ):
             _LOGGER.error("Need a overeenkomst id (see docs how to get one)!")
+            return False
+        return True
 
-        if data is None or self._measurement_type not in data:
-            self._state = STATE_UNKNOWN
-        else:
-            self._state = data[self._measurement_type]
-            self._measurement_date = data["measurement_date_electricity"]
-
-        if self._measurement_type == "electricity_consumption_high":
-            self._icon = "mdi:weather-sunset-up"
-            self._native_unit_of_measurement = "kWh"
-        elif self._measurement_type == "electricity_consumption_low":
-            self._icon = "mdi:weather-sunset-down"
-            self._native_unit_of_measurement = "kWh"
-        elif self._measurement_type == "electricity_consumption_total":
-            self._icon = "mdi:transmission-tower-export"
-            self._native_unit_of_measurement = "kWh"
-        elif self._measurement_type == "electricity_return_high":
-            self._icon = "mdi:solar-power"
-            self._native_unit_of_measurement = "kWh"
-        elif self._measurement_type == "electricity_return_low":
-            self._icon = "mdi:solar-panel"
-            self._native_unit_of_measurement = "kWh"
-        elif self._measurement_type == "electricity_return_total":
-            self._icon = "mdi:transmission-tower-import"
-            self._native_unit_of_measurement = "kWh"
-        elif self._measurement_type == "gas_consumption":
-            self._measurement_date = data["measurement_date_gas"]
-            self._icon = "mdi:fire"
-            self._device_class = SensorDeviceClass.GAS
-            self._native_unit_of_measurement = "m³"
-        elif self._measurement_type == "gas_price":
-            self._measurement_date = data["measurement_date_gas"]
-            self._icon = "mdi:currency-eur"
-            self._device_class = SensorDeviceClass.MONETARY
-            self._native_unit_of_measurement = "EUR/m³"
-        elif self._measurement_type in [
-            "electricity_price_single",
-            "electricity_price_low",
-            "electricity_price_high",
-            "electricity_return_price"
-        ]:
-            self._icon = "mdi:currency-eur"
-            self._device_class = SensorDeviceClass.MONETARY
-            self._native_unit_of_measurement = "EUR/kWh"
-
-
-class GreenchoiceApiData:
-    def __init__(self, overeenkomst_id, username, password):
-        self._resource = _RESOURCE
-        self._overeenkomst_id = overeenkomst_id
-        self._username = username
-        self._password = password
-
-        self.result = {}
-        self.session = requests.Session()
-
-    def _activate_session(self):
-        _LOGGER.info("Retrieving login cookies")
-        _LOGGER.debug("Purging existing session")
-        self.session.close()
-        self.session = requests.Session()
-
-        # first, get the login cookies and form data
-        login_page = self.session.get(_RESOURCE)
-
-        login_url = login_page.url
-        return_url = parse_qs(urlparse(login_url).query).get("ReturnUrl", "")
-        token = _get_verification_token(login_page.text)
-
-        # perform actual sign in
-        _LOGGER.debug("Logging in with username and password")
-        login_data = {
-            "ReturnUrl": return_url,
-            "Username": self._username,
-            "Password": self._password,
-            "__RequestVerificationToken": token,
-            "RememberLogin": True,
-        }
-        auth_page = self.session.post(login_page.url, data=login_data)
-
-        # exchange oidc params for a login cookie (automatically saved in session)
-        _LOGGER.debug("Signing in using OIDC")
-        oidc_params = _get_oidc_params(auth_page.text)
-        self.session.post(f"{_RESOURCE}/signin-oidc", data=oidc_params)
-
-        _LOGGER.debug("Login success")
-
-    def request(self, method, endpoint, data=None, _retry_count=1):
-        _LOGGER.debug(f"Request: {method} {endpoint}")
-        try:
-            target_url = _RESOURCE + endpoint
-            r = self.session.request(method, target_url, json=data)
-
-            if (
-                r.status_code == 403 or len(r.history) > 1
-            ):  # sometimes we get redirected on token expiry
-                _LOGGER.debug("Access cookie expired, triggering refresh")
-                try:
-                    self._activate_session()
-                    return self.request(method, endpoint, data, _retry_count)
-                except LoginError:
-                    _LOGGER.error(
-                        "Login failed! Please check your credentials and try again."
-                    )
-                    return None
-
-            r.raise_for_status()
-        except requests.HTTPError as e:
-            _LOGGER.error(f"HTTP Error: {e}")
-            _LOGGER.error([c.name for c in self.session.cookies])
-            if _retry_count == 0:
-                return None
-
-            _LOGGER.debug("Retrying request")
-            return self.request(method, endpoint, data, _retry_count - 1)
-
-        return r
-
-    def microbus_request(self, name, message=None):
-        if not message:
-            message = {}
-
-        payload = {"name": name, "message": message}
-        return self.request("POST", "/microbus/request", payload)
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
-        self.result = {}
-        self.update_usage_values()
-        self.update_contract_values()
-
-    def update_usage_values(self):
-        _LOGGER.debug("Retrieving meter values")
-        meter_values_request = self.microbus_request("OpnamesOphalen")
-        if not meter_values_request:
-            _LOGGER.error("Error while retrieving meter values!")
+        """Get the latest data from the Greenchoice API."""
+        if not self._check_login():
             return
 
-        try:
-            monthly_values = meter_values_request.json()
-        except requests.exceptions.JSONDecoderError:
-            _LOGGER.error(
-                "Could not update meter values: request returned no valid JSON"
-            )
-            _LOGGER.error("Returned data: " + meter_values_request.text)
+        data = self._api.update()
+
+        self._state = STATE_UNKNOWN
+        if not data or self._measurement_type not in data:
             return
 
-        # parse energy data
-        electricity_values = monthly_values["model"]["productenOpnamesModel"][0][
-            "opnamesJaarMaandModel"
-        ]
-        current_month = sorted(
-            electricity_values, key=lambda m: (m["jaar"], m["maand"]), reverse=True
-        )[0]
-        current_day = sorted(
-            current_month["opnames"],
-            key=lambda d: datetime.strptime(d["opnameDatum"], "%Y-%m-%dT%H:%M:%S"),
-            reverse=True,
-        )[0]
-
-        # process energy types
-        for measurement in current_day["standen"]:
-            measurement_type = MEASUREMENT_TYPES[measurement["telwerk"]]
-            self.result["electricity_" + measurement_type] = measurement["waarde"]
-
-        # total energy count
-        self.result["electricity_consumption_total"] = (
-            self.result["electricity_consumption_high"]
-            + self.result["electricity_consumption_low"]
-        )
-        self.result["electricity_return_total"] = (
-            self.result["electricity_return_high"]
-            + self.result["electricity_return_low"]
-        )
-
-        self.result["measurement_date_electricity"] = datetime.strptime(
-            current_day["opnameDatum"], "%Y-%m-%dT%H:%M:%S"
-        )
-
-        # process gas
-        if monthly_values["model"]["heeftGas"]:
-            gas_values = monthly_values["model"]["productenOpnamesModel"][1][
-                "opnamesJaarMaandModel"
-            ]
-            current_month = sorted(
-                gas_values, key=lambda m: (m["jaar"], m["maand"]), reverse=True
-            )[0]
-            current_day = sorted(
-                current_month["opnames"],
-                key=lambda d: datetime.strptime(d["opnameDatum"], "%Y-%m-%dT%H:%M:%S"),
-                reverse=True,
-            )[0]
-
-            measurement = current_day["standen"][0]
-            if measurement["telwerk"] == 5:
-                self.result["gas_consumption"] = measurement["waarde"]
-
-            self.result["measurement_date_gas"] = datetime.strptime(
-                current_day["opnameDatum"], "%Y-%m-%dT%H:%M:%S"
-            )
-
-    def update_contract_values(self):
-        _LOGGER.debug("Retrieving contract values")
-
-        contract_values_request = self.microbus_request("GetTariefOvereenkomst")
-        if not contract_values_request:
-            _LOGGER.error("Error while retrieving contract values!")
-            return
-
-        try:
-            contract_values = contract_values_request.json()
-        except requests.exceptions.JSONDecoderError:
-            _LOGGER.error(
-                "Could not update meter values: request returned no valid JSON"
-            )
-            _LOGGER.error(f"Returned data: {contract_values_request.text}")
-            return
-
-        electricity = contract_values.get("stroom")
-        if electricity:
-            self.result["electricity_price_single"] = electricity["leveringEnkelAllin"]
-            self.result["electricity_price_low"] = electricity["leveringLaagAllin"]
-            self.result["electricity_price_high"] = electricity["leveringHoogAllin"]
-            self.result["electricity_return_price"] = electricity["terugleververgoeding"]
-
-        gas = contract_values.get("gas")
-        if gas:
-            self.result["gas_price"] = gas["leveringAllin"]
+        self._state = data[self._measurement_type]
+        self._measurement_date = data[self._measurement_date_key]
