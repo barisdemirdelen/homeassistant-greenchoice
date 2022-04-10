@@ -155,6 +155,14 @@ def setup_platform(hass, config, add_entities, discovery_info=None):
             overeenkomst_id,
             username,
             password,
+            "electricity_return_price",
+        ),
+        GreenchoiceSensor(
+            greenchoice_api,
+            name,
+            overeenkomst_id,
+            username,
+            password,
             "gas_price",
         ),
     ]
@@ -328,6 +336,7 @@ class GreenchoiceSensor(SensorEntity):
             "electricity_price_single",
             "electricity_price_low",
             "electricity_price_high",
+            "electricity_return_price"
         ]:
             self._icon = "mdi:currency-eur"
             self._device_class = SensorDeviceClass.MONETARY
@@ -511,6 +520,7 @@ class GreenchoiceApiData:
             self.result["electricity_price_single"] = electricity["leveringEnkelAllin"]
             self.result["electricity_price_low"] = electricity["leveringLaagAllin"]
             self.result["electricity_price_high"] = electricity["leveringHoogAllin"]
+            self.result["electricity_return_price"] = electricity["terugleververgoeding"]
 
         gas = contract_values.get("gas")
         if gas:
