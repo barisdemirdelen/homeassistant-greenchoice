@@ -124,7 +124,6 @@ class GreenchoiceApiData:
         payload = {"name": name, "message": message}
         return self.request("POST", "/microbus/request", payload)
 
-    # @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         result = {}
         self.update_usage_values(result)
