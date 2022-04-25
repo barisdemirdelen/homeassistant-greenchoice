@@ -1,14 +1,12 @@
 import logging
-from datetime import timedelta, datetime
+from datetime import datetime
 from urllib.parse import parse_qs, urlparse
 
 import bs4
 import requests
-from homeassistant.util import Throttle
 
 _LOGGER = logging.getLogger(__name__)
 _RESOURCE = "https://mijn.greenchoice.nl"
-MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3600)
 
 MEASUREMENT_TYPES = {
     1: "consumption_high",
@@ -90,7 +88,7 @@ class GreenchoiceApiData:
         _LOGGER.debug("Login success")
 
     def request(self, method, endpoint, data=None, _retry_count=1):
-        _LOGGER.debug(f"Request: {method} {endpoint}")
+        _LOGGER.debug(f"Request: {method} {endpoint} {data}")
         try:
             target_url = _RESOURCE + endpoint
             r = self.session.request(method, target_url, json=data)
@@ -126,7 +124,7 @@ class GreenchoiceApiData:
         payload = {"name": name, "message": message}
         return self.request("POST", "/microbus/request", payload)
 
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    # @Throttle(MIN_TIME_BETWEEN_UPDATES)
     def update(self):
         result = {}
         self.update_usage_values(result)

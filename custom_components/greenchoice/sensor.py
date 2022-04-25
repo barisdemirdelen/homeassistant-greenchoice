@@ -1,4 +1,5 @@
 from collections import namedtuple
+from datetime import timedelta
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
@@ -10,11 +11,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_NAME, STATE_UNKNOWN
 from homeassistant.exceptions import PlatformNotReady
-from homeassistant.util import slugify
+from homeassistant.util import slugify, Throttle
+
+from .api import GreenchoiceApiData, _LOGGER
 
 __version__ = "0.0.3"
-
-from custom_components.greenchoice.api import GreenchoiceApiData, _LOGGER
 
 CONF_OVEREENKOMST_ID = "overeenkomst_id"
 CONF_USERNAME = "username"
@@ -30,6 +31,7 @@ ATTR_MEASUREMENT_DATE = "date"
 ATTR_NATIVE_UNIT_OF_MEASUREMENT = "native_unit_of_measurement"
 ATTR_STATE_CLASS = "state_class"
 
+MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3600)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -226,7 +228,7 @@ class GreenchoiceSensor(SensorEntity):
         if not self._check_login():
             return
 
-        data = self._api.update()
+        data = self._throttled_api_update()
 
         self._state = STATE_UNKNOWN
         if not data or self._measurement_type not in data:
@@ -234,3 +236,7 @@ class GreenchoiceSensor(SensorEntity):
 
         self._state = data[self._measurement_type]
         self._measurement_date = data[self._measurement_date_key]
+
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def _throttled_api_update(self):
+        return self._api.update()
