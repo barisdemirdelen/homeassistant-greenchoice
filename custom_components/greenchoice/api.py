@@ -146,21 +146,14 @@ class GreenchoiceApiData:
             _LOGGER.error("Returned data: " + meter_values_request.text)
             return
 
+        products = monthly_values["model"]["productenOpnamesModel"]
+
         # parse energy data
-        electricity_values = monthly_values["model"]["productenOpnamesModel"][0][
-            "opnamesJaarMaandModel"
-        ]
-        current_month = sorted(
-            electricity_values, key=lambda m: (m["jaar"], m["maand"]), reverse=True
-        )[0]
-        current_day = sorted(
-            current_month["opnames"],
-            key=lambda d: datetime.strptime(d["opnameDatum"], "%Y-%m-%dT%H:%M:%S"),
-            reverse=True,
-        )[0]
+        electricity_values = products[0]["opnamesJaarMaandModel"]
+        measurements, measurement_date = self._get_last_measurements(electricity_values)
 
         # process energy types
-        for measurement in current_day["standen"]:
+        for measurement in measurements:
             measurement_type = MEASUREMENT_TYPES[measurement["telwerk"]]
             result["electricity_" + measurement_type] = measurement["waarde"]
 
@@ -173,31 +166,17 @@ class GreenchoiceApiData:
             result["electricity_return_high"] + result["electricity_return_low"]
         )
 
-        result["measurement_date_electricity"] = datetime.strptime(
-            current_day["opnameDatum"], "%Y-%m-%dT%H:%M:%S"
-        )
+        result["measurement_date_electricity"] = measurement_date
 
         # process gas
         if monthly_values["model"]["heeftGas"]:
-            gas_values = monthly_values["model"]["productenOpnamesModel"][1][
-                "opnamesJaarMaandModel"
-            ]
-            current_month = sorted(
-                gas_values, key=lambda m: (m["jaar"], m["maand"]), reverse=True
-            )[0]
-            current_day = sorted(
-                current_month["opnames"],
-                key=lambda d: datetime.strptime(d["opnameDatum"], "%Y-%m-%dT%H:%M:%S"),
-                reverse=True,
-            )[0]
+            gas_values = products[1]["opnamesJaarMaandModel"]
+            measurements, measurement_date = self._get_last_measurements(gas_values)
+            for measurement in measurements:
+                if measurement["telwerk"] == 5:
+                    result["gas_consumption"] = measurement["waarde"]
 
-            measurement = current_day["standen"][0]
-            if measurement["telwerk"] == 5:
-                result["gas_consumption"] = measurement["waarde"]
-
-            result["measurement_date_gas"] = datetime.strptime(
-                current_day["opnameDatum"], "%Y-%m-%dT%H:%M:%S"
-            )
+            result["measurement_date_gas"] = measurement_date
 
     def update_contract_values(self, result):
         _LOGGER.debug("Retrieving contract values")
@@ -226,3 +205,34 @@ class GreenchoiceApiData:
         gas = contract_values.get("gas")
         if gas:
             result["gas_price"] = gas["leveringAllin"]
+
+    @staticmethod
+    def _get_last_measurements(values):
+        months = sorted(values, key=lambda m: (m["jaar"], m["maand"]), reverse=True)
+        for current_month in months:
+            if not current_month.get("opnames"):
+                continue
+
+            days = list(
+                sorted(
+                    current_month["opnames"],
+                    key=lambda d: datetime.strptime(
+                        d["opnameDatum"], "%Y-%m-%dT%H:%M:%S"
+                    ),
+                    reverse=True,
+                )
+            )
+
+            if not days:
+                continue
+
+            current_day = days[0]
+
+            measurements = current_day["standen"]
+            measurement_date = datetime.strptime(
+                current_day["opnameDatum"], "%Y-%m-%dT%H:%M:%S"
+            )
+
+            return measurements, measurement_date
+
+        _LOGGER.error("No measurements found")
