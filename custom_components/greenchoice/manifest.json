@@ -1,13 +1,13 @@
 {
     "domain": "greenchoice",
     "name": "Sensor Greenchoice",
-    "version": "1.2.0",
     "documentation": "https://github.com/barisdemirdelen/homeassistant-greenchoice/",
     "issue_tracker": "https://github.com/barisdemirdelen/homeassistant-greenchoice/issues",
-    "dependencies": [],
     "codeowners": ["@jessevl", "@barisdemirdelen"],
+    "iot_class": "cloud_polling",
     "requirements": [
         "requests>=2.0.0,<3.0.0",
         "beautifulsoup4>=4.0.0,<5.0.0"
-    ]
-  }
+    ],
+    "version": "1.2.5"
+}

@@ -10,7 +10,10 @@ from homeassistant.components.sensor import (
     PLATFORM_SCHEMA,
 )
 from homeassistant.const import CONF_NAME, STATE_UNKNOWN
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
+from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify, Throttle
 
 from .api import GreenchoiceApiData, _LOGGER
@@ -23,13 +26,6 @@ CONF_PASSWORD = "password"
 
 DEFAULT_NAME = "Energieverbruik"
 DEFAULT_DATE_FORMAT = "%y-%m-%dT%H:%M:%S"
-
-ATTR_NAME = "name"
-ATTR_UPDATE_CYCLE = "update_cycle"
-ATTR_ICON = "icon"
-ATTR_MEASUREMENT_DATE = "date"
-ATTR_NATIVE_UNIT_OF_MEASUREMENT = "native_unit_of_measurement"
-ATTR_STATE_CLASS = "state_class"
 
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3600)
 
@@ -88,31 +84,38 @@ sensor_infos = {
 
 
 # noinspection PyUnusedLocal
-def setup_platform(hass, config, add_entities, discovery_info=None):
+def setup_platform(
+    hass: HomeAssistant,
+    config: ConfigType,
+    add_entities: AddEntitiesCallback,
+    discovery_info: DiscoveryInfoType | None = None,
+) -> None:
     name = config.get(CONF_NAME)
-    overeenkomst_id = config.get(CONF_OVEREENKOMST_ID)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
+    contract_id = config.get(CONF_OVEREENKOMST_ID)
 
-    greenchoice_api = GreenchoiceApiData(overeenkomst_id, username, password)
+    if username == CONF_USERNAME:
+        username = None
+    if password == CONF_PASSWORD:
+        password = None
+    if contract_id == CONF_OVEREENKOMST_ID:
+        contract_id = None
 
-    greenchoice_api.update()
+    greenchoice_api = GreenchoiceApiData(contract_id, username, password)
 
-    if not greenchoice_api.result:
+    api_result = greenchoice_api.update()
+
+    if not api_result:
         raise PlatformNotReady
-
-    sensor_names = [sensor_name for sensor_name in sensor_infos.keys()]
 
     sensors = [
         GreenchoiceSensor(
             greenchoice_api,
             name,
-            overeenkomst_id,
-            username,
-            password,
             sensor_name,
         )
-        for sensor_name in sensor_names
+        for sensor_name in sensor_infos.keys()
     ]
 
     add_entities(sensors, True)
@@ -123,69 +126,41 @@ class GreenchoiceSensor(SensorEntity):
         self,
         greenchoice_api,
         name,
-        overeenkomst_id,
-        username,
-        password,
         measurement_type,
     ):
         self._api = greenchoice_api
-        self._unique_id = f"{slugify(name)}_{measurement_type}"
-        self._name = self._unique_id
-        self._overeenkomst_id = overeenkomst_id
-        self._username = username
-        self._password = password
         self._measurement_type = measurement_type
         self._measurement_date = None
-        self._state = None
-        self._state_class = SensorStateClass.TOTAL
-
-        sensor_info = sensor_infos[self._measurement_type]
-        self._device_class = sensor_info.device_class
-        self._native_unit_of_measurement = sensor_info.unit
-        self._icon = f"mdi:{sensor_info.icon}"
         self._measurement_date_key = (
             "measurement_date_electricity"
             if "electricity" in self._measurement_type
             else "measurement_date_gas"
         )
 
-    @property
-    def name(self):
-        """Return the name of the sensor."""
-        return self._name
+        sensor_info = sensor_infos[self._measurement_type]
 
-    @property
-    def unique_id(self):
-        """Return the unique id of the sensor."""
-        return self._unique_id
+        self._attr_unique_id = f"{slugify(name)}_{measurement_type}"
+        self._attr_name = self._attr_unique_id
+        self._attr_icon = f"mdi:{sensor_info.icon}"
 
-    @property
-    def overeenkomst_id(self):
-        return self._overeenkomst_id
+        self._attr_state_class = SensorStateClass.TOTAL
+        self._attr_device_class = sensor_info.device_class
+        self._attr_native_unit_of_measurement = sensor_info.unit
 
-    @property
-    def username(self):
-        return self._username
+    def update(self):
+        """Get the latest data from the Greenchoice API."""
+        api_result = self._throttled_api_update() or self._api.result
 
-    @property
-    def password(self):
-        return self._password
+        self._attr_native_value = STATE_UNKNOWN
+        if not api_result or self._measurement_type not in api_result:
+            return
 
-    @property
-    def icon(self):
-        return self._icon
+        self._attr_native_value = api_result[self._measurement_type]
+        self._measurement_date = api_result[self._measurement_date_key]
 
-    @property
-    def state(self):
-        return self._state
-
-    @property
-    def device_class(self):
-        return self._device_class
-
-    @property
-    def state_class(self):
-        return self._state_class
+    @Throttle(MIN_TIME_BETWEEN_UPDATES)
+    def _throttled_api_update(self):
+        return self._api.update()
 
     @property
     def measurement_type(self):
@@ -194,49 +169,3 @@ class GreenchoiceSensor(SensorEntity):
     @property
     def measurement_date(self):
         return self._measurement_date
-
-    @property
-    def native_unit_of_measurement(self):
-        return self._native_unit_of_measurement
-
-    @property
-    def device_state_attributes(self):
-        """Return the state attributes."""
-        return {
-            ATTR_MEASUREMENT_DATE: self._measurement_date,
-            ATTR_NATIVE_UNIT_OF_MEASUREMENT: self._native_unit_of_measurement,
-            ATTR_STATE_CLASS: self._state_class,
-        }
-
-    def _check_login(self):
-        if self._username == CONF_USERNAME or self._username is None:
-            _LOGGER.error("Need a username!")
-            return False
-        elif self._password == CONF_PASSWORD or self._password is None:
-            _LOGGER.error("Need a password!")
-            return False
-        elif (
-            self._overeenkomst_id == CONF_OVEREENKOMST_ID
-            or self._overeenkomst_id is None
-        ):
-            _LOGGER.error("Need a overeenkomst id (see docs how to get one)!")
-            return False
-        return True
-
-    def update(self):
-        """Get the latest data from the Greenchoice API."""
-        if not self._check_login():
-            return
-
-        data = self._throttled_api_update()
-
-        self._state = STATE_UNKNOWN
-        if not data or self._measurement_type not in data:
-            return
-
-        self._state = data[self._measurement_type]
-        self._measurement_date = data[self._measurement_date_key]
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def _throttled_api_update(self):
-        return self._api.update()

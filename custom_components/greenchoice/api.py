@@ -53,8 +53,23 @@ class GreenchoiceApiData:
         self._username = username
         self._password = password
 
+        if not self._check_login():
+            raise AttributeError("Configuration is incomplete")
+
         self.result = {}
         self.session = requests.Session()
+
+    def _check_login(self):
+        if not self._username:
+            _LOGGER.error("Need a username!")
+            return False
+        if not self._password:
+            _LOGGER.error("Need a password!")
+            return False
+        if not self._overeenkomst_id:
+            _LOGGER.error("Need a overeenkomst id (see docs how to get one)!")
+            return False
+        return True
 
     def _activate_session(self):
         _LOGGER.info("Retrieving login cookies")
@@ -125,10 +140,10 @@ class GreenchoiceApiData:
         return self.request("POST", "/microbus/request", payload)
 
     def update(self):
-        result = {}
-        self.update_usage_values(result)
-        self.update_contract_values(result)
-        return result
+        self.result = {}
+        self.update_usage_values(self.result)
+        self.update_contract_values(self.result)
+        return self.result
 
     def update_usage_values(self, result):
         _LOGGER.debug("Retrieving meter values")

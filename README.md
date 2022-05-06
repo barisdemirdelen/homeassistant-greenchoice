@@ -12,9 +12,9 @@ The sensor will check every hour if a new reading can be retrieved but Greenchoi
 [//]: # (    *OR*)
 1. Place the 'greenchoice' folder in your 'custom_compontents' directory if it exists or create a new one under your config directory.
 2. The Greenchoice API can theoretically have multiple contracts under one user account, so we need to figure out the ID for the contract. We can use the script `get-overeenkomsten.py` to list all contracts for our account as follows:
-   1. Install the dependencies listed in `requirements.txt` using pip (`python3 -m pip install -u -r requirements.txt`)
+   1. Install this package using pip (`python3 -m pip install .`)
    2. Run the script using `python3 get-overeenkomsten.py` (while CD'ed into the root directory) or by double-clicking it (on Windows.)
-   3. It will ask for your username and password, after entering these your contracts will be shown.
+   3. It will ask for your username and password, after entering these, your contracts will be shown.
 3. Add the component to your configuration.yaml, an example of a proper config entry:
 
 ```YAML
