@@ -1,3 +1,4 @@
+import logging
 import typing as t
 from collections import namedtuple
 from datetime import timedelta
@@ -12,14 +13,13 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.const import CONF_NAME, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify, Throttle
 
 from .api import GreenchoiceApiData
 
-__version__ = "0.0.3"
+_LOGGER = logging.getLogger(__name__)
 
 CONF_OVEREENKOMST_ID = "overeenkomst_id"
 CONF_USERNAME = "username"
@@ -103,12 +103,10 @@ def setup_platform(
     if contract_id == CONF_OVEREENKOMST_ID:
         contract_id = None
 
+    _LOGGER.debug("Set up platform")
     greenchoice_api = GreenchoiceApiData(contract_id, username, password)
 
-    api_result = greenchoice_api.update()
-
-    if not api_result:
-        raise PlatformNotReady
+    throttled_api_update(greenchoice_api)
 
     sensors = [
         GreenchoiceSensor(
@@ -120,6 +118,14 @@ def setup_platform(
     ]
 
     add_entities(sensors, True)
+
+
+@Throttle(MIN_TIME_BETWEEN_UPDATES)
+def throttled_api_update(api):
+    _LOGGER.debug("Throttled update called.")
+    api_result = api.update()
+    _LOGGER.debug(f"{api_result=}")
+    return api_result
 
 
 class GreenchoiceSensor(SensorEntity):
@@ -146,22 +152,19 @@ class GreenchoiceSensor(SensorEntity):
 
         self._attr_state_class = SensorStateClass.TOTAL
         self._attr_device_class = sensor_info.device_class
+        self._attr_native_value = STATE_UNKNOWN
         self._attr_native_unit_of_measurement = sensor_info.unit
 
     def update(self):
         """Get the latest data from the Greenchoice API."""
-        api_result = self._throttled_api_update() or self._api.result
+        _LOGGER.debug(f"Updating {self.name}")
+        api_result = throttled_api_update() or self._api.result
 
-        self._attr_native_value = STATE_UNKNOWN
         if not api_result or self._measurement_type not in api_result:
             return
 
         self._attr_native_value = api_result[self._measurement_type]
         self._measurement_date = api_result[self._measurement_date_key]
-
-    @Throttle(MIN_TIME_BETWEEN_UPDATES)
-    def _throttled_api_update(self):
-        return self._api.update()
 
     @property
     def measurement_type(self):

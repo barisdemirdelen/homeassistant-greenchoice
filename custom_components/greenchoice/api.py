@@ -57,7 +57,8 @@ class GreenchoiceApiData:
             raise AttributeError("Configuration is incomplete")
 
         self.result = {}
-        self.session = requests.Session()
+        self.session = None
+        self._activate_session()
 
     def _check_login(self):
         if not self._username:
@@ -73,8 +74,9 @@ class GreenchoiceApiData:
 
     def _activate_session(self):
         _LOGGER.info("Retrieving login cookies")
-        _LOGGER.debug("Purging existing session")
-        self.session.close()
+        if self.session:
+            _LOGGER.debug("Purging existing session")
+            self.session.close()
         self.session = requests.Session()
 
         # first, get the login cookies and form data
@@ -106,7 +108,10 @@ class GreenchoiceApiData:
         _LOGGER.debug(f"Request: {method} {endpoint} {data}")
         try:
             target_url = _RESOURCE + endpoint
-            r = self.session.request(method, target_url, json=data, timeout=10)
+            r = self.session.request(method, target_url, json=data)
+
+            if len(r.history) > 1:
+                _LOGGER.debug(f"Response history len > 1. {r.history=}")
 
             # Sometimes we get redirected on token expiry
             if r.status_code == 403:
@@ -119,7 +124,7 @@ class GreenchoiceApiData:
                     )
                     return None
 
-                r = self.session.request(method, endpoint, data, timeout=10)
+                r = self.session.request(method, target_url, json=data)
 
             r.raise_for_status()
         except requests.HTTPError as e:
@@ -131,6 +136,7 @@ class GreenchoiceApiData:
             _LOGGER.debug("Retrying request")
             return self.request(method, endpoint, data, _retry_count - 1)
 
+        _LOGGER.debug("Request success")
         return r
 
     def microbus_request(self, name, message=None):
@@ -155,11 +161,10 @@ class GreenchoiceApiData:
 
         try:
             monthly_values = meter_values_request.json()
-        except requests.exceptions.JSONDecoderError:
+        except requests.exceptions.JSONDecodeError:
             _LOGGER.error(
                 "Could not update meter values: request returned no valid JSON"
             )
-            _LOGGER.error("Returned data: " + meter_values_request.text)
             return
 
         products = monthly_values["model"]["productenOpnamesModel"]
@@ -204,11 +209,10 @@ class GreenchoiceApiData:
 
         try:
             contract_values = contract_values_request.json()
-        except requests.exceptions.JSONDecoderError:
+        except requests.exceptions.JSONDecodeError:
             _LOGGER.error(
-                "Could not update meter values: request returned no valid JSON"
+                "Could not update contract values: request returned no valid JSON"
             )
-            _LOGGER.error(f"Returned data: {contract_values_request.text}")
             return
 
         electricity = contract_values.get("stroom")
