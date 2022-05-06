@@ -5,7 +5,7 @@ description = ""
 authors = ["Baris Demirdelen <barisdemirdelen@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.10"
+python = "^3.9"
 homeassistant = "^2022.5.2"
 requests = "^2.27.1"
 beautifulsoup4 = "^4.11.1"

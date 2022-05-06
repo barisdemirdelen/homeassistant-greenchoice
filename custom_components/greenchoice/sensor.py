@@ -18,6 +18,8 @@ from homeassistant.util import slugify, Throttle
 
 from .api import GreenchoiceApiData
 
+import typing as t
+
 __version__ = "0.0.3"
 
 CONF_OVEREENKOMST_ID = "overeenkomst_id"
@@ -88,7 +90,7 @@ def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
-    discovery_info: DiscoveryInfoType | None = None,
+    discovery_info: t.Optional[DiscoveryInfoType] = None,
 ) -> None:
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
