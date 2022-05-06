@@ -106,19 +106,20 @@ class GreenchoiceApiData:
         _LOGGER.debug(f"Request: {method} {endpoint} {data}")
         try:
             target_url = _RESOURCE + endpoint
-            r = self.session.request(method, target_url, json=data)
+            r = self.session.request(method, target_url, json=data, timeout=10)
 
             # Sometimes we get redirected on token expiry
             if r.status_code == 403:
                 _LOGGER.debug("Access cookie expired, triggering refresh")
                 try:
                     self._activate_session()
-                    return self.request(method, endpoint, data, _retry_count)
                 except LoginError:
                     _LOGGER.error(
                         "Login failed! Please check your credentials and try again."
                     )
                     return None
+
+                r = self.session.request(method, endpoint, data, timeout=10)
 
             r.raise_for_status()
         except requests.HTTPError as e:
