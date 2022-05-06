@@ -16,7 +16,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify, Throttle
 
-from .api import GreenchoiceApiData, _LOGGER
+from .api import GreenchoiceApiData
 
 __version__ = "0.0.3"
 
