@@ -57,7 +57,8 @@ class GreenchoiceApiData:
             raise AttributeError("Configuration is incomplete")
 
         self.result = {}
-        self.session = requests.Session()
+        self.session = None
+        self._activate_session()
 
     def _check_login(self):
         if not self._username:
@@ -74,7 +75,8 @@ class GreenchoiceApiData:
     def _activate_session(self):
         _LOGGER.info("Retrieving login cookies")
         _LOGGER.debug("Purging existing session")
-        self.session.close()
+        if self.session:
+            self.session.close()
         self.session = requests.Session()
 
         # first, get the login cookies and form data
@@ -102,18 +104,20 @@ class GreenchoiceApiData:
 
         _LOGGER.debug("Login success")
 
-    def request(self, method, endpoint, data=None, _retry_count=1):
+    def request(self, method, endpoint, data=None, _retry_count=2):
         _LOGGER.debug(f"Request: {method} {endpoint} {data}")
         try:
             target_url = _RESOURCE + endpoint
             r = self.session.request(method, target_url, json=data)
 
             # Sometimes we get redirected on token expiry
-            if r.status_code == 403 or len(r.history) > 1:
+            if r.status_code == 403 or r.status_code == 500 or len(r.history) > 1:
                 _LOGGER.debug("Access cookie expired, triggering refresh")
                 try:
                     self._activate_session()
-                    return self.request(method, endpoint, data, _retry_count)
+                    if _retry_count == 0:
+                        r.raise_for_status()
+                    return self.request(method, endpoint, data, _retry_count - 1)
                 except LoginError:
                     _LOGGER.error(
                         "Login failed! Please check your credentials and try again."
