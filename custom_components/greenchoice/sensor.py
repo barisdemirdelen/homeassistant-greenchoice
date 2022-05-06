@@ -1,3 +1,4 @@
+import typing as t
 from collections import namedtuple
 from datetime import timedelta
 
@@ -17,8 +18,6 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify, Throttle
 
 from .api import GreenchoiceApiData
-
-import typing as t
 
 __version__ = "0.0.3"
 
