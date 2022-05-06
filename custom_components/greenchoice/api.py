@@ -109,7 +109,7 @@ class GreenchoiceApiData:
             r = self.session.request(method, target_url, json=data)
 
             # Sometimes we get redirected on token expiry
-            if r.status_code == 403 or len(r.history) > 1:
+            if r.status_code == 403:
                 _LOGGER.debug("Access cookie expired, triggering refresh")
                 try:
                     self._activate_session()
