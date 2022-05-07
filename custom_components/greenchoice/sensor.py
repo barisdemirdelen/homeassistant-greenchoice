@@ -158,7 +158,7 @@ class GreenchoiceSensor(SensorEntity):
     def update(self):
         """Get the latest data from the Greenchoice API."""
         _LOGGER.debug(f"Updating {self.name}")
-        api_result = throttled_api_update() or self._api.result
+        api_result = throttled_api_update(self._api) or self._api.result
 
         if not api_result or self._measurement_type not in api_result:
             return
