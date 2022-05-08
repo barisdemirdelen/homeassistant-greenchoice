@@ -6,7 +6,7 @@ import bs4
 import requests
 
 _LOGGER = logging.getLogger(__name__)
-_RESOURCE = "https://mijn.greenchoice.nl"
+BASE_URL = "https://mijn.greenchoice.nl"
 
 MEASUREMENT_TYPES = {
     1: "consumption_high",
@@ -16,14 +16,14 @@ MEASUREMENT_TYPES = {
 }
 
 
-def _get_verification_token(html_txt: str):
+def _get_verification_token(html_txt: str) -> str:
     soup = bs4.BeautifulSoup(html_txt, "html.parser")
     token_elem = soup.find("input", {"name": "__RequestVerificationToken"})
 
     return token_elem.attrs.get("value")
 
 
-def _get_oidc_params(html_txt: str):
+def _get_oidc_params(html_txt: str) -> dict[str, str]:
     soup = bs4.BeautifulSoup(html_txt, "html.parser")
 
     code_elem = soup.find("input", {"name": "code"})
@@ -47,9 +47,8 @@ class LoginError(Exception):
 
 
 class GreenchoiceApiData:
-    def __init__(self, overeenkomst_id, username, password):
-        self._resource = _RESOURCE
-        self._overeenkomst_id = overeenkomst_id
+    def __init__(self, username: str, password: str):
+        self._resource = BASE_URL
         self._username = username
         self._password = password
 
@@ -67,9 +66,6 @@ class GreenchoiceApiData:
         if not self._password:
             _LOGGER.error("Need a password!")
             return False
-        if not self._overeenkomst_id:
-            _LOGGER.error("Need a overeenkomst id (see docs how to get one)!")
-            return False
         return True
 
     def _activate_session(self):
@@ -80,7 +76,7 @@ class GreenchoiceApiData:
         self.session = requests.Session()
 
         # first, get the login cookies and form data
-        login_page = self.session.get(_RESOURCE)
+        login_page = self.session.get(BASE_URL)
 
         login_url = login_page.url
         return_url = parse_qs(urlparse(login_url).query).get("ReturnUrl", "")
@@ -100,14 +96,14 @@ class GreenchoiceApiData:
         # exchange oidc params for a login cookie (automatically saved in session)
         _LOGGER.debug("Signing in using OIDC")
         oidc_params = _get_oidc_params(auth_page.text)
-        self.session.post(f"{_RESOURCE}/signin-oidc", data=oidc_params)
+        self.session.post(f"{BASE_URL}/signin-oidc", data=oidc_params)
 
         _LOGGER.debug("Login success")
 
     def request(self, method, endpoint, data=None, _retry_count=2):
         _LOGGER.debug("Request: %s %s %s", method, endpoint, data)
         try:
-            target_url = _RESOURCE + endpoint
+            target_url = BASE_URL + endpoint
             response = self.session.request(method, target_url, json=data)
 
             if len(response.history) > 1:

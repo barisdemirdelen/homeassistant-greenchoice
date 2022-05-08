@@ -2,7 +2,6 @@ import logging
 import typing as t
 from collections import namedtuple
 from datetime import timedelta
-from enum import Enum
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
@@ -22,7 +21,6 @@ from .api import GreenchoiceApiData
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_OVEREENKOMST_ID = "overeenkomst_id"
 CONF_USERNAME = "username"
 CONF_PASSWORD = "password"  # nosec:B105
 
@@ -35,13 +33,12 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
         vol.Required(CONF_USERNAME): cv.string,
         vol.Required(CONF_PASSWORD): cv.string,
-        vol.Optional(CONF_OVEREENKOMST_ID, default=None): cv.string,
         vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
     }
 )
 
 
-class Unit(Enum):
+class Unit:
     KWH = "kWh"
     EUR_KWH = "EUR/kWh"
     M3 = "m³"
@@ -95,10 +92,9 @@ def setup_platform(
     name = config.get(CONF_NAME)
     username = config.get(CONF_USERNAME)
     password = config.get(CONF_PASSWORD)
-    contract_id = config.get(CONF_OVEREENKOMST_ID)
 
     _LOGGER.debug("Set up platform")
-    greenchoice_api = GreenchoiceApiData(contract_id, username, password)
+    greenchoice_api = GreenchoiceApiData(username, password)
 
     throttled_api_update(greenchoice_api)
 
