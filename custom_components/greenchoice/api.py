@@ -105,16 +105,16 @@ class GreenchoiceApiData:
         _LOGGER.debug("Login success")
 
     def request(self, method, endpoint, data=None, _retry_count=2):
-        _LOGGER.debug(f"Request: {method} {endpoint} {data}")
+        _LOGGER.debug("Request: %s %s %s", method, endpoint, data)
         try:
             target_url = _RESOURCE + endpoint
-            r = self.session.request(method, target_url, json=data)
+            response = self.session.request(method, target_url, json=data)
 
-            if len(r.history) > 1:
-                _LOGGER.debug(f"Response history len > 1. {r.history=}")
+            if len(response.history) > 1:
+                _LOGGER.debug("Response history len > 1. %s", response.history)
 
             # Sometimes we get redirected on token expiry
-            if r.status_code == 403:
+            if response.status_code == 403:
                 _LOGGER.debug("Access cookie expired, triggering refresh")
                 try:
                     self._activate_session()
@@ -124,12 +124,12 @@ class GreenchoiceApiData:
                     )
                     return None
 
-                r = self.session.request(method, target_url, json=data)
+                response = self.session.request(method, target_url, json=data)
 
-            r.raise_for_status()
+            response.raise_for_status()
         except requests.HTTPError as e:
-            _LOGGER.error(f"HTTP Error: {e}")
-            _LOGGER.error(f"Cookies: {[c.name for c in self.session.cookies]}")
+            _LOGGER.error("HTTP Error: %s", e)
+            _LOGGER.error("Cookies: %s", [c.name for c in self.session.cookies])
             if _retry_count == 0:
                 return None
 
@@ -137,7 +137,7 @@ class GreenchoiceApiData:
             return self.request(method, endpoint, data, _retry_count - 1)
 
         _LOGGER.debug("Request success")
-        return r
+        return response
 
     def microbus_request(self, name, message=None):
         if not message:

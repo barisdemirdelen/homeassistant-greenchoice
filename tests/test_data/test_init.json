@@ -1,0 +1,26 @@
+{
+  "profile": {
+    "voorkeursOvereenkomst": {
+      "klantnummer": 2222
+    }
+  },
+  "klantgegevens": [
+    {
+      "klantnummer": 2222,
+      "adressen": [
+        {
+          "overeenkomstId": 1111,
+          "klantnummer": 2222,
+          "heeftLevering": true,
+          "heeftGasLevering": true,
+          "heeftStroomLevering": true,
+          "heeftTerugLevering": true,
+          "datumInhuizing": "2019-10-10T00:00:00Z",
+          "huisnummer": 1,
+          "postcode": "1234AB",
+          "plaats": "CityName"
+        }
+      ]
+    }
+  ]
+}

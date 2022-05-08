@@ -1,0 +1,223 @@
+{
+  "klantnummer": 2222,
+  "overeenkomstId": 1111,
+  "model": {
+    "productenOpnamesModel": [
+      {
+        "product": 1,
+        "opnamesJaarMaandModel": [
+          {
+            "jaar": 2022,
+            "maand": 3,
+            "opnames": []
+          },
+          {
+            "jaar": 2021,
+            "maand": 11,
+            "opnames": [
+              {
+                "status": 3,
+                "opnameDatum": "2021-11-17T00:00:00",
+                "bron": 11,
+                "herkomst": 3,
+                "aanleverReden": 5,
+                "standen": [
+                  {
+                    "telwerk": 2,
+                    "waarde": 6890
+                  },
+                  {
+                    "telwerk": 1,
+                    "waarde": 68000
+                  },
+                  {
+                    "telwerk": 4,
+                    "waarde": 0
+                  },
+                  {
+                    "telwerk": 3,
+                    "waarde": 0
+                  }
+                ],
+                "invoerDatum": "2021-11-17T22:20:20.200",
+                "gebruiker": null,
+                "verbruiksMessages": null
+              }
+            ]
+          },
+          {
+            "jaar": 2021,
+            "maand": 8,
+            "opnames": [
+              {
+                "status": 3,
+                "opnameDatum": "2021-08-17T00:00:00",
+                "bron": 11,
+                "herkomst": 3,
+                "aanleverReden": 5,
+                "standen": [
+                  {
+                    "telwerk": 2,
+                    "waarde": 5556
+                  },
+                  {
+                    "telwerk": 1,
+                    "waarde": 66777
+                  },
+                  {
+                    "telwerk": 4,
+                    "waarde": 0
+                  },
+                  {
+                    "telwerk": 3,
+                    "waarde": 0
+                  }
+                ],
+                "invoerDatum": "2021-08-17T20:20:20.863",
+                "gebruiker": null,
+                "verbruiksMessages": null
+              }
+            ]
+          },
+          {
+            "jaar": 2020,
+            "maand": 9,
+            "opnames": [
+              {
+                "status": 3,
+                "opnameDatum": "2020-09-02T00:00:00",
+                "bron": 11,
+                "herkomst": 3,
+                "aanleverReden": 5,
+                "standen": [
+                  {
+                    "telwerk": 1,
+                    "waarde": 66666
+                  },
+                  {
+                    "telwerk": 2,
+                    "waarde": 5555
+                  },
+                  {
+                    "telwerk": 3,
+                    "waarde": 0
+                  },
+                  {
+                    "telwerk": 4,
+                    "waarde": 0
+                  }
+                ],
+                "invoerDatum": "2020-09-02T17:18:06.09",
+                "gebruiker": null,
+                "verbruiksMessages": null
+              }
+            ]
+          },
+          {
+            "jaar": 2020,
+            "maand": 8,
+            "opnames": []
+          }
+        ],
+        "uniekeLeveringsJaren": [
+          2022,
+          2021,
+          2020
+        ],
+        "meestRecenteJaar": 2022
+      },
+      {
+        "product": 2,
+        "opnamesJaarMaandModel": [
+          {
+            "jaar": 2022,
+            "maand": 5,
+            "opnames": [
+              {
+                "status": 4,
+                "opnameDatum": "2022-05-06T00:00:00",
+                "bron": 11,
+                "herkomst": 3,
+                "aanleverReden": 6,
+                "standen": [
+                  {
+                    "telwerk": 5,
+                    "waarde": 50000
+                  }
+                ],
+                "invoerDatum": "2022-05-06T22:00:00.00",
+                "gebruiker": null,
+                "verbruiksMessages": null
+              },
+              {
+                "status": 5,
+                "opnameDatum": "2022-05-06T00:00:00",
+                "bron": 2,
+                "herkomst": 3,
+                "aanleverReden": 6,
+                "standen": [
+                  {
+                    "telwerk": 5,
+                    "waarde": 45000
+                  }
+                ],
+                "invoerDatum": "2022-05-07T11:00:00.000",
+                "gebruiker": null,
+                "verbruiksMessages": null
+              }
+            ]
+          },
+          {
+            "jaar": 2022,
+            "maand": 4,
+            "opnames": [
+              {
+                "status": 3,
+                "opnameDatum": "2022-04-18T00:00:00",
+                "bron": 11,
+                "herkomst": 3,
+                "aanleverReden": 5,
+                "standen": [
+                  {
+                    "telwerk": 5,
+                    "waarde": 40000
+                  }
+                ],
+                "invoerDatum": "2022-04-18T21:00:00.00",
+                "gebruiker": null,
+                "verbruiksMessages": null
+              },
+              {
+                "status": 3,
+                "opnameDatum": "2022-04-01T00:00:00",
+                "bron": 11,
+                "herkomst": 3,
+                "aanleverReden": 5,
+                "standen": [
+                  {
+                    "telwerk": 5,
+                    "waarde": 30000
+                  }
+                ],
+                "invoerDatum": "2022-04-01T17:00:00.000",
+                "gebruiker": null,
+                "verbruiksMessages": null
+              }
+            ]
+          }
+        ],
+        "uniekeLeveringsJaren": [
+          2022
+        ],
+        "meestRecenteJaar": 2022
+      }
+    ],
+    "heeftGas": true,
+    "heeftStroom": true,
+    "geselecteerdeProduct": 1,
+    "huidigJaar": 2022
+  },
+  "success": true,
+  "error": null,
+  "heeftOpnameRegistrerenRecht": true
+}

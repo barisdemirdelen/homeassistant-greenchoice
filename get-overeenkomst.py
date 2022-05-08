@@ -1,3 +1,4 @@
+import json
 from urllib.parse import urlparse, parse_qs
 
 import bs4
@@ -60,6 +61,8 @@ def main():
 
     # retrieve overeenkomsten
     init_data = sess.get("https://mijn.greenchoice.nl/microbus/init").json()
+
+    print(json.dumps(init_data))
 
     customer_number = init_data["profile"]["voorkeursOvereenkomst"]["klantnummer"]
     customer = next(
