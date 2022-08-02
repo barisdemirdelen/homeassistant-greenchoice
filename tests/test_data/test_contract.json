@@ -15,7 +15,7 @@
     "terugLeveringEnkel": 100.0,
     "terugLeveringHoog": 110.0,
     "terugLeveringLaag": 120.0,
-    "terugleververgoeding": 0.08,
+    "terugleverVergoeding": 0.08,
     "terugleveringVolumegrensInKwh": null,
     "beginDatum": "2021-10-10T00:00:00Z",
     "refBron": null,

@@ -216,7 +216,7 @@ class GreenchoiceApiData:
             result["electricity_price_single"] = electricity["leveringEnkelAllin"]
             result["electricity_price_low"] = electricity["leveringLaagAllin"]
             result["electricity_price_high"] = electricity["leveringHoogAllin"]
-            result["electricity_return_price"] = electricity["terugleververgoeding"]
+            result["electricity_return_price"] = electricity["terugleverVergoeding"]
 
         gas = contract_values.get("gas")
         if gas:
