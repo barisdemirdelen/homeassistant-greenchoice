@@ -1,3 +1,4 @@
+import json
 import logging
 from datetime import datetime
 from typing import Union
@@ -22,6 +23,19 @@ MEASUREMENT_TYPES = {
     3: "return_high",
     4: "return_low",
 }
+
+
+def _curl_dump(req: requests.Request) -> str:
+    # Slightly modified curl dump borrowed from this Stack Overflow answer: https://stackoverflow.com/a/17936634/4925795
+    command = "curl -X {method} -H {headers} -d '{data}' '{uri}'"
+    method = req.method
+    uri = req.url
+    data = req.body
+    if isinstance(data, bytes):
+        data = json.dumps(json.loads(data))
+    headers = ['"{0}: {1}"'.format(k, v) for k, v in req.headers.items()]
+    headers = " -H ".join(headers)
+    return command.format(method=method, headers=headers, data=data, uri=uri)
 
 
 def _get_verification_token(html_txt: str) -> str:
