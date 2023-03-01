@@ -90,6 +90,17 @@ class GreenchoiceApiData:
             return False
         return True
 
+    def __session_request(self, method: str, endpoint: str, data=None, json=None) -> requests.models.Response:
+        _LOGGER.debug(f"Request: {method} {endpoint} {data if data is not None else json}")
+        response = self.session.request(method, endpoint, data=data, json=json)
+
+        try:
+            _LOGGER.debug(_curl_dump(response.request))
+        except (Exception,):  # NOSONAR Catch all exceptions here because execution should not stop in case of curl dump errors.
+            _LOGGER.warning("Logging curl dump failed, gracefully ignoring.")
+
+        return response
+
     def _activate_session(self):
         _LOGGER.info("Retrieving login cookies")
         if self.session:
@@ -98,7 +109,7 @@ class GreenchoiceApiData:
         self.session = requests.Session()
 
         # first, get the login cookies and form data
-        login_page = self.session.get(BASE_URL)
+        login_page = self.__session_request("GET", BASE_URL)
 
         login_url = login_page.url
         return_url = parse_qs(urlparse(login_url).query).get("ReturnUrl", "")
@@ -113,20 +124,19 @@ class GreenchoiceApiData:
             "__RequestVerificationToken": token,
             "RememberLogin": True,
         }
-        auth_page = self.session.post(login_page.url, data=login_data)
+        auth_page = self.__session_request("POST", login_page.url, data=login_data)
 
         # exchange oidc params for a login cookie (automatically saved in session)
         _LOGGER.debug("Signing in using OIDC")
         oidc_params = _get_oidc_params(auth_page.text)
-        self.session.post(f"{BASE_URL}/signin-oidc", data=oidc_params)
+        self.__session_request("POST", f"{BASE_URL}/signin-oidc", data=oidc_params)
 
         _LOGGER.debug("Login success")
 
     def request(self, method, endpoint, data=None, _retry_count=2):
-        _LOGGER.debug("Request: %s %s %s", method, endpoint, data)
         try:
             target_url = BASE_URL + endpoint
-            response = self.session.request(method, target_url, json=data)
+            response = self.__session_request(method, target_url, json=data)
 
             if len(response.history) > 1:
                 _LOGGER.debug("Response history len > 1. %s", response.history)
@@ -141,8 +151,7 @@ class GreenchoiceApiData:
                         "Login failed! Please check your credentials and try again."
                     )
                     return None
-
-                response = self.session.request(method, target_url, json=data)
+                response = self.__session_request(method, target_url, json=data)
 
             response.raise_for_status()
         except requests.HTTPError as e:
