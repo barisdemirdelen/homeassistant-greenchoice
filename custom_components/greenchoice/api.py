@@ -6,6 +6,7 @@ from urllib.parse import parse_qs, urlparse
 
 import bs4
 import requests
+import re
 
 _LOGGER = logging.getLogger(__name__)
 # Force the log level for easy debugging.
@@ -141,15 +142,26 @@ class GreenchoiceApiData:
             if len(response.history) > 1:
                 _LOGGER.debug("Response history len > 1. %s", response.history)
 
-            # Sometimes we get redirected on token expiry
+            session_expired = False
+            # If the session expired, the client is redirected to the SSO login.
+            for history_response in response.history:
+                if history_response.status_code != 302:
+                    continue
+                location_header: str = history_response.headers.get("Location")
+                if location_header is not None and re.search("^.*://sso.greenchoice.nl/connect/authorize.*$", location_header):
+                    session_expired = True
+                    break
+
+            # Sometimes we get Forbidden on token expiry
             if response.status_code == 403:
-                _LOGGER.debug("Access cookie expired, triggering refresh")
+                session_expired = True
+
+            if session_expired:
+                _LOGGER.debug("Session possibly expired, triggering refresh")
                 try:
                     self._activate_session()
                 except LoginError:
-                    _LOGGER.error(
-                        "Login failed! Please check your credentials and try again."
-                    )
+                    _LOGGER.error("Login failed! Please check your credentials and try again.")
                     return None
                 response = self.__session_request(method, target_url, json=data)
 
