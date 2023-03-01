@@ -1,11 +1,19 @@
 import logging
 from datetime import datetime
+from typing import Union
 from urllib.parse import parse_qs, urlparse
 
 import bs4
 import requests
 
 _LOGGER = logging.getLogger(__name__)
+# Force the log level for easy debugging.
+# None          - Don't force any log level and use the defaults.
+# logging.DEBUG - Force debug logging. See the logging package for additional log levels.
+_FORCE_LOG_LEVEL: Union[int, None] = None
+if _FORCE_LOG_LEVEL is not None:
+    _LOGGER.setLevel(_FORCE_LOG_LEVEL)
+
 BASE_URL = "https://mijn.greenchoice.nl"
 
 MEASUREMENT_TYPES = {
