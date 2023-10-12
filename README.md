@@ -19,7 +19,7 @@ greenchoiceuser: your@user.name
 ```
 
 3. Restart Home Assistant to make it load the integration
-3. Finally add the component to your configuration.yaml, an example of a proper config entry:
+4. Finally add the component to your configuration.yaml, an example of a proper config entry:
 
 ```YAML
 sensor:
