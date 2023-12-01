@@ -11,7 +11,15 @@ The sensor will check every hour if a new reading can be retrieved but Greenchoi
 
 [//]: # (    *OR*)
 1. Place the 'greenchoice' folder in your 'custom_compontents' directory if it exists or create a new one under your config directory.
-2. Add the component to your configuration.yaml, an example of a proper config entry:
+2. Add your username and password to the secrets.yaml:
+
+```YAML
+greenchoicepass: your_secret_password
+greenchoiceuser: your@user.name
+```
+
+3. Restart Home Assistant to make it load the integration.
+4. Finally add the component to your configuration.yaml, an example of a proper config entry:
 
 ```YAML
 sensor:
