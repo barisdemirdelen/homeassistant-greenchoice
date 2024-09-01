@@ -2,7 +2,7 @@ import json
 import logging
 from datetime import datetime
 from typing import Union
-from urllib.parse import parse_qs, urlparse
+from urllib.parse import parse_qs, urlparse, urlencode
 
 import bs4
 import requests
@@ -19,10 +19,11 @@ if _FORCE_LOG_LEVEL is not None:
 BASE_URL = "https://mijn.greenchoice.nl"
 
 MEASUREMENT_TYPES = {
-    1: "consumption_high",
-    2: "consumption_low",
-    3: "return_high",
-    4: "return_low",
+    1: "electricity_consumption_high",
+    2: "electricity_consumption_low",
+    3: "electricity_return_high",
+    4: "electricity_return_low",
+    5: "gas_consumption",
 }
 
 
@@ -91,13 +92,19 @@ class GreenchoiceApiData:
             return False
         return True
 
-    def __session_request(self, method: str, endpoint: str, data=None, json=None) -> requests.models.Response:
-        _LOGGER.debug(f"Request: {method} {endpoint} {data if data is not None else json}")
+    def __session_request(
+        self, method: str, endpoint: str, data=None, json=None
+    ) -> requests.models.Response:
+        _LOGGER.debug(
+            f"Request: {method} {endpoint} {data if data is not None else json}"
+        )
         response = self.session.request(method, endpoint, data=data, json=json)
 
         try:
             _LOGGER.debug(_curl_dump(response.request))
-        except (Exception,):  # NOSONAR Catch all exceptions here because execution should not stop in case of curl dump errors.
+        except (
+            Exception,
+        ):  # NOSONAR Catch all exceptions here because execution should not stop in case of curl dump errors.
             _LOGGER.warning("Logging curl dump failed, gracefully ignoring.")
 
         return response
@@ -148,7 +155,9 @@ class GreenchoiceApiData:
                 if history_response.status_code != 302:
                     continue
                 location_header: str = history_response.headers.get("Location")
-                if location_header is not None and re.search("^.*://sso.greenchoice.nl/connect/authorize.*$", location_header):
+                if location_header is not None and re.search(
+                    "^.*://sso.greenchoice.nl/connect/authorize.*$", location_header
+                ):
                     session_expired = True
                     break
 
@@ -161,7 +170,9 @@ class GreenchoiceApiData:
                 try:
                     self._activate_session()
                 except LoginError:
-                    _LOGGER.error("Login failed! Please check your credentials and try again.")
+                    _LOGGER.error(
+                        "Login failed! Please check your credentials and try again."
+                    )
                     return None
                 response = self.__session_request(method, target_url, json=data)
 
@@ -178,12 +189,30 @@ class GreenchoiceApiData:
         _LOGGER.debug("Request success")
         return response
 
+    def _validate_response(self, response):
+        if not response:
+            _LOGGER.error("Error retrieving microbus init values!")
+            return
+
+        try:
+            response_json = response.json()
+        except requests.exceptions.JSONDecodeError:
+            _LOGGER.error("Could not parse response: invalid JSON")
+            return
+
+        return response_json
+
+    def microbus_init(self):
+        response = self.request("GET", "/microbus/init")
+        return self._validate_response(response)
+
     def microbus_request(self, name, message=None):
         if not message:
             message = {}
 
         payload = {"name": name, "message": message}
-        return self.request("POST", "/microbus/request", payload)
+        response = self.request("POST", "/microbus/request", payload)
+        return self._validate_response(response)
 
     def update(self):
         self.result = {}
@@ -193,29 +222,28 @@ class GreenchoiceApiData:
 
     def update_usage_values(self, result):
         _LOGGER.debug("Retrieving meter values")
-        meter_values_request = self.microbus_request("OpnamesOphalen")
-        if not meter_values_request:
-            _LOGGER.error("Error while retrieving meter values!")
-            return
 
-        try:
-            monthly_values = meter_values_request.json()
-        except requests.exceptions.JSONDecodeError:
-            _LOGGER.error(
-                "Could not update meter values: request returned no valid JSON"
+        conn_details_req = self.microbus_request("AansluitingGegevens")
+
+        connection_details = conn_details_req.get("aansluitingGegevens")
+        for connection in connection_details:
+            reference = connection.get("referentieOpname")
+            meter_number = reference.get("meterNummer")
+
+            # process measurement date per meter
+            measurement_date = datetime.strptime(
+                reference.get("opnameDatum"), "%Y-%m-%dT%H:%M:%S"
             )
-            return
+            if meter_number.startswith("E"):
+                result["measurement_date_electricity"] = measurement_date
+            else:
+                result["measurement_date_gas"] = measurement_date
+            measurements = reference.get("standen")
 
-        products = monthly_values["model"]["productenOpnamesModel"]
-
-        # parse energy data
-        electricity_values = products[0]["opnamesJaarMaandModel"]
-        measurements, measurement_date = self._get_last_measurements(electricity_values)
-
-        # process energy types
-        for measurement in measurements:
-            measurement_type = MEASUREMENT_TYPES[measurement["telwerk"]]
-            result["electricity_" + measurement_type] = measurement["waarde"]
+            # process energy and gas types
+            for measurement in measurements:
+                measurement_type = MEASUREMENT_TYPES[measurement["telwerk"]]
+                result[measurement_type] = measurement["waarde"]
 
         # total energy count
         result["electricity_consumption_total"] = (
@@ -226,72 +254,61 @@ class GreenchoiceApiData:
             result["electricity_return_high"] + result["electricity_return_low"]
         )
 
-        result["measurement_date_electricity"] = measurement_date
-
-        # process gas
-        if monthly_values["model"]["heeftGas"]:
-            gas_values = products[1]["opnamesJaarMaandModel"]
-            measurements, measurement_date = self._get_last_measurements(gas_values)
-            for measurement in measurements:
-                if measurement["telwerk"] == 5:
-                    result["gas_consumption"] = measurement["waarde"]
-
-            result["measurement_date_gas"] = measurement_date
-
     def update_contract_values(self, result):
         _LOGGER.debug("Retrieving contract values")
 
-        contract_values_request = self.microbus_request("GetTariefOvereenkomst")
-        if not contract_values_request:
-            _LOGGER.error("Error while retrieving contract values!")
-            return
+        init_config = self.microbus_init()
 
-        try:
-            contract_values = contract_values_request.json()
-        except requests.exceptions.JSONDecodeError:
-            _LOGGER.error(
-                "Could not update contract values: request returned no valid JSON"
-            )
-            return
+        current_contract_details = init_config.get("profile").get(
+            "voorkeursOvereenkomst"
+        )
+        customer_id = current_contract_details.get("klantnummer")
+        contract_id = current_contract_details.get("overeenkomstId")
+        ref_id_electricity = ""
+        ref_id_gas = ""
+        house_number = ""
+        zip_code = ""
 
-        electricity = contract_values.get("stroom")
+        all_client_details = init_config.get("klantgegevens")
+        for client_details in all_client_details:
+            if client_details.get("klantnummer") == customer_id:
+                client_addresses = client_details.get("adressen")
+                for client_address in client_addresses:
+                    if (
+                        client_address.get("klantnummer") == customer_id
+                        and client_address.get("overeenkomstId") == contract_id
+                    ):
+                        house_number = client_address.get("huisnummer")
+                        zip_code = client_address.get("postcode")
+
+                        contracts = client_address.get("contracten")
+                        for contract in contracts:
+                            if (
+                                contract.get("marktsegment") == "E"
+                            ):  # E stands for electricity, G for gas
+                                ref_id_electricity = contract.get("refId")
+                            else:
+                                ref_id_gas = contract.get("refId")
+
+        req_data = {
+            "AgreementIdElectricity": contract_id,
+            "AgreementIdGas": contract_id,
+            "HouseNumber": house_number,
+            "ReferenceIdElectricity": ref_id_electricity,
+            "ReferenceIdGas": ref_id_gas,
+            "ZipCode": zip_code,
+        }
+        data = urlencode(req_data)
+        response = self.request("GET", f"/api/v2/Rates/{customer_id}?{data}")
+        pricing_details = self._validate_response(response)
+
+        electricity = pricing_details.get("stroom")
         if electricity:
-            result["electricity_price_single"] = electricity["leveringEnkelAllin"]
-            result["electricity_price_low"] = electricity["leveringLaagAllin"]
-            result["electricity_price_high"] = electricity["leveringHoogAllin"]
+            result["electricity_price_single"] = electricity["leveringEnkelAllIn"]
+            result["electricity_price_low"] = electricity["leveringLaagAllIn"]
+            result["electricity_price_high"] = electricity["leveringHoogAllIn"]
             result["electricity_return_price"] = electricity["terugleverVergoeding"]
 
-        gas = contract_values.get("gas")
+        gas = pricing_details.get("gas")
         if gas:
-            result["gas_price"] = gas["leveringAllin"]
-
-    @staticmethod
-    def _get_last_measurements(values):
-        months = sorted(values, key=lambda m: (m["jaar"], m["maand"]), reverse=True)
-        for current_month in months:
-            if not current_month.get("opnames"):
-                continue
-
-            days = list(
-                sorted(
-                    current_month["opnames"],
-                    key=lambda d: datetime.strptime(
-                        d["opnameDatum"], "%Y-%m-%dT%H:%M:%S"
-                    ),
-                    reverse=True,
-                )
-            )
-
-            if not days:
-                continue
-
-            current_day = days[0]
-
-            measurements = current_day["standen"]
-            measurement_date = datetime.strptime(
-                current_day["opnameDatum"], "%Y-%m-%dT%H:%M:%S"
-            )
-
-            return measurements, measurement_date
-
-        _LOGGER.error("No measurements found")
+            result["gas_price"] = gas["leveringAllIn"]
