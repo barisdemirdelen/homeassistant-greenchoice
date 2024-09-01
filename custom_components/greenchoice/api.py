@@ -11,7 +11,8 @@ import re
 _LOGGER = logging.getLogger(__name__)
 # Force the log level for easy debugging.
 # None          - Don't force any log level and use the defaults.
-# logging.DEBUG - Force debug logging. See the logging package for additional log levels.
+# logging.DEBUG - Force debug logging.
+#   See the logging package for additional log levels.
 _FORCE_LOG_LEVEL: Union[int, None] = None
 if _FORCE_LOG_LEVEL is not None:
     _LOGGER.setLevel(_FORCE_LOG_LEVEL)
@@ -28,7 +29,8 @@ MEASUREMENT_TYPES = {
 
 
 def _curl_dump(req: requests.Request) -> str:
-    # Slightly modified curl dump borrowed from this Stack Overflow answer: https://stackoverflow.com/a/17936634/4925795
+    # Slightly modified curl dump borrowed from this
+    #   Stack Overflow answer: https://stackoverflow.com/a/17936634/4925795
     command = "curl -X {method} -H {headers} -d '{data}' '{uri}'"
     method = req.method
     uri = req.url
@@ -102,9 +104,8 @@ class GreenchoiceApiData:
 
         try:
             _LOGGER.debug(_curl_dump(response.request))
-        except (
-            Exception,
-        ):  # NOSONAR Catch all exceptions here because execution should not stop in case of curl dump errors.
+        except Exception:  # NOSONAR Catch all exceptions here because
+            #   execution should not stop in case of curl dump errors.
             _LOGGER.warning("Logging curl dump failed, gracefully ignoring.")
 
         return response
@@ -228,15 +229,14 @@ class GreenchoiceApiData:
         connection_details = conn_details_req.get("aansluitingGegevens")
         for connection in connection_details:
             reference = connection.get("referentieOpname")
-            meter_number = reference.get("meterNummer")
 
             # process measurement date per meter
             measurement_date = datetime.strptime(
                 reference.get("opnameDatum"), "%Y-%m-%dT%H:%M:%S"
             )
-            if meter_number.startswith("E"):
+            if connection.get("productType") == 1:
                 result["measurement_date_electricity"] = measurement_date
-            else:
+            elif connection.get("productType") == 2:
                 result["measurement_date_gas"] = measurement_date
             measurements = reference.get("standen")
 

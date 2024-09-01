@@ -1,14 +1,14 @@
 [tool.poetry]
 name = "homeassistant-greenchoice"
-version = "2.0.1"
+version = "2.1.0"
 description = ""
 authors = ["Baris Demirdelen <barisdemirdelen@gmail.com>"]
 
 [tool.poetry.dependencies]
-python = "^3.11"
-homeassistant = "^2023.9.0"
-requests = "^2.31.0"
-beautifulsoup4 = "^4.12.2"
+python = ">=3.12,<3.13"
+homeassistant = ">=2024.8.3"
+requests = "^2.32.3"
+beautifulsoup4 = "^4.12.3"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"
