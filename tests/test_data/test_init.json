@@ -1,7 +1,8 @@
 {
   "profile": {
     "voorkeursOvereenkomst": {
-      "klantnummer": 2222
+      "klantnummer": 2222,
+      "overeenkomstId": 1111
     }
   },
   "klantgegevens": [
@@ -18,7 +19,17 @@
           "datumInhuizing": "2019-10-10T00:00:00Z",
           "huisnummer": 1,
           "postcode": "1234AB",
-          "plaats": "CityName"
+          "plaats": "CityName",
+          "contracten": [
+            {
+              "marktsegment": "E",
+              "refId": 12345
+            },
+            {
+              "marktsegment": "G",
+              "refId": 54321
+            }
+          ]
         }
       ]
     }

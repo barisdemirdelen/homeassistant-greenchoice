@@ -197,13 +197,13 @@ class GreenchoiceApiData:
     def _validate_response(self, response):
         if not response:
             _LOGGER.error("Error retrieving response!")
-            return
+            return {}
 
         try:
             response_json = response.json()
         except requests.exceptions.JSONDecodeError:
             _LOGGER.error("Could not parse response: invalid JSON")
-            return
+            return {}
 
         return response_json
 
@@ -329,10 +329,13 @@ class GreenchoiceApiData:
             "AgreementIdElectricity": contract_id,
             "AgreementIdGas": contract_id,
             "HouseNumber": house_number,
-            "ReferenceIdElectricity": ref_id_electricity,
-            "ReferenceIdGas": ref_id_gas,
             "ZipCode": zip_code,
         }
+        if ref_id_electricity:
+            req_data["ReferenceIdElectricity"] = ref_id_electricity
+        if ref_id_gas:
+            req_data["ReferenceIdGas"] = ref_id_gas
+
         data = urlencode(req_data)
         response = self.request("GET", f"/api/v2/Rates/{customer_id}?{data}")
         pricing_details = self._validate_response(response)
