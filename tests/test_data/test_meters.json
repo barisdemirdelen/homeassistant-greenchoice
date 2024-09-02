@@ -15,19 +15,19 @@
         "standen": [
           {
             "telwerk": 1,
-            "waarde": 50000
+            "waarde": 50000.0
           },
           {
             "telwerk": 2,
-            "waarde": 60000
+            "waarde": 60000.0
           },
           {
             "telwerk": 3,
-            "waarde": 5000
+            "waarde": 5000.0
           },
           {
             "telwerk": 4,
-            "waarde": 6000
+            "waarde": 6000.0
           }
         ],
         "invoerDatum": "2022-05-06T22:00:00.00",
@@ -40,17 +40,17 @@
       "referentieOpname": {
         "id": 5555555,
         "status": 5,
-        "opnameDatum": "2023-05-06T00:00:00",
+        "opnameDatum": "2022-05-06T00:00:00",
         "bron": 2,
         "herkomst": 3,
         "aanleverReden": 6,
         "standen": [
           {
             "telwerk": 5,
-            "waarde": 10000
+            "waarde": 10000.0
           }
         ],
-        "invoerDatum": "2023-05-06T22:00:00.00",
+        "invoerDatum": "2022-05-06T22:00:00.00",
         "gebruiker": null
       }
     }

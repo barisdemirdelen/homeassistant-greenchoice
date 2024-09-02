@@ -1,0 +1,162 @@
+{
+  "productTypes": [
+    {
+      "productType": "Stroom",
+      "months": [
+        {
+          "month": 12,
+          "readings": []
+        },
+        {
+          "month": 11,
+          "readings": []
+        },
+        {
+          "month": 10,
+          "readings": []
+        },
+        {
+          "month": 9,
+          "readings": []
+        },
+        {
+          "month": 8,
+          "readings": []
+        },
+        {
+          "month": 7,
+          "readings": []
+        },
+        {
+          "month": 6,
+          "readings": []
+        },
+        {
+          "month": 5,
+          "readings": [
+            {
+              "readingDate": "2022-05-06T00:00:00",
+              "normalConsumption": 50000,
+              "offPeakConsumption": 60000,
+              "normalFeedIn": 5000,
+              "offPeakFeedIn": 6000,
+              "gas": null
+            },
+            {
+              "readingDate": "2022-05-05T00:00:00",
+              "normalConsumption": 45000,
+              "offPeakConsumption": 6800,
+              "normalFeedIn": 0,
+              "offPeakFeedIn": 0,
+              "gas": null
+            }
+          ]
+        },
+        {
+          "month": 4,
+          "readings": [
+            {
+              "readingDate": "2022-04-10T00:00:00",
+              "normalConsumption": 40000,
+              "offPeakConsumption": 5000,
+              "normalFeedIn": 0,
+              "offPeakFeedIn": 0,
+              "gas": null
+            }
+          ]
+        },
+        {
+          "month": 3,
+          "readings": []
+        },
+        {
+          "month": 2,
+          "readings": []
+        },
+        {
+          "month": 1,
+          "readings": []
+        }
+      ]
+    },
+    {
+      "productType": "Gas",
+      "months": [
+        {
+          "month": 12,
+          "readings": []
+        },
+        {
+          "month": 11,
+          "readings": []
+        },
+        {
+          "month": 10,
+          "readings": []
+        },
+        {
+          "month": 9,
+          "readings": []
+        },
+        {
+          "month": 8,
+          "readings": []
+        },
+        {
+          "month": 7,
+          "readings": []
+        },
+        {
+          "month": 6,
+          "readings": []
+        },
+        {
+          "month": 5,
+          "readings": [
+            {
+              "readingDate": "2022-05-06T00:00:00",
+              "normalConsumption": null,
+              "offPeakConsumption": null,
+              "normalFeedIn": null,
+              "offPeakFeedIn": null,
+              "gas": 10000
+            },
+            {
+              "readingDate": "2022-05-05T00:10:00",
+              "normalConsumption": null,
+              "offPeakConsumption": null,
+              "normalFeedIn": null,
+              "offPeakFeedIn": null,
+              "gas": 5000
+            }
+          ]
+        },
+        {
+          "month": 4,
+          "readings": [
+            {
+              "readingDate": "2022-04-10T00:00:00",
+              "normalConsumption": null,
+              "offPeakConsumption": null,
+              "normalFeedIn": null,
+              "offPeakFeedIn": null,
+              "gas": 3000
+            }
+          ]
+        },
+        {
+          "month": 3,
+          "readings": []
+        },
+        {
+          "month": 2,
+          "readings": []
+        },
+        {
+          "month": 1,
+          "readings": []
+        }
+      ]
+    }
+  ]
+}

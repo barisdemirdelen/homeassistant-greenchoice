@@ -285,9 +285,11 @@ class GreenchoiceApiData:
             result["electricity_return_total"] = (
                 electricity_reading.offPeakFeedIn + electricity_reading.normalFeedIn
             )
+            result["measurement_date_electricity"] = electricity_reading.readingDate
 
         if gas_reading:
             result["gas_consumption"] = gas_reading.gas
+            result["measurement_date_gas"] = gas_reading.readingDate
 
     def update_contract_values(self, result):
         _LOGGER.debug("Retrieving contract values")
