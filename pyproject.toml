@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "homeassistant-greenchoice"
-version = "2.1.0"
-description = ""
+version = "2.1.1"
+description = "Integration to connect Greenchoice.nl with Home Assistant"
 authors = ["Baris Demirdelen <barisdemirdelen@gmail.com>"]
 
 [tool.poetry.dependencies]
@@ -9,6 +9,7 @@ python = ">=3.12,<3.13"
 homeassistant = ">=2024.8.3"
 requests = "^2.32.3"
 beautifulsoup4 = "^4.12.3"
+pydantic = "^2.8.2"
 
 [tool.poetry.dev-dependencies]
 pytest = "*"

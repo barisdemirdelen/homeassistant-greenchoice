@@ -8,6 +8,10 @@ import bs4
 import requests
 import re
 
+from pydantic import ValidationError
+
+from .model import Profile, MeterReadings, Reading
+
 _LOGGER = logging.getLogger(__name__)
 # Force the log level for easy debugging.
 # None          - Don't force any log level and use the defaults.
@@ -192,7 +196,7 @@ class GreenchoiceApiData:
 
     def _validate_response(self, response):
         if not response:
-            _LOGGER.error("Error retrieving microbus init values!")
+            _LOGGER.error("Error retrieving response!")
             return
 
         try:
@@ -224,35 +228,66 @@ class GreenchoiceApiData:
     def update_usage_values(self, result):
         _LOGGER.debug("Retrieving meter values")
 
-        conn_details_req = self.microbus_request("AansluitingGegevens")
+        profile_json = self._validate_response(
+            self.request("GET", f"/api/v2/Profiles/")
+        )
+        try:
+            profile = Profile.model_validate(profile_json[0])
+        except ValidationError:
+            _LOGGER.error("Could not validate profile")
+            return
 
-        connection_details = conn_details_req.get("aansluitingGegevens")
-        for connection in connection_details:
-            reference = connection.get("referentieOpname")
-
-            # process measurement date per meter
-            measurement_date = datetime.strptime(
-                reference.get("opnameDatum"), "%Y-%m-%dT%H:%M:%S"
+        meter_json = self._validate_response(
+            self.request(
+                "GET",
+                (
+                    "/api/v2/MeterReadings/"
+                    f"{datetime.now().year}/"
+                    f"{profile.customerNumber}/"
+                    f"{profile.agreementId}"
+                ),
             )
-            if connection.get("productType") == 1:
-                result["measurement_date_electricity"] = measurement_date
-            elif connection.get("productType") == 2:
-                result["measurement_date_gas"] = measurement_date
-            measurements = reference.get("standen")
-
-            # process energy and gas types
-            for measurement in measurements:
-                measurement_type = MEASUREMENT_TYPES[measurement["telwerk"]]
-                result[measurement_type] = measurement["waarde"]
-
-        # total energy count
-        result["electricity_consumption_total"] = (
-            result["electricity_consumption_high"]
-            + result["electricity_consumption_low"]
         )
-        result["electricity_return_total"] = (
-            result["electricity_return_high"] + result["electricity_return_low"]
-        )
+
+        try:
+            meter_readings = MeterReadings.model_validate(meter_json)
+        except ValidationError:
+            _LOGGER.error("Could not validate meter readings")
+            return
+
+        electricity_reading: Reading | None = None
+        gas_reading: Reading | None = None
+        for product in meter_readings.productTypes:
+            for month in sorted(product.months, key=lambda p: p.month, reverse=True):
+                if month.readings:
+                    last_reading = sorted(month.readings, key=lambda r: r.readingDate)[
+                        -1
+                    ]
+                    if product.productType.lower() == "stroom":
+                        electricity_reading = last_reading
+                    if product.productType.lower() == "gas":
+                        gas_reading = last_reading
+                    break
+
+        if electricity_reading:
+            result[
+                "electricity_consumption_low"
+            ] = electricity_reading.offPeakConsumption
+            result[
+                "electricity_consumption_high"
+            ] = electricity_reading.normalConsumption
+            result["electricity_consumption_total"] = (
+                electricity_reading.offPeakConsumption
+                + electricity_reading.normalConsumption
+            )
+            result["electricity_return_low"] = electricity_reading.offPeakFeedIn
+            result["electricity_return_high"] = electricity_reading.normalFeedIn
+            result["electricity_return_total"] = (
+                electricity_reading.offPeakFeedIn + electricity_reading.normalFeedIn
+            )
+
+        if gas_reading:
+            result["gas_consumption"] = gas_reading.gas
 
     def update_contract_values(self, result):
         _LOGGER.debug("Retrieving contract values")
