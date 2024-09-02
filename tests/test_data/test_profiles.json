@@ -1,0 +1,18 @@
+[
+  {
+    "customerNumber": 2222,
+    "agreementId": 1111,
+    "roleName": "Customer",
+    "name": "J Doe",
+    "street": "Address Street",
+    "houseNumber": 1,
+    "houseNumberAddition": null,
+    "postalCode": "1234AB",
+    "city": "City",
+    "energySupplyStatus": "Active",
+    "moveOutDate": null,
+    "moveInDate": "2020-01-01T00:00:00",
+    "hasActiveGasSupply": true,
+    "hasActiveElectricitySupply": true
+  }
+]

@@ -48,6 +48,12 @@ def init_response(data_folder):
 
 
 @pytest.fixture
+def profiles_response(data_folder):
+    with data_folder.joinpath("test_profiles.json").open() as f:
+        return json.load(f)
+
+
+@pytest.fixture
 def init_response_without_gas(data_folder):
     with data_folder.joinpath("test_init.json").open() as f:
         response = json.load(f)
@@ -77,7 +83,6 @@ def contract_response_callback(contract_response, contract_response_without_gas)
             return contract_response
         if request.qs == {
             "agreementidelectricity": ["1111"],
-            "agreementidgas": ["1111"],
             "housenumber": ["1"],
             "referenceidelectricity": ["12345"],
             "zipcode": ["1234ab"],
@@ -90,7 +95,12 @@ def contract_response_callback(contract_response, contract_response_without_gas)
 
 
 def test_update_request(
-    mocker, requests_mock, init_response, meters_response, contract_response_callback
+    mocker,
+    requests_mock,
+    init_response,
+    meters_response,
+    profiles_response,
+    contract_response_callback,
 ):
     mocker.patch(
         "custom_components.greenchoice.api.GreenchoiceApiData._activate_session",
@@ -115,6 +125,11 @@ def test_update_request(
     requests_mock.get(
         f"{BASE_URL}/api/v2/Rates/2222",
         json=contract_response_callback,
+    )
+
+    requests_mock.get(
+        f"{BASE_URL}/api/v2/Profiles/",
+        json=profiles_response,
     )
 
     greenchoice_api = GreenchoiceApiData("fake_user", "fake_password")
@@ -145,6 +160,7 @@ def test_update_request_without_gas(
     requests_mock,
     init_response_without_gas,
     meters_response_without_gas,
+    profiles_response,
     contract_response_callback,
 ):
     mocker.patch(
@@ -165,6 +181,11 @@ def test_update_request_without_gas(
     requests_mock.get(
         f"{BASE_URL}/api/v2/Rates/2222",
         json=contract_response_callback,
+    )
+
+    requests_mock.get(
+        f"{BASE_URL}/api/v2/Profiles/",
+        json=profiles_response,
     )
 
     greenchoice_api = GreenchoiceApiData("fake_user", "fake_password")

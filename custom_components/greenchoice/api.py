@@ -326,15 +326,15 @@ class GreenchoiceApiData:
                                 ref_id_gas = contract.get("refId")
 
         req_data = {
-            "AgreementIdElectricity": contract_id,
-            "AgreementIdGas": contract_id,
             "HouseNumber": house_number,
             "ZipCode": zip_code,
         }
         if ref_id_electricity:
             req_data["ReferenceIdElectricity"] = ref_id_electricity
+            req_data["AgreementIdElectricity"] = contract_id
         if ref_id_gas:
             req_data["ReferenceIdGas"] = ref_id_gas
+            req_data["AgreementIdGas"] = contract_id
 
         data = urlencode(req_data)
         response = self.request("GET", f"/api/v2/Rates/{customer_id}?{data}")
