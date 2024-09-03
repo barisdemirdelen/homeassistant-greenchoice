@@ -236,7 +236,7 @@ class GreenchoiceApiData:
             self.request("GET", f"/api/v2/Profiles/")
         )
         try:
-            profile = Profile.model_validate(profile_json[0])
+            profile = Profile.from_dict(profile_json[0])
         except ValidationError:
             _LOGGER.error("Could not validate profile")
             return
@@ -254,7 +254,7 @@ class GreenchoiceApiData:
         )
 
         try:
-            meter_readings = MeterReadings.model_validate(meter_json)
+            meter_readings = MeterReadings.from_dict(meter_json)
         except ValidationError:
             _LOGGER.error("Could not validate meter readings")
             return
@@ -349,20 +349,8 @@ class GreenchoiceApiData:
         pricing_details = self._validate_response(response)
         if "huidig" in pricing_details:
             pricing_details = pricing_details["huidig"]
-        if "stroom" in pricing_details and pricing_details["stroom"]:
-            electricity = pricing_details["stroom"]
-            if "leveringEnkelAllin" in electricity:
-                electricity["leveringEnkelAllIn"] = electricity["leveringEnkelAllin"]
-            if "leveringLaagAllin" in electricity:
-                electricity["leveringLaagAllIn"] = electricity["leveringLaagAllin"]
-            if "leveringHoogAllin" in electricity:
-                electricity["leveringHoogAllIn"] = electricity["leveringHoogAllin"]
-        if "gas" in pricing_details and pricing_details["gas"]:
-            gas = pricing_details["gas"]
-            if "leveringAllin" in gas:
-                gas["leveringAllIn"] = gas["leveringAllin"]
 
-        pricing_details = Rates.model_validate(pricing_details)
+        pricing_details = Rates.from_dict(pricing_details)
 
         if pricing_details.stroom:
             result[
