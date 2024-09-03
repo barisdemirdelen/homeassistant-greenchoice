@@ -1,6 +1,6 @@
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, UTC
 from typing import Union
 from urllib.parse import parse_qs, urlparse, urlencode
 
@@ -10,7 +10,7 @@ import re
 
 from pydantic import ValidationError
 
-from .model import Profile, MeterReadings, Reading
+from .model import Profile, MeterReadings, Reading, Rates
 
 _LOGGER = logging.getLogger(__name__)
 # Force the log level for easy debugging.
@@ -181,6 +181,10 @@ class GreenchoiceApiData:
                     return None
                 response = self.__session_request(method, target_url, json=data)
 
+            # Some api's may not work and there might be fallbacks for them
+            if response.status_code == 404:
+                return response
+
             response.raise_for_status()
         except requests.HTTPError as e:
             _LOGGER.error("HTTP Error: %s", e)
@@ -242,7 +246,7 @@ class GreenchoiceApiData:
                 "GET",
                 (
                     "/api/v2/MeterReadings/"
-                    f"{datetime.now().year}/"
+                    f"{datetime.now(UTC).year}/"
                     f"{profile.customerNumber}/"
                     f"{profile.agreementId}"
                 ),
@@ -340,15 +344,35 @@ class GreenchoiceApiData:
 
         data = urlencode(req_data)
         response = self.request("GET", f"/api/v2/Rates/{customer_id}?{data}")
+        if response.status_code == 404:
+            response = self.request("GET", "/api/tariffs")
         pricing_details = self._validate_response(response)
+        if "huidig" in pricing_details:
+            pricing_details = pricing_details["huidig"]
+        if "stroom" in pricing_details and pricing_details["stroom"]:
+            electricity = pricing_details["stroom"]
+            if "leveringEnkelAllin" in electricity:
+                electricity["leveringEnkelAllIn"] = electricity["leveringEnkelAllin"]
+            if "leveringLaagAllin" in electricity:
+                electricity["leveringLaagAllIn"] = electricity["leveringLaagAllin"]
+            if "leveringHoogAllin" in electricity:
+                electricity["leveringHoogAllIn"] = electricity["leveringHoogAllin"]
+        if "gas" in pricing_details and pricing_details["gas"]:
+            gas = pricing_details["gas"]
+            if "leveringAllin" in gas:
+                gas["leveringAllIn"] = gas["leveringAllin"]
 
-        electricity = pricing_details.get("stroom")
-        if electricity:
-            result["electricity_price_single"] = electricity["leveringEnkelAllIn"]
-            result["electricity_price_low"] = electricity["leveringLaagAllIn"]
-            result["electricity_price_high"] = electricity["leveringHoogAllIn"]
-            result["electricity_return_price"] = electricity["terugleverVergoeding"]
+        pricing_details = Rates.model_validate(pricing_details)
 
-        gas = pricing_details.get("gas")
-        if gas:
-            result["gas_price"] = gas["leveringAllIn"]
+        if pricing_details.stroom:
+            result[
+                "electricity_price_single"
+            ] = pricing_details.stroom.leveringEnkelAllIn
+            result["electricity_price_low"] = pricing_details.stroom.leveringLaagAllIn
+            result["electricity_price_high"] = pricing_details.stroom.leveringHoogAllIn
+            result[
+                "electricity_return_price"
+            ] = pricing_details.stroom.terugleverVergoeding
+
+        if pricing_details.gas:
+            result["gas_price"] = pricing_details.gas.leveringAllIn

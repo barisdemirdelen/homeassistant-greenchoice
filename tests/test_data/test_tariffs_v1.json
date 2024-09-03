@@ -1,0 +1,52 @@
+{
+  "huidig": {
+    "beginDatum": "2023-09-01T00:00:00",
+    "eindDatum": "2023-09-02T00:00:00",
+    "stroom": {
+      "leveringHoog": 0.20,
+      "leveringLaag": 0.10,
+      "leveringEnkel": 0.15,
+      "leveringLaagAllin": 0.30,
+      "leveringHoogAllin": 0.40,
+      "leveringEnkelAllin": 0.35,
+      "leveringHoogBtw": 0.35,
+      "leveringLaagBtw": 0.015,
+      "leveringEnkelBtw": 0.03,
+      "soortMeter": "dd",
+      "terugLeveringEnkel": 0.05,
+      "terugLeveringHoog": 0.06,
+      "terugLeveringLaag": 0.04,
+      "terugleverVergoeding": 0.09,
+      "terugleverKostenIncBtw": 0.01,
+      "terugleverKostenExcBtw": 0.001,
+      "terugleverKostenBtw": 0.009,
+      "btw": 0.04,
+      "btwPercentage": 21.0,
+      "vastrechtPerDagExcBtw": 0.15,
+      "vastrechtPerDagIncBtw": 0.18,
+      "vastrechtPerDagBtw": 0.032,
+      "netbeheerPerDagExcBtw": 0.57,
+      "netbeheerPerDagIncBtw": 0.69,
+      "netbeheerPerDagBtw": 0.12,
+      "reb": 0.1,
+      "sde": 0,
+      "capaciteit": null
+    },
+    "gas": {
+      "levering": 0.18,
+      "leveringAllIn": 0.70,
+      "leveringBtw": 0.15,
+      "btw": 0.14,
+      "btwPercentage": 21.0,
+      "vastrechtPerDagExcBtw": 0.15,
+      "vastrechtPerDagIncBtw": 0.18,
+      "vastrechtPerDagBtw": 0.032,
+      "netbeheerPerDagExcBtw": 0.40,
+      "netbeheerPerDagIncBtw": 0.50,
+      "netbeheerPerDagBtw": 0.08,
+      "reb": 0.5,
+      "sde": 0,
+      "capaciteit": null
+    }
+  }
+}

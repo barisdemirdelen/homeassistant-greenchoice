@@ -60,7 +60,7 @@ class ElectricityTariff(BaseModel):
     leveringLaagBtw: float
     leveringEnkelBtw: float
     soortMeter: str
-    rebTeruggaveIncBtw: float
+    rebTeruggaveIncBtw: float | None = None
     terugLeveringEnkel: float
     terugLeveringHoog: float
     terugLeveringLaag: float
@@ -69,7 +69,7 @@ class ElectricityTariff(BaseModel):
     terugleverKostenExcBtw: float
     terugleverKostenBtw: float
     btw: float
-    btwPercentaqge: float
+    btwPercentage: float
     vastrechtPerDagExcBtw: float
     vastrechtPerDagIncBtw: float
     vastrechtPerDagBtw: float
@@ -86,7 +86,7 @@ class GasTariff(BaseModel):
     leveringAllIn: float
     leveringBtw: float
     btw: float
-    btwPercentaqge: float
+    btwPercentage: float
     vastrechtPerDagExcBtw: float
     vastrechtPerDagIncBtw: float
     vastrechtPerDagBtw: float
