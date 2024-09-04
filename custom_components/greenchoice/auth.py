@@ -17,6 +17,7 @@ class Auth:
         self._password = password
 
         self.logger = logging.getLogger(__name__)
+        self.session = None
         self.session = self.refresh_session()
 
         if not self._check_config():
