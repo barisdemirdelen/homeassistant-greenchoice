@@ -1,23 +1,21 @@
-import json
 import logging
 from datetime import datetime, UTC
 from typing import Union
-from urllib.parse import parse_qs, urlparse, urlencode
+from urllib.parse import urlencode
 
-import bs4
 import requests
-import re
-
 from pydantic import ValidationError
 
+from .auth import Auth
 from .model import Profile, MeterReadings, Reading, Rates
+from .util import curl_dump
 
-_LOGGER = logging.getLogger(__name__)
 # Force the log level for easy debugging.
 # None          - Don't force any log level and use the defaults.
 # logging.DEBUG - Force debug logging.
 #   See the logging package for additional log levels.
 _FORCE_LOG_LEVEL: Union[int, None] = None
+_LOGGER = logging.getLogger(__name__)
 if _FORCE_LOG_LEVEL is not None:
     _LOGGER.setLevel(_FORCE_LOG_LEVEL)
 
@@ -32,154 +30,35 @@ MEASUREMENT_TYPES = {
 }
 
 
-def _curl_dump(req: requests.Request) -> str:
-    # Slightly modified curl dump borrowed from this
-    #   Stack Overflow answer: https://stackoverflow.com/a/17936634/4925795
-    command = "curl -X {method} -H {headers} -d '{data}' '{uri}'"
-    method = req.method
-    uri = req.url
-    data = req.body
-    if isinstance(data, bytes):
-        data = json.dumps(json.loads(data))
-    headers = ['"{0}: {1}"'.format(k, v) for k, v in req.headers.items()]
-    headers = " -H ".join(headers)
-    return command.format(method=method, headers=headers, data=data, uri=uri)
-
-
-def _get_verification_token(html_txt: str) -> str:
-    soup = bs4.BeautifulSoup(html_txt, "html.parser")
-    token_elem = soup.find("input", {"name": "__RequestVerificationToken"})
-
-    return token_elem.attrs.get("value")
-
-
-def _get_oidc_params(html_txt: str) -> dict[str, str]:
-    soup = bs4.BeautifulSoup(html_txt, "html.parser")
-
-    code_elem = soup.find("input", {"name": "code"})
-    scope_elem = soup.find("input", {"name": "scope"})
-    state_elem = soup.find("input", {"name": "state"})
-    session_state_elem = soup.find("input", {"name": "session_state"})
-
-    if not (code_elem and scope_elem and state_elem and session_state_elem):
-        raise LoginError("Login failed, check your credentials?")
-
-    return {
-        "code": code_elem.attrs.get("value"),
-        "scope": scope_elem.attrs.get("value").replace(" ", "+"),
-        "state": state_elem.attrs.get("value"),
-        "session_state": session_state_elem.attrs.get("value"),
-    }
-
-
-class LoginError(Exception):
-    pass
-
-
 class GreenchoiceApiData:
     def __init__(self, username: str, password: str):
         self._resource = BASE_URL
-        self._username = username
-        self._password = password
-
-        if not self._check_login():
-            raise AttributeError("Configuration is incomplete")
+        self.auth = Auth(BASE_URL, username, password)
 
         self.result = {}
-        self.session = None
-        self._activate_session()
 
-    def _check_login(self):
-        if not self._username:
-            _LOGGER.error("Need a username!")
-            return False
-        if not self._password:
-            _LOGGER.error("Need a password!")
-            return False
-        return True
-
-    def __session_request(
+    def _authenticated_request(
         self, method: str, endpoint: str, data=None, json=None
     ) -> requests.models.Response:
         _LOGGER.debug(
             f"Request: {method} {endpoint} {data if data is not None else json}"
         )
-        response = self.session.request(method, endpoint, data=data, json=json)
+        response = self.auth.session.request(method, endpoint, data=data, json=json)
+        if self.auth.is_session_expired(response):
+            self.session = self.auth.refresh_session()
+            response = self.auth.session.request(method, endpoint, data=data, json=json)
 
-        try:
-            _LOGGER.debug(_curl_dump(response.request))
-        except Exception:  # NOSONAR Catch all exceptions here because
-            #   execution should not stop in case of curl dump errors.
-            _LOGGER.warning("Logging curl dump failed, gracefully ignoring.")
+        _LOGGER.debug(curl_dump(response.request))
 
         return response
-
-    def _activate_session(self):
-        _LOGGER.info("Retrieving login cookies")
-        if self.session:
-            _LOGGER.debug("Purging existing session")
-            self.session.close()
-        self.session = requests.Session()
-
-        # first, get the login cookies and form data
-        login_page = self.__session_request("GET", BASE_URL)
-
-        login_url = login_page.url
-        return_url = parse_qs(urlparse(login_url).query).get("ReturnUrl", "")
-        token = _get_verification_token(login_page.text)
-
-        # perform actual sign in
-        _LOGGER.debug("Logging in with username and password")
-        login_data = {
-            "ReturnUrl": return_url,
-            "Username": self._username,
-            "Password": self._password,
-            "__RequestVerificationToken": token,
-            "RememberLogin": True,
-        }
-        auth_page = self.__session_request("POST", login_page.url, data=login_data)
-
-        # exchange oidc params for a login cookie (automatically saved in session)
-        _LOGGER.debug("Signing in using OIDC")
-        oidc_params = _get_oidc_params(auth_page.text)
-        self.__session_request("POST", f"{BASE_URL}/signin-oidc", data=oidc_params)
-
-        _LOGGER.debug("Login success")
 
     def request(self, method, endpoint, data=None, _retry_count=2):
         try:
             target_url = BASE_URL + endpoint
-            response = self.__session_request(method, target_url, json=data)
+            response = self._authenticated_request(method, target_url, json=data)
 
             if len(response.history) > 1:
                 _LOGGER.debug("Response history len > 1. %s", response.history)
-
-            session_expired = False
-            # If the session expired, the client is redirected to the SSO login.
-            for history_response in response.history:
-                if history_response.status_code != 302:
-                    continue
-                location_header: str = history_response.headers.get("Location")
-                if location_header is not None and re.search(
-                    "^.*://sso.greenchoice.nl/connect/authorize.*$", location_header
-                ):
-                    session_expired = True
-                    break
-
-            # Sometimes we get Forbidden on token expiry
-            if response.status_code == 403:
-                session_expired = True
-
-            if session_expired:
-                _LOGGER.debug("Session possibly expired, triggering refresh")
-                try:
-                    self._activate_session()
-                except LoginError:
-                    _LOGGER.error(
-                        "Login failed! Please check your credentials and try again."
-                    )
-                    return None
-                response = self.__session_request(method, target_url, json=data)
 
             # Some api's may not work and there might be fallbacks for them
             if response.status_code == 404:
@@ -198,7 +77,8 @@ class GreenchoiceApiData:
         _LOGGER.debug("Request success")
         return response
 
-    def _validate_response(self, response):
+    @staticmethod
+    def _validate_response(response):
         if not response:
             _LOGGER.error("Error retrieving response!")
             return {}
