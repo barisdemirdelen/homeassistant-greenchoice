@@ -6,6 +6,7 @@ from urllib.parse import urlencode
 import requests
 from pydantic import ValidationError
 
+from .model import Preferences, MeterReadings, Reading, Rates
 from .auth import Auth
 from .model import Profile, MeterReadings, Reading, Rates
 from .util import curl_dump
@@ -21,18 +22,9 @@ if _FORCE_LOG_LEVEL is not None:
 
 BASE_URL = "https://mijn.greenchoice.nl"
 
-MEASUREMENT_TYPES = {
-    1: "electricity_consumption_high",
-    2: "electricity_consumption_low",
-    3: "electricity_return_high",
-    4: "electricity_return_low",
-    5: "gas_consumption",
-}
-
 
 class GreenchoiceApiData:
     def __init__(self, username: str, password: str):
-        self._resource = BASE_URL
         self.auth = Auth(BASE_URL, username, password)
 
         self.result = {}
@@ -95,14 +87,6 @@ class GreenchoiceApiData:
         response = self.request("GET", "/microbus/init")
         return self._validate_response(response)
 
-    def microbus_request(self, name, message=None):
-        if not message:
-            message = {}
-
-        payload = {"name": name, "message": message}
-        response = self.request("POST", "/microbus/request", payload)
-        return self._validate_response(response)
-
     def update(self):
         self.result = {}
         self.update_usage_values(self.result)
@@ -112,11 +96,11 @@ class GreenchoiceApiData:
     def update_usage_values(self, result):
         _LOGGER.debug("Retrieving meter values")
 
-        profile_json = self._validate_response(
-            self.request("GET", f"/api/v2/Profiles/")
+        preferences_json = self._validate_response(
+            self.request("GET", f"/api/v2/Preferences/")
         )
         try:
-            profile = Profile.from_dict(profile_json[0])
+            preferences = Preferences.from_dict(preferences_json)
         except ValidationError:
             _LOGGER.error("Could not validate profile")
             return
@@ -127,8 +111,8 @@ class GreenchoiceApiData:
                 (
                     "/api/v2/MeterReadings/"
                     f"{datetime.now(UTC).year}/"
-                    f"{profile.customerNumber}/"
-                    f"{profile.agreementId}"
+                    f"{preferences.subject.customerNumber}/"
+                    f"{preferences.subject.agreementId}"
                 ),
             )
         )

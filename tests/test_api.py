@@ -68,6 +68,12 @@ def profiles_response(data_folder):
 
 
 @pytest.fixture
+def preferences_response(data_folder):
+    with data_folder.joinpath("test_preferences.json").open() as f:
+        return json.load(f)
+
+
+@pytest.fixture
 def tariffs_v1_response(data_folder):
     with data_folder.joinpath("test_tariffs_v1.json").open() as f:
         return json.load(f)
@@ -121,11 +127,12 @@ def test_update_request(
     meters_response,
     meters_v2_response,
     profiles_response,
+    preferences_response,
     contract_response_callback,
 ):
     mocker.patch(
-        "custom_components.greenchoice.api.GreenchoiceApiData._activate_session",
-        return_value=None,
+        "custom_components.greenchoice.auth.Auth.refresh_session",
+        return_value=requests.Session(),
     )
 
     requests_mock.get(
@@ -146,6 +153,11 @@ def test_update_request(
     requests_mock.get(
         f"{BASE_URL}/api/v2/Profiles/",
         json=profiles_response,
+    )
+
+    requests_mock.get(
+        f"{BASE_URL}/api/v2/Preferences/",
+        json=preferences_response,
     )
 
     requests_mock.get(
@@ -186,11 +198,12 @@ def test_update_request_without_gas(
     meters_response_without_gas,
     profiles_response,
     meters_v2_response_without_gas,
+    preferences_response,
     contract_response_callback,
 ):
     mocker.patch(
-        "custom_components.greenchoice.api.GreenchoiceApiData._activate_session",
-        return_value=None,
+        "custom_components.greenchoice.auth.Auth.refresh_session",
+        return_value=requests.Session(),
     )
 
     requests_mock.get(
@@ -211,6 +224,11 @@ def test_update_request_without_gas(
     requests_mock.get(
         f"{BASE_URL}/api/v2/Profiles/",
         json=profiles_response,
+    )
+
+    requests_mock.get(
+        f"{BASE_URL}/api/v2/Preferences/",
+        json=preferences_response,
     )
 
     requests_mock.get(
@@ -245,12 +263,13 @@ def test_with_old_tariffs_api(
     meters_response,
     meters_v2_response,
     profiles_response,
+    preferences_response,
     tariffs_v1_response,
     contract_response_callback,
 ):
     mocker.patch(
-        "custom_components.greenchoice.api.GreenchoiceApiData._activate_session",
-        return_value=None,
+        "custom_components.greenchoice.auth.Auth.refresh_session",
+        return_value=requests.Session(),
     )
 
     requests_mock.get(
@@ -272,6 +291,11 @@ def test_with_old_tariffs_api(
     requests_mock.get(
         f"{BASE_URL}/api/v2/Profiles/",
         json=profiles_response,
+    )
+
+    requests_mock.get(
+        f"{BASE_URL}/api/v2/Preferences/",
+        json=preferences_response,
     )
 
     requests_mock.get(
