@@ -87,14 +87,6 @@ def init_response_without_gas(data_folder):
     return response
 
 
-def contract_request_matcher(request):
-    return "GetTariefOvereenkomst" in (request.text or "")
-
-
-def meters_request_matcher(request):
-    return "AansluitingGegevens" in (request.text or "")
-
-
 @pytest.fixture
 def contract_response_callback(contract_response, contract_response_without_gas):
     def _contract_response_callback(request, context):
@@ -120,7 +112,8 @@ def contract_response_callback(contract_response, contract_response_without_gas)
     return _contract_response_callback
 
 
-def test_update_request(
+@pytest.fixture
+def mock_api(
     mocker,
     requests_mock,
     init_response,
@@ -128,45 +121,65 @@ def test_update_request(
     meters_v2_response,
     profiles_response,
     preferences_response,
+    tariffs_v1_response,
     contract_response_callback,
+    init_response_without_gas,
+    meters_response_without_gas,
+    meters_v2_response_without_gas,
 ):
-    mocker.patch(
-        "custom_components.greenchoice.auth.Auth.refresh_session",
-        return_value=requests.Session(),
-    )
+    def _mock_api(has_gas: bool, has_rates: bool):
+        mocker.patch(
+            "custom_components.greenchoice.auth.Auth.refresh_session",
+            return_value=requests.Session(),
+        )
 
-    requests_mock.get(
-        f"{BASE_URL}/microbus/init",
-        json=init_response,
-    )
+        requests_mock.get(
+            f"{BASE_URL}/microbus/init",
+            json=init_response if has_gas else init_response_without_gas,
+        )
 
-    requests_mock.post(
-        f"{BASE_URL}/microbus/request",
-        json=meters_response,
-    )
+        requests_mock.post(
+            f"{BASE_URL}/microbus/request",
+            json=meters_response if has_gas else meters_response_without_gas,
+        )
 
-    requests_mock.get(
-        f"{BASE_URL}/api/v2/Rates/2222",
-        json=contract_response_callback,
-    )
+        requests_mock.get(f"{BASE_URL}/api/tariffs", json=tariffs_v1_response)
 
-    requests_mock.get(
-        f"{BASE_URL}/api/v2/Profiles/",
-        json=profiles_response,
-    )
+        if has_rates:
+            requests_mock.get(
+                f"{BASE_URL}/api/v2/Rates/2222",
+                json=contract_response_callback,
+            )
+        else:
+            requests_mock.get(
+                f"{BASE_URL}/api/v2/Rates/2222", json={"status": 404}, status_code=404
+            )
 
-    requests_mock.get(
-        f"{BASE_URL}/api/v2/Preferences/",
-        json=preferences_response,
-    )
+        requests_mock.get(
+            f"{BASE_URL}/api/v2/Profiles/",
+            json=profiles_response,
+        )
 
-    requests_mock.get(
-        (
-            f"{BASE_URL}/api/v2/MeterReadings/"
-            f"{datetime.datetime.now(datetime.UTC).year}/2222/1111"
-        ),
-        json=meters_v2_response,
-    )
+        requests_mock.get(
+            f"{BASE_URL}/api/v2/Preferences/",
+            json=preferences_response,
+        )
+
+        requests_mock.get(
+            (
+                f"{BASE_URL}/api/v2/MeterReadings/"
+                f"{datetime.datetime.now(datetime.UTC).year}/2222/1111"
+            ),
+            json=meters_v2_response if has_gas else meters_v2_response_without_gas,
+        )
+
+    return _mock_api
+
+
+def test_update_request(
+    mock_api,
+):
+    mock_api(has_gas=True, has_rates=True)
 
     greenchoice_api = GreenchoiceApiData("fake_user", "fake_password")
     greenchoice_api.session = requests.Session()
@@ -191,50 +204,8 @@ def test_update_request(
     }
 
 
-def test_update_request_without_gas(
-    mocker,
-    requests_mock,
-    init_response_without_gas,
-    meters_response_without_gas,
-    profiles_response,
-    meters_v2_response_without_gas,
-    preferences_response,
-    contract_response_callback,
-):
-    mocker.patch(
-        "custom_components.greenchoice.auth.Auth.refresh_session",
-        return_value=requests.Session(),
-    )
-
-    requests_mock.get(
-        f"{BASE_URL}/microbus/init",
-        json=init_response_without_gas,
-    )
-
-    requests_mock.post(
-        f"{BASE_URL}/microbus/request",
-        json=meters_response_without_gas,
-    )
-
-    requests_mock.get(
-        f"{BASE_URL}/api/v2/Rates/2222",
-        json=contract_response_callback,
-    )
-
-    requests_mock.get(
-        f"{BASE_URL}/api/v2/Profiles/",
-        json=profiles_response,
-    )
-
-    requests_mock.get(
-        f"{BASE_URL}/api/v2/Preferences/",
-        json=preferences_response,
-    )
-
-    requests_mock.get(
-        f"{BASE_URL}/api/v2/MeterReadings/{datetime.datetime.now().year}/2222/1111",
-        json=meters_v2_response_without_gas,
-    )
+def test_update_request_without_gas(mock_api):
+    mock_api(has_gas=False, has_rates=True)
 
     greenchoice_api = GreenchoiceApiData("fake_user", "fake_password")
     greenchoice_api.session = requests.Session()
@@ -256,55 +227,8 @@ def test_update_request_without_gas(
     }
 
 
-def test_with_old_tariffs_api(
-    mocker,
-    requests_mock,
-    init_response,
-    meters_response,
-    meters_v2_response,
-    profiles_response,
-    preferences_response,
-    tariffs_v1_response,
-    contract_response_callback,
-):
-    mocker.patch(
-        "custom_components.greenchoice.auth.Auth.refresh_session",
-        return_value=requests.Session(),
-    )
-
-    requests_mock.get(
-        f"{BASE_URL}/microbus/init",
-        json=init_response,
-    )
-
-    requests_mock.post(
-        f"{BASE_URL}/microbus/request",
-        json=meters_response,
-    )
-
-    requests_mock.get(
-        f"{BASE_URL}/api/v2/Rates/2222", json={"status": 404}, status_code=404
-    )
-
-    requests_mock.get(f"{BASE_URL}/api/tariffs", json=tariffs_v1_response)
-
-    requests_mock.get(
-        f"{BASE_URL}/api/v2/Profiles/",
-        json=profiles_response,
-    )
-
-    requests_mock.get(
-        f"{BASE_URL}/api/v2/Preferences/",
-        json=preferences_response,
-    )
-
-    requests_mock.get(
-        (
-            f"{BASE_URL}/api/v2/MeterReadings/"
-            f"{datetime.datetime.now(datetime.UTC).year}/2222/1111"
-        ),
-        json=meters_v2_response,
-    )
+def test_with_old_tariffs_api(mock_api):
+    mock_api(has_gas=True, has_rates=False)
 
     greenchoice_api = GreenchoiceApiData("fake_user", "fake_password")
     greenchoice_api.session = requests.Session()
