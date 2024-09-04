@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "homeassistant-greenchoice"
-version = "2.1.0"
-description = ""
+version = "2.1.1"
+description = "Integration to connect Greenchoice.nl with Home Assistant"
 authors = ["Baris Demirdelen <barisdemirdelen@gmail.com>"]
 
 [tool.poetry.dependencies]
