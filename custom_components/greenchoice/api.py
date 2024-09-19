@@ -4,11 +4,10 @@ from typing import Union
 from urllib.parse import urlencode
 
 import requests
-from pydantic import ValidationError
 
-from .model import Preferences, MeterReadings, Reading, Rates
 from .auth import Auth
-from .model import Profile, MeterReadings, Reading, Rates
+from .model import MeterReadings, Reading, Rates, Profile
+from .model import Preferences
 from .util import curl_dump
 
 # Force the log level for easy debugging.
@@ -23,9 +22,16 @@ if _FORCE_LOG_LEVEL is not None:
 BASE_URL = "https://mijn.greenchoice.nl"
 
 
-class GreenchoiceApiData:
+class ApiError(Exception):
+    def __init__(self, message: str):
+        _LOGGER.error(message)
+        super(message)
+
+
+class GreenchoiceApi:
     def __init__(self, username: str, password: str):
         self.auth = Auth(BASE_URL, username, password)
+        self.preferences: Preferences | None = None
 
         self.result = {}
 
@@ -44,7 +50,9 @@ class GreenchoiceApiData:
 
         return response
 
-    def request(self, method, endpoint, data=None, _retry_count=2):
+    def request(
+        self, method: str, endpoint: str, data=None, _retry_count=2
+    ) -> requests.Response:
         try:
             target_url = BASE_URL + endpoint
             response = self._authenticated_request(method, target_url, json=data)
@@ -61,7 +69,7 @@ class GreenchoiceApiData:
             _LOGGER.error("HTTP Error: %s", e)
             _LOGGER.error("Cookies: %s", [c.name for c in self.session.cookies])
             if _retry_count == 0:
-                return None
+                raise ApiError(f"HTTP Error: {e}")
 
             _LOGGER.debug("Retrying request")
             return self.request(method, endpoint, data, _retry_count - 1)
@@ -70,80 +78,153 @@ class GreenchoiceApiData:
         return response
 
     @staticmethod
-    def _validate_response(response):
+    def _validate_response(response: requests.Response) -> dict:
         if not response:
-            _LOGGER.error("Error retrieving response!")
-            return {}
+            raise ApiError("Error retrieving response!")
 
         try:
             response_json = response.json()
-        except requests.exceptions.JSONDecodeError:
-            _LOGGER.error("Could not parse response: invalid JSON")
-            return {}
+        except requests.exceptions.JSONDecodeError as e:
+            raise ApiError("Could not parse response: invalid JSON", e)
 
         return response_json
 
-    def microbus_init(self):
+    def microbus_init(self) -> dict:
         response = self.request("GET", "/microbus/init")
         return self._validate_response(response)
 
-    def update(self):
-        self.result = {}
-        self.update_usage_values(self.result)
-        self.update_contract_values(self.result)
-        return self.result
-
-    def update_usage_values(self, result):
-        _LOGGER.debug("Retrieving meter values")
-
+    def get_preferences(self) -> Preferences:
         preferences_json = self._validate_response(
             self.request("GET", f"/api/v2/Preferences/")
         )
-        try:
-            preferences = Preferences.from_dict(preferences_json)
-        except ValidationError:
-            _LOGGER.error("Could not validate profile")
-            return
+        return Preferences.from_dict(preferences_json)
 
+    def get_profiles(self) -> list[Profile]:
+        profiles_json = self._validate_response(
+            self.request("GET", f"/api/v2/Profiles/")
+        )
+        return [Profile.from_dict(p) for p in profiles_json]
+
+    def get_meter_readings(self) -> MeterReadings:
         meter_json = self._validate_response(
             self.request(
                 "GET",
                 (
                     "/api/v2/MeterReadings/"
                     f"{datetime.now(UTC).year}/"
-                    f"{preferences.subject.customerNumber}/"
-                    f"{preferences.subject.agreementId}"
+                    f"{self.preferences.subject.customerNumber}/"
+                    f"{self.preferences.subject.agreementId}"
                 ),
             )
         )
 
-        try:
-            meter_readings = MeterReadings.from_dict(meter_json)
-        except ValidationError:
-            _LOGGER.error("Could not validate meter readings")
-            return
+        return MeterReadings.from_dict(meter_json)
 
-        electricity_reading: Reading | None = None
-        gas_reading: Reading | None = None
-        for product in meter_readings.productTypes:
-            for month in sorted(product.months, key=lambda p: p.month, reverse=True):
-                if month.readings:
-                    last_reading = sorted(month.readings, key=lambda r: r.readingDate)[
-                        -1
-                    ]
-                    if product.productType.lower() == "stroom":
-                        electricity_reading = last_reading
-                    if product.productType.lower() == "gas":
-                        gas_reading = last_reading
-                    break
+    def get_ref_ids(self) -> tuple[str, str]:
+        init_config = self.microbus_init()
+
+        customer_id = self.preferences.subject.customerNumber
+        contract_id = self.preferences.subject.agreementId
+        ref_id_electricity = ""
+        ref_id_gas = ""
+
+        all_client_details = init_config.get("klantgegevens")
+        for client_details in all_client_details:
+            if client_details.get("klantnummer") == customer_id:
+                client_addresses = client_details.get("adressen")
+                for client_address in client_addresses:
+                    if (
+                        client_address.get("klantnummer") == customer_id
+                        and client_address.get("overeenkomstId") == contract_id
+                    ):
+
+                        contracts = client_address.get("contracten")
+                        for contract in contracts:
+                            if (
+                                contract.get("marktsegment") == "E"
+                            ):  # E stands for electricity, G for gas
+                                ref_id_electricity = contract.get("refId")
+                            else:
+                                ref_id_gas = contract.get("refId")
+
+        return ref_id_electricity, ref_id_gas
+
+    def get_rates(self) -> Rates:
+
+        profiles = self.get_profiles()
+        current_profile: Profile | None = None
+        for profile in profiles:
+            if (
+                profile.customerNumber == self.preferences.subject.customerNumber
+                and profile.agreementId == self.preferences.subject.agreementId
+            ):
+                current_profile = profile
+                break
+        if not current_profile:
+            raise ApiError("Cant find profile")
+
+        ref_id_electricity, ref_id_gas = self.get_ref_ids()
+
+        req_data = {
+            "HouseNumber": current_profile.houseNumber,
+            "ZipCode": current_profile.postalCode,
+        }
+        if ref_id_electricity:
+            req_data["ReferenceIdElectricity"] = ref_id_electricity
+            req_data["AgreementIdElectricity"] = current_profile.agreementId
+        if ref_id_gas:
+            req_data["ReferenceIdGas"] = ref_id_gas
+            req_data["AgreementIdGas"] = current_profile.agreementId
+
+        response = self.request(
+            "GET",
+            f"/api/v2/Rates/{current_profile.customerNumber}?{urlencode(req_data)}",
+        )
+        if response.status_code == 404:
+            response = self.request("GET", "/api/tariffs")
+        pricing_details = self._validate_response(response)
+        if "huidig" in pricing_details:
+            pricing_details = pricing_details["huidig"]
+
+        return Rates.from_dict(pricing_details)
+
+    def update(self) -> dict:
+        self.result = {}
+        try:
+            self.preferences = self.get_preferences()
+        except ApiError:
+            _LOGGER.error("Cant get preferences")
+            return self.result
+
+        try:
+            self.update_usage_values(self.result)
+        except ApiError:
+            _LOGGER.error("Cant update usage values")
+            pass
+
+        try:
+            self.update_contract_values(self.result)
+        except ApiError:
+            _LOGGER.error("Cant update contract values")
+            pass
+
+        return self.result
+
+    def update_usage_values(self, result: dict) -> None:
+        _LOGGER.debug("Retrieving meter values")
+
+        meter_readings = self.get_meter_readings()
+
+        electricity_reading: Reading | None = meter_readings.last_electricity_reading
+        gas_reading: Reading | None = meter_readings.last_gas_reading
 
         if electricity_reading:
-            result[
-                "electricity_consumption_low"
-            ] = electricity_reading.offPeakConsumption
-            result[
-                "electricity_consumption_high"
-            ] = electricity_reading.normalConsumption
+            result["electricity_consumption_low"] = (
+                electricity_reading.offPeakConsumption
+            )
+            result["electricity_consumption_high"] = (
+                electricity_reading.normalConsumption
+            )
             result["electricity_consumption_total"] = (
                 electricity_reading.offPeakConsumption
                 + electricity_reading.normalConsumption
@@ -159,72 +240,20 @@ class GreenchoiceApiData:
             result["gas_consumption"] = gas_reading.gas
             result["measurement_date_gas"] = gas_reading.readingDate
 
-    def update_contract_values(self, result):
+    def update_contract_values(self, result: dict) -> None:
         _LOGGER.debug("Retrieving contract values")
 
-        init_config = self.microbus_init()
-
-        current_contract_details = init_config.get("profile").get(
-            "voorkeursOvereenkomst"
-        )
-        customer_id = current_contract_details.get("klantnummer")
-        contract_id = current_contract_details.get("overeenkomstId")
-        ref_id_electricity = ""
-        ref_id_gas = ""
-        house_number = ""
-        zip_code = ""
-
-        all_client_details = init_config.get("klantgegevens")
-        for client_details in all_client_details:
-            if client_details.get("klantnummer") == customer_id:
-                client_addresses = client_details.get("adressen")
-                for client_address in client_addresses:
-                    if (
-                        client_address.get("klantnummer") == customer_id
-                        and client_address.get("overeenkomstId") == contract_id
-                    ):
-                        house_number = client_address.get("huisnummer")
-                        zip_code = client_address.get("postcode")
-
-                        contracts = client_address.get("contracten")
-                        for contract in contracts:
-                            if (
-                                contract.get("marktsegment") == "E"
-                            ):  # E stands for electricity, G for gas
-                                ref_id_electricity = contract.get("refId")
-                            else:
-                                ref_id_gas = contract.get("refId")
-
-        req_data = {
-            "HouseNumber": house_number,
-            "ZipCode": zip_code,
-        }
-        if ref_id_electricity:
-            req_data["ReferenceIdElectricity"] = ref_id_electricity
-            req_data["AgreementIdElectricity"] = contract_id
-        if ref_id_gas:
-            req_data["ReferenceIdGas"] = ref_id_gas
-            req_data["AgreementIdGas"] = contract_id
-
-        data = urlencode(req_data)
-        response = self.request("GET", f"/api/v2/Rates/{customer_id}?{data}")
-        if response.status_code == 404:
-            response = self.request("GET", "/api/tariffs")
-        pricing_details = self._validate_response(response)
-        if "huidig" in pricing_details:
-            pricing_details = pricing_details["huidig"]
-
-        pricing_details = Rates.from_dict(pricing_details)
+        pricing_details = self.get_rates()
 
         if pricing_details.stroom:
-            result[
-                "electricity_price_single"
-            ] = pricing_details.stroom.leveringEnkelAllIn
+            result["electricity_price_single"] = (
+                pricing_details.stroom.leveringEnkelAllIn
+            )
             result["electricity_price_low"] = pricing_details.stroom.leveringLaagAllIn
             result["electricity_price_high"] = pricing_details.stroom.leveringHoogAllIn
-            result[
-                "electricity_return_price"
-            ] = pricing_details.stroom.terugleverVergoeding
+            result["electricity_return_price"] = (
+                pricing_details.stroom.terugleverVergoeding
+            )
 
         if pricing_details.gas:
             result["gas_price"] = pricing_details.gas.leveringAllIn

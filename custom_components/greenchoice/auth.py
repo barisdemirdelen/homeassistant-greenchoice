@@ -74,7 +74,7 @@ class Auth:
         if response.status_code == 403:
             return True
 
-    def _activate_session(self):
+    def _activate_session(self) -> requests.Session:
         if self.session:
             self.session.close()
 

@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify, Throttle
 
-from .api import GreenchoiceApiData
+from .api import GreenchoiceApi
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -94,7 +94,7 @@ def setup_platform(
     password = config.get(CONF_PASSWORD)
 
     _LOGGER.debug("Set up platform")
-    greenchoice_api = GreenchoiceApiData(username, password)
+    greenchoice_api = GreenchoiceApi(username, password)
 
     throttled_api_update(greenchoice_api)
 

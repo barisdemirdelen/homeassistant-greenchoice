@@ -3,6 +3,7 @@ from __future__ import annotations
 import uuid
 from dataclasses import dataclass
 from datetime import datetime
+from typing import Iterator
 
 
 @dataclass
@@ -231,9 +232,11 @@ class Rates:
         return Rates(
             beginDatum=datetime.fromisoformat(data.get("beginDatum")),
             eindDatum=datetime.fromisoformat(data.get("eindDatum")),
-            stroom=ElectricityTariff.from_dict(data.get("stroom"))
-            if data.get("stroom")
-            else None,
+            stroom=(
+                ElectricityTariff.from_dict(data.get("stroom"))
+                if data.get("stroom")
+                else None
+            ),
             gas=GasTariff.from_dict(data.get("gas")) if data.get("gas") else None,
         )
 
@@ -296,3 +299,25 @@ class MeterReadings:
         return MeterReadings(
             productTypes=[MeterProduct.from_dict(r) for r in data.get("productTypes")],
         )
+
+    @property
+    def last_electricity_reading(self) -> Reading | None:
+        for last_reading in self.iter_readings("stroom"):
+            return last_reading
+        return None
+
+    @property
+    def last_gas_reading(self) -> Reading | None:
+        for last_reading in self.iter_readings("gas"):
+            return last_reading
+        return None
+
+    def iter_readings(self, product_type) -> Iterator[Reading]:
+        for product in self.productTypes:
+            if product.productType.lower() != product_type:
+                continue
+            for month in sorted(product.months, key=lambda p: p.month, reverse=True):
+                for reading in sorted(
+                    month.readings, key=lambda r: r.readingDate, reverse=True
+                ):
+                    yield reading

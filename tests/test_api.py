@@ -1,6 +1,6 @@
 import datetime
 
-from custom_components.greenchoice.api import GreenchoiceApiData
+from custom_components.greenchoice.api import GreenchoiceApi
 
 
 def test_update_request(
@@ -8,7 +8,7 @@ def test_update_request(
 ):
     mock_api(has_gas=True, has_rates=True)
 
-    greenchoice_api = GreenchoiceApiData("fake_user", "fake_password")
+    greenchoice_api = GreenchoiceApi("fake_user", "fake_password")
     result = greenchoice_api.update()
 
     assert result == {
@@ -32,7 +32,7 @@ def test_update_request(
 def test_update_request_without_gas(mock_api):
     mock_api(has_gas=False, has_rates=True)
 
-    greenchoice_api = GreenchoiceApiData("fake_user", "fake_password")
+    greenchoice_api = GreenchoiceApi("fake_user", "fake_password")
     result = greenchoice_api.update()
 
     assert result == {
@@ -53,7 +53,7 @@ def test_update_request_without_gas(mock_api):
 def test_with_old_tariffs_api(mock_api):
     mock_api(has_gas=True, has_rates=False)
 
-    greenchoice_api = GreenchoiceApiData("fake_user", "fake_password")
+    greenchoice_api = GreenchoiceApi("fake_user", "fake_password")
     result = greenchoice_api.update()
 
     assert result == {
