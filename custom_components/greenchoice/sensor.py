@@ -11,7 +11,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     PLATFORM_SCHEMA,
 )
-from homeassistant.const import CONF_NAME, STATE_UNKNOWN
+from homeassistant.const import (
+    CONF_NAME,
+    CURRENCY_EURO,
+    UnitOfEnergy,
+    UnitOfVolume,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
@@ -39,10 +44,10 @@ PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
 
 
 class Unit:
-    KWH = "kWh"
-    EUR_KWH = "EUR/kWh"
-    M3 = "m³"
-    EUR_M3 = "EUR/m³"
+    KWH = UnitOfEnergy.KILO_WATT_HOUR
+    EUR_KWH = f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}"
+    M3 = UnitOfVolume.CUBIC_METERS
+    EUR_M3 = f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}"
 
 
 SensorInfo = namedtuple("SensorInfo", ["device_class", "unit", "icon"])
@@ -142,7 +147,6 @@ class GreenchoiceSensor(SensorEntity):
 
         self._attr_state_class = SensorStateClass.TOTAL
         self._attr_device_class = sensor_info.device_class
-        self._attr_native_value = STATE_UNKNOWN
         self._attr_native_unit_of_measurement = sensor_info.unit
 
     def update(self):
@@ -150,7 +154,11 @@ class GreenchoiceSensor(SensorEntity):
         _LOGGER.debug("Updating %s", self.name)
         api_result = throttled_api_update(self._api) or self._api.result
 
-        if not api_result or self._measurement_type not in api_result:
+        if (
+            not api_result
+            or self._measurement_type not in api_result
+            or self._measurement_date_key not in api_result
+        ):
             return
 
         self._attr_native_value = api_result[self._measurement_type]
