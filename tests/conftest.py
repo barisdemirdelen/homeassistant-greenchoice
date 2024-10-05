@@ -147,12 +147,12 @@ def mock_api(
 
         if has_rates:
             requests_mock.get(
-                f"{BASE_URL}/api/v2/Rates/2222",
+                f"{BASE_URL}/api/v2/customers/2222/rates",
                 json=contract_response_callback,
             )
         else:
             requests_mock.get(
-                f"{BASE_URL}/api/v2/Rates/2222", json={"status": 404}, status_code=404
+                f"{BASE_URL}/api/v2/customers/2222/rates", json={"status": 404}, status_code=404
             )
 
         requests_mock.get(
@@ -167,8 +167,8 @@ def mock_api(
 
         requests_mock.get(
             (
-                f"{BASE_URL}/api/v2/MeterReadings/"
-                f"{datetime.datetime.now(datetime.UTC).year}/2222/1111"
+                f"{BASE_URL}/api/v2/customers/2222/agreements/1111/meter-readings/"
+                f"{datetime.datetime.now(datetime.UTC).year}/"
             ),
             json=meters_v2_response if has_gas else meters_v2_response_without_gas,
         )

@@ -25,7 +25,7 @@ BASE_URL = "https://mijn.greenchoice.nl"
 class ApiError(Exception):
     def __init__(self, message: str):
         _LOGGER.error(message)
-        super(message)
+        super().__init__(message)
 
 
 class GreenchoiceApi:
@@ -110,10 +110,12 @@ class GreenchoiceApi:
             self.request(
                 "GET",
                 (
-                    "/api/v2/MeterReadings/"
-                    f"{datetime.now(UTC).year}/"
+                    "/api/v2/customers/"
                     f"{self.preferences.subject.customerNumber}/"
-                    f"{self.preferences.subject.agreementId}"
+                    "agreements/"
+                    f"{self.preferences.subject.agreementId}/"
+                    "meter-readings/"
+                    f"{datetime.now(UTC).year}/"
                 ),
             )
         )
@@ -178,7 +180,7 @@ class GreenchoiceApi:
 
         response = self.request(
             "GET",
-            f"/api/v2/Rates/{current_profile.customerNumber}?{urlencode(req_data)}",
+            f"/api/v2/customers/{current_profile.customerNumber}/rates?{urlencode(req_data)}",
         )
         if response.status_code == 404:
             response = self.request("GET", "/api/tariffs")
@@ -253,6 +255,9 @@ class GreenchoiceApi:
             result["electricity_price_high"] = pricing_details.stroom.leveringHoogAllIn
             result["electricity_return_price"] = (
                 pricing_details.stroom.terugleverVergoeding
+            )
+            result["electricity_return_cost"] = (
+                pricing_details.stroom.terugleverKostenIncBtw
             )
 
         if pricing_details.gas:
