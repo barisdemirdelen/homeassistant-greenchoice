@@ -82,6 +82,9 @@ sensor_infos = {
     "electricity_return_price": SensorInfo(
         SensorDeviceClass.MONETARY, Unit.EUR_KWH, "currency-eur"
     ),
+    "electricity_return_cost": SensorInfo(
+        SensorDeviceClass.MONETARY, Unit.EUR_KWH, "currency-eur"
+    ),
     "gas_consumption": SensorInfo(SensorDeviceClass.GAS, Unit.M3, "fire"),
     "gas_price": SensorInfo(SensorDeviceClass.MONETARY, Unit.EUR_M3, "currency-eur"),
 }

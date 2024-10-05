@@ -213,7 +213,7 @@ class GasTariff:
 
 @dataclass
 class Rates:
-    """/api/v2/Rates/<customerNumber>
+    """/api/v2/customers/<customerNumber>/rates
     ?AgreementIdElectricity=<agreementId>
     &AgreementIdGas=<agreementId>
     &HouseNumber=<houseNumber>

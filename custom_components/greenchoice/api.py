@@ -180,7 +180,7 @@ class GreenchoiceApi:
 
         response = self.request(
             "GET",
-            f"/api/v2/Rates/{current_profile.customerNumber}?{urlencode(req_data)}",
+            f"/api/v2/customers/{current_profile.customerNumber}/rates?{urlencode(req_data)}",
         )
         if response.status_code == 404:
             response = self.request("GET", "/api/tariffs")
@@ -255,6 +255,9 @@ class GreenchoiceApi:
             result["electricity_price_high"] = pricing_details.stroom.leveringHoogAllIn
             result["electricity_return_price"] = (
                 pricing_details.stroom.terugleverVergoeding
+            )
+            result["electricity_return_cost"] = (
+                pricing_details.stroom.terugleverKostenIncBtw
             )
 
         if pricing_details.gas:
