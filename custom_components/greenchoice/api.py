@@ -25,7 +25,7 @@ BASE_URL = "https://mijn.greenchoice.nl"
 class ApiError(Exception):
     def __init__(self, message: str):
         _LOGGER.error(message)
-        super(message)
+        super().__init__(message)
 
 
 class GreenchoiceApi:
@@ -110,10 +110,12 @@ class GreenchoiceApi:
             self.request(
                 "GET",
                 (
-                    "/api/v2/MeterReadings/"
-                    f"{datetime.now(UTC).year}/"
+                    "/api/v2/customers/"
                     f"{self.preferences.subject.customerNumber}/"
-                    f"{self.preferences.subject.agreementId}"
+                    "agreements/"
+                    f"{self.preferences.subject.agreementId}/"
+                    "meter-readings/"
+                    f"{datetime.now(UTC).year}/"
                 ),
             )
         )

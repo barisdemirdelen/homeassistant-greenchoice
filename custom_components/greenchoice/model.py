@@ -290,7 +290,7 @@ class MeterProduct:
 
 @dataclass
 class MeterReadings:
-    """/api/v2/MeterReadings/<year>/<customerNumber>/<agreementId>"""
+    """/api/v2/customers/<customerNumber>/agreements/<agreementId>/meter-readings/<year>/"""
 
     productTypes: list[MeterProduct]
 
