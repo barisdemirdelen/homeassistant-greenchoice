@@ -17,7 +17,7 @@
       "terugLeveringHoog": 0.06,
       "terugLeveringLaag": 0.04,
       "terugleverVergoeding": 0.09,
-      "terugleverKostenIncBtw": 0.01,
+      "terugleverKostenIncBtw": 0.02,
       "terugleverKostenExcBtw": 0.001,
       "terugleverKostenBtw": 0.009,
       "btw": 0.04,

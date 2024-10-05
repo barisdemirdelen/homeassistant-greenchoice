@@ -25,6 +25,7 @@ def test_update_request(
         "electricity_price_low": 0.2,
         "electricity_price_high": 0.3,
         "electricity_return_price": 0.08,
+        "electricity_return_cost": 0.01,
         "gas_price": 0.8,
     }
 
@@ -47,6 +48,7 @@ def test_update_request_without_gas(mock_api):
         "electricity_price_low": 0.2,
         "electricity_price_high": 0.3,
         "electricity_return_price": 0.08,
+        "electricity_return_cost": 0.01,
     }
 
 
@@ -70,5 +72,6 @@ def test_with_old_tariffs_api(mock_api):
         "electricity_price_low": 0.3,
         "electricity_price_high": 0.4,
         "electricity_return_price": 0.09,
+        "electricity_return_cost": 0.02,
         "gas_price": 0.7,
     }
