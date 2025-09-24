@@ -6,35 +6,35 @@ from datetime import timedelta
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from homeassistant.components.sensor import (
-    SensorEntity,
-    SensorDeviceClass,
-    SensorStateClass,
     PLATFORM_SCHEMA,
+    SensorDeviceClass,
+    SensorEntity,
+    SensorStateClass,
 )
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_NAME,
+    CONF_PASSWORD,
+    CONF_USERNAME,
     CURRENCY_EURO,
     UnitOfEnergy,
     UnitOfVolume,
-    CONF_USERNAME,
-    CONF_PASSWORD,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import slugify, Throttle
 from homeassistant.helpers.issue_registry import (
     IssueSeverity,
     create_issue,
 )
+from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.util import Throttle, slugify
 
-from . import CONF_CUSTOMER_NUMBER, CONF_AGREEMENT_ID
+from . import CONF_AGREEMENT_ID, CONF_CUSTOMER_NUMBER
 from .api import GreenchoiceApi
 from .const import DEFAULT_NAME, DOMAIN
 from .model import SensorUpdate

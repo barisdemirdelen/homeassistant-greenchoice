@@ -1,25 +1,22 @@
 import asyncio
 import logging
-from datetime import datetime, UTC
-from typing import Union
+from datetime import UTC, datetime
 
 import aiohttp
-import requests
 from pydantic import ValidationError
 
 from .auth import Auth
-from .model import MeterReadings, Reading, Rates, Profile, SensorUpdate, MeterProduct
-from .model import Preferences
-from .util import curl_dump
+from .model import (
+    MeterProduct,
+    MeterReadings,
+    Preferences,
+    Profile,
+    Rates,
+    Reading,
+    SensorUpdate,
+)
 
-# Force the log level for easy debugging.
-# None          - Don't force any log level and use the defaults.
-# logging.DEBUG - Force debug logging.
-#   See the logging package for additional log levels.
-_FORCE_LOG_LEVEL: Union[int, None] = None
 _LOGGER = logging.getLogger(__name__)
-if _FORCE_LOG_LEVEL is not None:
-    _LOGGER.setLevel(_FORCE_LOG_LEVEL)
 
 BASE_URL = "https://mijn.greenchoice.nl"
 
@@ -111,11 +108,11 @@ class GreenchoiceApi:
     # ASYNC METHODS (Core implementation)
     async def get_preferences(self) -> Preferences:
         preferences_json = await self.request("/api/v2/Preferences/")
-        return Preferences(**preferences_json)
+        return Preferences.model_validate(preferences_json)
 
     async def get_profiles(self) -> list[Profile]:
         profiles_json = await self.request("/api/v2/Profiles/")
-        return [Profile(**p) for p in profiles_json]
+        return [Profile.model_validate(p) for p in profiles_json]
 
     async def get_meter_readings(self) -> MeterReadings:
         meter_json = await self.request(
@@ -136,7 +133,7 @@ class GreenchoiceApi:
                 agreement_id=self.agreement_id,
             ).build_url(),
         )
-        return Rates(**pricing_details)
+        return Rates.model_validate(pricing_details)
 
     async def update(self) -> SensorUpdate:
         """Async update method."""

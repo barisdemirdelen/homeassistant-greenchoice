@@ -6,13 +6,13 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EMAIL,
     CONF_PASSWORD,
-    Platform,
     EVENT_HOMEASSISTANT_STOP,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 
 from .api import GreenchoiceApi
-from .const import DOMAIN, CONF_CUSTOMER_NUMBER, CONF_AGREEMENT_ID
+from .const import CONF_AGREEMENT_ID, CONF_CUSTOMER_NUMBER, DOMAIN
 from .sensor import GreenchoiceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -52,7 +52,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a config entry."""
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        coordinator: GreenchoiceDataUpdateCoordinator = hass.data[DOMAIN][entry.entry_id]
+        coordinator: GreenchoiceDataUpdateCoordinator = hass.data[DOMAIN][
+            entry.entry_id
+        ]
         await coordinator.async_shutdown()
         hass.data[DOMAIN].pop(entry.entry_id)
 

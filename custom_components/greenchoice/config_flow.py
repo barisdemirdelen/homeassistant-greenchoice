@@ -1,20 +1,20 @@
 """Config flow for Greenchoice integration."""
 
 import logging
-import voluptuous as vol
-from typing import Any, cast
+from typing import Any
 
+import voluptuous as vol
 from homeassistant import config_entries
-from homeassistant.const import CONF_PASSWORD, CONF_EMAIL, CONF_NAME
+from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResult
 
 from .api import GreenchoiceApi
 from .const import (
-    DOMAIN,
-    CONF_CUSTOMER_NUMBER,
     CONF_AGREEMENT_ID,
+    CONF_CUSTOMER_NUMBER,
     CONF_PROFILE,
     DEFAULT_NAME,
+    DOMAIN,
 )
 from .model import Profile
 

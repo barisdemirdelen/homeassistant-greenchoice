@@ -1,4 +1,3 @@
-import asyncio
 import logging
 import re
 from urllib.parse import parse_qs, urlparse
@@ -42,7 +41,6 @@ class Auth:
     async def __aexit__(self, exc_type, exc_val, exc_tb):
         """Async context manager exit."""
         await self.close_session()
-
 
     @property
     def session(self):
@@ -129,7 +127,9 @@ class Auth:
 
         # Send login request to the correct endpoint
         login_url = f"{self.sso_url}/api/login"
-        async with self._session.post(login_url, json=login_data, headers=headers) as auth_page:
+        async with self._session.post(
+            login_url, json=login_data, headers=headers
+        ) as auth_page:
             auth_page.raise_for_status()
             login_response = await auth_page.json()
 
@@ -152,7 +152,9 @@ class Auth:
         # Continue with OIDC flow
         self.logger.debug("Signing in using OIDC")
         oidc_params = self._get_oidc_params(oauth_text)
-        async with self._session.post(f"{self.base_url}/signin-oidc", data=oidc_params) as response:
+        async with self._session.post(
+            f"{self.base_url}/signin-oidc", data=oidc_params
+        ) as response:
             response.raise_for_status()
 
         self.logger.debug("Login success")
