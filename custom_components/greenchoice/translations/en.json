@@ -1,0 +1,34 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Greenchoice Authentication",
+        "description": "Enter your Greenchoice credentials",
+        "data": {
+          "email": "Email",
+          "password": "Password"
+        }
+      },
+      "profile": {
+        "title": "Select Profile",
+        "description": "Choose which address/profile to monitor",
+        "data": {
+          "profile": "Address",
+          "name": "Sensor Name (optional)"
+        }
+      }
+    },
+    "error": {
+      "cannot_connect": "Failed to connect to Greenchoice. Please check your credentials.",
+      "no_profiles": "No profiles found for this account.",
+      "invalid_profile": "Invalid profile selection.",
+      "unknown": "Unknown error occurred."
+    }
+  },
+  "issues": {
+    "yaml_deprecation": {
+      "title": "YAML configuration is deprecated",
+      "description": "Configuring {integration_title} using YAML is deprecated and will be removed in a future version.\n\nTo continue using this integration, please:\n1. Remove the `{domain}` configuration from your configuration.yaml file\n2. Restart Home Assistant\n3. Go to Settings > Devices & Services\n4. Click 'Add Integration' and find {integration_title}\n5. Follow the setup wizard to configure the integration."
+    }
+  }
+}

@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 
 import pytest
-import requests
+from aioresponses import aioresponses
 
 from custom_components.greenchoice.api import BASE_URL
 
@@ -103,8 +103,17 @@ def init_response_without_gas(data_folder):
 
 @pytest.fixture
 def contract_response_callback(contract_response, contract_response_without_gas):
-    def _contract_response_callback(request, context):
-        if request.qs == {
+    def _contract_response_callback(url, **kwargs):
+        # Parse query parameters from URL
+        from urllib.parse import urlparse, parse_qs
+
+        parsed = urlparse(str(url))
+        query_params = parse_qs(parsed.query)
+
+        # Convert to same format as requests_mock
+        qs = {k: v for k, v in query_params.items()}
+
+        if qs == {
             "agreementidelectricity": ["1111"],
             "agreementidgas": ["1111"],
             "housenumber": ["1"],
@@ -113,14 +122,14 @@ def contract_response_callback(contract_response, contract_response_without_gas)
             "zipcode": ["1234ab"],
         }:
             return contract_response
-        if request.qs == {
+        if qs == {
             "agreementidelectricity": ["1111"],
             "housenumber": ["1"],
             "referenceidelectricity": ["12345"],
             "zipcode": ["1234ab"],
         }:
             return contract_response_without_gas
-        context.status_code = 400
+
         return {"status": 400}
 
     return _contract_response_callback
@@ -129,7 +138,6 @@ def contract_response_callback(contract_response, contract_response_without_gas)
 @pytest.fixture
 def mock_api(
     mocker,
-    requests_mock,
     init_response,
     meters_response,
     meters_v2_response,
@@ -143,66 +151,75 @@ def mock_api(
     meters_response_without_gas,
     meters_v2_response_without_gas,
 ):
-    def _mock_api(has_gas: bool, has_rates: bool):
-        mocker.patch(
-            "custom_components.greenchoice.auth.Auth.refresh_session",
-            return_value=requests.Session(),
-        )
+    with aioresponses() as mocked:
 
-        requests_mock.get(
-            f"{BASE_URL}/microbus/init",
-            json=init_response if has_gas else init_response_without_gas,
-        )
-
-        requests_mock.post(
-            f"{BASE_URL}/microbus/request",
-            json=meters_response if has_gas else meters_response_without_gas,
-        )
-
-        requests_mock.get(f"{BASE_URL}/api/tariffs", json=tariffs_v1_response)
-
-        if has_rates:
-            requests_mock.get(
-                f"{BASE_URL}/api/v2/customers/2222/rates",
-                json=contract_response_callback,
-            )
-        else:
-            requests_mock.get(
-                f"{BASE_URL}/api/v2/customers/2222/rates",
-                json={"status": 404},
-                status_code=404,
+        def _mock_api(has_gas: bool, has_rates: bool):
+            mocker.patch(
+                "custom_components.greenchoice.auth.Auth.refresh_session",
+                return_value=None,
             )
 
-        requests_mock.get(
-            f"{BASE_URL}/api/v2/Profiles/",
-            json=profiles_response,
-        )
+            mocked.get(
+                f"{BASE_URL}/microbus/init",
+                payload=init_response if has_gas else init_response_without_gas,
+            )
 
-        requests_mock.get(
-            f"{BASE_URL}/api/v2/Preferences/",
-            json=preferences_response,
-        )
+            mocked.post(
+                f"{BASE_URL}/microbus/request",
+                payload=meters_response if has_gas else meters_response_without_gas,
+            )
 
-        requests_mock.get(
-            (
-                f"{BASE_URL}/api/v2/customers/2222/agreements/1111/meter-readings/"
-                f"{datetime.datetime.now(datetime.UTC).year}/"
-            ),
-            json=meters_v2_response if has_gas else meters_v2_response_without_gas,
-        )
+            mocked.get(f"{BASE_URL}/api/tariffs", payload=tariffs_v1_response)
 
-        if has_rates:
-            requests_mock.get(
-                f"{BASE_URL}/api/v2/customers/2222/agreements/1111/contracts/current",
-                json=contract_response_current
+            if has_rates:
+                mocked.get(
+                    f"{BASE_URL}/api/v2/customers/2222/rates",
+                    callback=lambda url, **kwargs: contract_response_callback(
+                        url, **kwargs
+                    ),
+                )
+            else:
+                mocked.get(
+                    f"{BASE_URL}/api/v2/customers/2222/rates",
+                    payload={"status": 404},
+                    status=404,
+                )
+
+            mocked.get(
+                f"{BASE_URL}/api/v2/Profiles/",
+                payload=profiles_response,
+            )
+
+            mocked.get(
+                f"{BASE_URL}/api/v2/Preferences/",
+                payload=preferences_response,
+            )
+
+            mocked.get(
+                (
+                    f"{BASE_URL}/api/v2/customers/2222/agreements/1111/meter-readings/"
+                    f"{datetime.datetime.now(datetime.UTC).year}/"
+                ),
+                payload=meters_v2_response
                 if has_gas
-                else contract_response_current_without_gas,
-            )
-        else:
-            requests_mock.get(
-                f"{BASE_URL}/api/v2/customers/2222/agreements/1111/contracts/current",
-                json={"status": 404},
-                status_code=404,
+                else meters_v2_response_without_gas,
             )
 
-    return _mock_api
+            if has_rates:
+                mocked.get(
+                    f"{BASE_URL}/api/v2/customers/2222/agreements/1111/contracts/current",
+                    payload=contract_response_current
+                    if has_gas
+                    else contract_response_current_without_gas,
+                )
+            else:
+                mocked.get(
+                    f"{BASE_URL}/api/v2/customers/2222/agreements/1111/contracts/current",
+                    payload={"status": 404},
+                    status=404,
+                )
+
+            return mocked
+
+        yield _mock_api
+

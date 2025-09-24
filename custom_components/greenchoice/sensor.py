@@ -16,26 +16,33 @@ from homeassistant.const import (
     CURRENCY_EURO,
     UnitOfEnergy,
     UnitOfVolume,
+    CONF_USERNAME,
+    CONF_PASSWORD,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import slugify, Throttle
+from homeassistant.helpers.issue_registry import (
+    IssueSeverity,
+    create_issue,
+)
+from homeassistant.helpers.update_coordinator import (
+    CoordinatorEntity,
+    DataUpdateCoordinator,
+    UpdateFailed,
+)
+from homeassistant.config_entries import ConfigEntry
 
+from . import CONF_CUSTOMER_NUMBER, CONF_AGREEMENT_ID
 from .api import GreenchoiceApi
+from .const import DEFAULT_NAME, DOMAIN
 from .model import SensorUpdate
 
 _LOGGER = logging.getLogger(__name__)
 
-CONF_USERNAME = "username"
-CONF_PASSWORD = "password"  # nosec:B105
-CONF_CUSTOMER_NUMBER = "customer_number"
-CONF_AGREEMENT_ID = "agreement_id"
-
-DEFAULT_NAME = "Energieverbruik"
-DEFAULT_DATE_FORMAT = "%y-%m-%dT%H:%M:%S"
-
 MIN_TIME_BETWEEN_UPDATES = timedelta(seconds=3600)
+UPDATE_INTERVAL = timedelta(hours=1)
 
 PLATFORM_SCHEMA = PLATFORM_SCHEMA.extend(
     {
@@ -80,7 +87,7 @@ sensor_infos = {
     "electricity_feed_in_normal": SensorInfo(
         SensorDeviceClass.ENERGY, Unit.KWH, "solar-power"
     ),
-    "electricity_return_total": SensorInfo(
+    "electricity_feed_in_total": SensorInfo(
         SensorDeviceClass.ENERGY, Unit.KWH, "transmission-tower-import"
     ),
     "electricity_price_single": SensorInfo(
@@ -103,13 +110,133 @@ sensor_infos = {
 }
 
 
-# noinspection PyUnusedLocal
+async def async_setup_entry(
+    hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
+) -> None:
+    """Set up Greenchoice sensors from a config entry."""
+    coordinator = hass.data[DOMAIN][entry.entry_id]
+
+    sensors = [
+        GreenchoiceSensor(coordinator, sensor_name) for sensor_name in sensor_infos
+    ]
+
+    async_add_entities(sensors)
+
+
+class GreenchoiceDataUpdateCoordinator(DataUpdateCoordinator[SensorUpdate]):
+    """Class to manage fetching data from the API."""
+
+    def __init__(
+        self, hass: HomeAssistant, api: GreenchoiceApi, config_entry: ConfigEntry
+    ) -> None:
+        """Initialize."""
+        self.api = api
+        self.config_entry = config_entry
+        coordinator_name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
+        super().__init__(
+            hass,
+            _LOGGER,
+            name=f"{DOMAIN}_{slugify(coordinator_name)}",
+            update_interval=timedelta(minutes=60),
+        )
+
+    async def _async_update_data(self) -> SensorUpdate:
+        """Update data via library."""
+        try:
+            async with self.api:
+                return await self.api.update()
+        except Exception as exception:
+            _LOGGER.error("Failed to update data: %s", exception)
+            raise UpdateFailed() from exception
+
+
+class GreenchoiceSensor(CoordinatorEntity, SensorEntity):
+    """Representation of a Greenchoice sensor for async config flow."""
+
+    def __init__(
+        self,
+        coordinator: GreenchoiceDataUpdateCoordinator,
+        measurement_type: str,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator)
+        self._measurement_type = measurement_type
+        self._measurement_date_key = (
+            "electricity_reading_date"
+            if "electricity" in self._measurement_type
+            else "gas_reading_date"
+        )
+
+        sensor_info = sensor_infos[self._measurement_type]
+
+        # Get human-readable name from config entry
+        sensor_title = coordinator.config_entry.data.get(CONF_NAME, DEFAULT_NAME)
+
+        # Use sensor_title as prefix instead of DOMAIN
+        self._attr_unique_id = f"{slugify(sensor_title)}_{measurement_type}"
+        self._attr_name = f"{sensor_title} {measurement_type.replace('_', ' ').title()}"
+        self._attr_icon = f"mdi:{sensor_info.icon}"
+        self._attr_state_class = SensorStateClass.TOTAL
+        self._attr_device_class = sensor_info.device_class
+        self._attr_native_unit_of_measurement = sensor_info.unit
+
+    @property
+    def native_value(self):
+        """Return the state of the sensor."""
+        if not self.coordinator.data:
+            return None
+
+        if not hasattr(self.coordinator.data, self._measurement_type):
+            return None
+
+        return getattr(self.coordinator.data, self._measurement_type)
+
+    @property
+    def extra_state_attributes(self):
+        """Return the state attributes."""
+        if not self.coordinator.data:
+            return None
+
+        if not hasattr(self.coordinator.data, self._measurement_date_key):
+            return None
+
+        return {
+            "measurement_date": getattr(
+                self.coordinator.data, self._measurement_date_key
+            )
+        }
+
+
+# YAML platform setup (DEPRECATED)
 def setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     add_entities: AddEntitiesCallback,
     discovery_info: t.Optional[DiscoveryInfoType] = None,
 ) -> None:
+    """Set up Greenchoice sensors from YAML configuration (DEPRECATED)."""
+
+    # Create deprecation warning
+    create_issue(
+        hass,
+        "greenchoice",
+        "yaml_deprecation",
+        is_fixable=False,
+        severity=IssueSeverity.WARNING,
+        translation_key="yaml_deprecation",
+        translation_placeholders={
+            "domain": "greenchoice",
+            "integration_title": "Greenchoice",
+        },
+    )
+
+    _LOGGER.warning(
+        "YAML configuration for Greenchoice is deprecated and will be removed "
+        "in the next version. Please migrate to the UI-based configuration "
+        "by removing the YAML configuration and re-adding the integration via "
+        "Settings > Devices & Services"
+    )
+
     name: str = config.get(CONF_NAME)
     username: str = config.get(CONF_USERNAME)
     password: str = config.get(CONF_PASSWORD)
@@ -124,7 +251,7 @@ def setup_platform(
     throttled_api_update(greenchoice_api)
 
     sensors = [
-        GreenchoiceSensor(
+        GreenchoiceYamlSensor(
             greenchoice_api,
             name,
             sensor_name,
@@ -135,15 +262,19 @@ def setup_platform(
     add_entities(sensors, True)
 
 
+# Legacy yaml sensor (DEPRECATED)
 @Throttle(MIN_TIME_BETWEEN_UPDATES)
 def throttled_api_update(api) -> SensorUpdate:
     _LOGGER.debug("Throttled update called.")
-    api_result = api.update()
+    api_result = api.sync_update()
     _LOGGER.debug("Api result: %s", api_result)
     return api_result
 
 
-class GreenchoiceSensor(SensorEntity):
+# Legacy yaml sensor (DEPRECATED)
+class GreenchoiceYamlSensor(SensorEntity):
+    """Legacy sensor class for YAML configuration (DEPRECATED)."""
+
     def __init__(
         self,
         greenchoice_api: GreenchoiceApi,

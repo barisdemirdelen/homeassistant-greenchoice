@@ -9,7 +9,6 @@ dependencies = [
     "beautifulsoup4>=4.12.3",
     "homeassistant>=2024.12.5",
     "pydantic>=2.11.1",
-    "requests>=2.32.3",
 ]
 
 [dependency-groups]
@@ -20,7 +19,7 @@ dev = [
     "mypy>=1.14.1",
     "ruff>=0.9.4",
     "pytest-mock>=3.14.0",
-    "types-requests>=2.31.0.6",
-    "requests-mock>=1.12.1",
     "ty>=0.0.0a8",
+    "pytest-asyncio>=1.2.0",
+    "aioresponses>=0.7.8",
 ]

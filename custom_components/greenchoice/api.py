@@ -1,11 +1,14 @@
+import asyncio
 import logging
 from datetime import datetime, UTC
 from typing import Union
 
+import aiohttp
 import requests
+from pydantic import ValidationError
 
 from .auth import Auth
-from .model import MeterReadings, Reading, Rates, Profile, SensorUpdate
+from .model import MeterReadings, Reading, Rates, Profile, SensorUpdate, MeterProduct
 from .model import Preferences
 from .util import curl_dump
 
@@ -35,127 +38,136 @@ class GreenchoiceApi:
         customer_number: int | None = None,
         agreement_id: int | None = None,
     ):
-        self.auth = Auth(BASE_URL, username, password)
         self.customer_number: int | None = customer_number
         self.agreement_id: int | None = agreement_id
-
         self.result: SensorUpdate = SensorUpdate()
+        self._auth = Auth(BASE_URL, username, password)
 
-    def _authenticated_request(
-        self, method: str, endpoint: str, data=None, json=None
-    ) -> requests.models.Response:
+    async def __aenter__(self):
+        """Async context manager entry."""
+        await self._auth.__aenter__()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        await self._auth.__aexit__(exc_type, exc_val, exc_tb)
+
+    async def _authenticated_request(
+        self, method: str, endpoint: str, data=None, json=None, _retry_count=2
+    ) -> dict:
+        """Async authenticated request."""
         _LOGGER.debug(
-            f"Request: {method} {endpoint} {data if data is not None else json}"
+            f"Async Request: {method} {endpoint} {data if data is not None else json}"
         )
-        response = self.auth.session.request(method, endpoint, data=data, json=json)
-        if self.auth.is_session_expired(response):
-            self.session = self.auth.refresh_session()
-            response = self.auth.session.request(method, endpoint, data=data, json=json)
 
-        _LOGGER.debug(curl_dump(response.request))
+        session = self._auth.session
 
-        return response
-
-    def request(self, endpoint: str, data=None, _retry_count=2) -> requests.Response:
         try:
-            target_url = BASE_URL + endpoint
-            response = self._authenticated_request("GET", target_url, json=data)
+            async with session.request(
+                method,
+                endpoint,
+                data=data,
+                json=json,
+                timeout=aiohttp.ClientTimeout(total=30),
+            ) as response:
+                # Check if session expired
+                if response.status in (401, 403):
+                    # Refresh session synchronously (Auth class is sync)
+                    await self._auth.refresh_session()
 
-            if len(response.history) > 1:
-                _LOGGER.debug("Response history len > 1. %s", response.history)
+                    async with session.request(
+                        method,
+                        endpoint,
+                        data=data,
+                        json=json,
+                        timeout=aiohttp.ClientTimeout(total=30),
+                    ) as retry_response:
+                        if retry_response.status == 404:
+                            return {}
+                        retry_response.raise_for_status()
+                        return await retry_response.json()
 
-            # Some api's may not work and there might be fallbacks for them
-            if response.status_code == 404:
-                return response
+                if response.status == 404:
+                    return {}
 
-            response.raise_for_status()
-        except requests.HTTPError as e:
+                response.raise_for_status()
+                return await response.json()
+
+        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
             _LOGGER.error("HTTP Error: %s", e)
-            _LOGGER.error("Cookies: %s", [c.name for c in self.session.cookies])
             if _retry_count == 0:
                 raise ApiError(f"HTTP Error: {e}")
 
-            _LOGGER.debug("Retrying request")
-            return self.request(endpoint, data, _retry_count - 1)
+            _LOGGER.debug("Retrying async request")
+            return await self._authenticated_request(
+                method, endpoint, data, json, _retry_count - 1
+            )
 
-        _LOGGER.debug("Request success")
-        return response
+    async def request(self, endpoint: str, data=None) -> dict:
+        """Async request method."""
+        target_url = BASE_URL + endpoint
+        return await self._authenticated_request("GET", target_url, json=data)
 
-    @staticmethod
-    def _validate_response(response: requests.Response) -> dict:
-        if not response:
-            raise ApiError("Error retrieving response!")
-
-        try:
-            response_json = response.json()
-        except requests.exceptions.JSONDecodeError as e:
-            raise ApiError(f"Could not parse response: invalid JSON: {e}")
-
-        return response_json
-
-    def get_preferences(self) -> Preferences:
-        preferences_json = self._validate_response(self.request("/api/v2/Preferences/"))
+    # ASYNC METHODS (Core implementation)
+    async def get_preferences(self) -> Preferences:
+        preferences_json = await self.request("/api/v2/Preferences/")
         return Preferences(**preferences_json)
 
-    def get_profiles(self) -> list[Profile]:
-        profiles_json = self._validate_response(self.request("/api/v2/Profiles/"))
+    async def get_profiles(self) -> list[Profile]:
+        profiles_json = await self.request("/api/v2/Profiles/")
         return [Profile(**p) for p in profiles_json]
 
-    def get_meter_readings(self) -> MeterReadings:
-        meter_json = self._validate_response(
-            self.request(
-                MeterReadings.Request(
-                    customer_number=self.customer_number,
-                    agreement_id=self.agreement_id,
-                    year=datetime.now(UTC).year,
-                ).build_url(),
-            )
+    async def get_meter_readings(self) -> MeterReadings:
+        meter_json = await self.request(
+            MeterReadings.Request(
+                customer_number=self.customer_number,
+                agreement_id=self.agreement_id,
+                year=datetime.now(UTC).year,
+            ).build_url(),
+        )
+        return MeterReadings(
+            product_types=[MeterProduct.model_validate(mp) for mp in meter_json]
         )
 
-        # noinspection PyTypeChecker
-        return MeterReadings(product_types=meter_json)
-
-    def get_rates(self) -> Rates:
-        pricing_details = self._validate_response(
-            self.request(
-                Rates.Request(
-                    customer_number=self.customer_number,
-                    agreement_id=self.agreement_id,
-                ).build_url(),
-            )
+    async def get_rates(self) -> Rates:
+        pricing_details = await self.request(
+            Rates.Request(
+                customer_number=self.customer_number,
+                agreement_id=self.agreement_id,
+            ).build_url(),
         )
-
         return Rates(**pricing_details)
 
-    def update(self) -> SensorUpdate:
-        self.result = SensorUpdate()
+    async def update(self) -> SensorUpdate:
+        """Async update method."""
+        result = SensorUpdate()
         if not self.customer_number or not self.agreement_id:
             try:
-                preferences = self.get_preferences()
+                preferences = await self.get_preferences()
                 self.customer_number = preferences.subject.customer_number
                 self.agreement_id = preferences.subject.agreement_id
             except ApiError:
                 _LOGGER.error("Cant get preferences")
-                return self.result
+                return result
 
         try:
-            self.update_usage_values(self.result)
+            await self.update_usage_values(result)
         except ApiError:
             _LOGGER.error("Cant update usage values")
             pass
 
         try:
-            self.update_contract_values(self.result)
+            await self.update_contract_values(result)
         except ApiError:
             _LOGGER.error("Cant update contract values")
             pass
 
-        return self.result
+        return result
 
-    def update_usage_values(self, result: SensorUpdate) -> None:
-        _LOGGER.debug("Retrieving meter values")
-
-        meter_readings = self.get_meter_readings()
+    async def update_usage_values(self, result: SensorUpdate) -> None:
+        """Async usage values update."""
+        _LOGGER.debug("Retrieving meter values async")
+        meter_readings = await self.get_meter_readings()
 
         electricity_reading: Reading | None = meter_readings.last_electricity_reading
         gas_reading: Reading | None = meter_readings.last_gas_reading
@@ -167,7 +179,6 @@ class GreenchoiceApi:
             result.electricity_consumption_normal = (
                 electricity_reading.normal_consumption
             )
-
             result.electricity_consumption_total = (
                 electricity_reading.off_peak_consumption
                 + electricity_reading.normal_consumption
@@ -184,16 +195,18 @@ class GreenchoiceApi:
             result.gas_consumption = gas_reading.gas
             result.gas_reading_date = gas_reading.reading_date
 
-    def update_contract_values(self, result: SensorUpdate) -> None:
-        _LOGGER.debug("Retrieving contract values")
-
-        pricing_details = self.get_rates()
+    async def update_contract_values(self, result: SensorUpdate) -> None:
+        """Async contract values update."""
+        _LOGGER.debug("Retrieving contract values async")
+        try:
+            pricing_details = await self.get_rates()
+        except ValidationError:
+            return
 
         if pricing_details.electricity:
             electricity_usage = (
                 pricing_details.electricity.rates.usage_dependent_electricity_rates
             )
-
             result.electricity_price_single = (
                 electricity_usage.all_in_delivery_single_including_vat
             )
@@ -212,3 +225,40 @@ class GreenchoiceApi:
 
         if pricing_details.gas:
             result.gas_price = pricing_details.gas.rates.usage_dependent_gas_rates.all_in_delivery_including_vat
+
+    # SYNC METHODS (Wrapper around async methods for backward compatibility)
+    @staticmethod
+    def _run_async(coro):
+        """Run async method in sync context."""
+        try:
+            loop = asyncio.get_event_loop()
+            if loop.is_running():
+                # If we're already in an async context, this won't work
+                # Fall back to creating a new loop in a thread
+                import concurrent.futures
+
+                def run_in_thread():
+                    new_loop = asyncio.new_event_loop()
+                    asyncio.set_event_loop(new_loop)
+                    try:
+                        return new_loop.run_until_complete(coro)
+                    finally:
+                        new_loop.close()
+
+                with concurrent.futures.ThreadPoolExecutor() as executor:
+                    future = executor.submit(run_in_thread)
+                    return future.result()
+            else:
+                return loop.run_until_complete(coro)
+        except RuntimeError:
+            # No event loop exists
+            return asyncio.run(coro)
+
+    def sync_update(self) -> SensorUpdate:
+        async def _async_update_with_context():
+            async with self:
+                return await self.update()
+
+        """Sync update method (calls async implementation)."""
+        self.result = self._run_async(_async_update_with_context())
+        return self.result

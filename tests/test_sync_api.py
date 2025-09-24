@@ -1,18 +1,15 @@
 import datetime
 
-import pytest
-
 from custom_components.greenchoice.api import GreenchoiceApi
 
 
-@pytest.mark.asyncio
-async def test_update_request(
+def test_update_request(
     mock_api,
 ):
     mock_api(has_gas=True, has_rates=True)
 
-    async with GreenchoiceApi("fake_user", "fake_password") as greenchoice_api:
-        result = await greenchoice_api.update()
+    greenchoice_api = GreenchoiceApi("fake_user", "fake_password")
+    result = greenchoice_api.sync_update()
 
     assert result.model_dump() == {
         "electricity_consumption_off_peak": 60000.0,
@@ -33,12 +30,11 @@ async def test_update_request(
     }
 
 
-@pytest.mark.asyncio
-async def test_update_request_without_gas(mock_api):
+def test_update_request_without_gas(mock_api):
     mock_api(has_gas=False, has_rates=True)
 
-    async with GreenchoiceApi("fake_user", "fake_password") as greenchoice_api:
-        result = await greenchoice_api.update()
+    greenchoice_api = GreenchoiceApi("fake_user", "fake_password")
+    result = greenchoice_api.sync_update()
 
     assert result.model_dump() == {
         "electricity_consumption_off_peak": 60000.0,
@@ -59,12 +55,11 @@ async def test_update_request_without_gas(mock_api):
     }
 
 
-@pytest.mark.asyncio
-async def test_with_old_tariffs_api(mock_api):
+def test_with_old_tariffs_api(mock_api):
     mock_api(has_gas=True, has_rates=False)
 
-    async with GreenchoiceApi("fake_user", "fake_password") as greenchoice_api:
-        result = await greenchoice_api.update()
+    greenchoice_api = GreenchoiceApi("fake_user", "fake_password")
+    result = greenchoice_api.sync_update()
 
     assert result.model_dump() == {
         "electricity_consumption_off_peak": 60000.0,
@@ -85,16 +80,15 @@ async def test_with_old_tariffs_api(mock_api):
     }
 
 
-@pytest.mark.asyncio
-async def test_update_request_with_agreement_id(
+def test_update_request_with_agreement_id(
     mock_api,
 ):
     mock_api(has_gas=True, has_rates=True)
 
-    async with GreenchoiceApi(
+    greenchoice_api = GreenchoiceApi(
         "fake_user", "fake_password", customer_number=2222, agreement_id=1111
-    ) as greenchoice_api:
-        result = await greenchoice_api.update()
+    )
+    result = greenchoice_api.sync_update()
 
     assert result.model_dump() == {
         "electricity_consumption_off_peak": 60000.0,

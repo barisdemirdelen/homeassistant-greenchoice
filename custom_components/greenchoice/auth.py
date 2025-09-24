@@ -1,9 +1,10 @@
+import asyncio
 import logging
 import re
 from urllib.parse import parse_qs, urlparse
 
+import aiohttp
 import bs4
-import requests
 
 
 class LoginError(Exception):
@@ -18,8 +19,7 @@ class Auth:
         self._password = password
 
         self.logger = logging.getLogger(__name__)
-        self.session = None
-        self.session = self.refresh_session()
+        self._session: aiohttp.ClientSession | None = None
 
         if not self._check_config():
             raise AttributeError("Configuration is incomplete")
@@ -33,11 +33,28 @@ class Auth:
             return False
         return True
 
-    def _get_antiforgery_token(self) -> str:
+    async def __aenter__(self):
+        """Async context manager entry."""
+        self._session = aiohttp.ClientSession()
+        await self.refresh_session()  # Authenticate on entry
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        """Async context manager exit."""
+        await self.close_session()
+
+
+    @property
+    def session(self):
+        """Get the current session."""
+        return self._session
+
+    async def _get_antiforgery_token(self) -> str:
         """Get the antiforgery token from the API."""
-        response = self.session.get(f"{self.sso_url}/api/antiforgery")
-        response.raise_for_status()
-        return response.json()["requestToken"]
+        async with self._session.get(f"{self.sso_url}/api/antiforgery") as response:
+            response.raise_for_status()
+            data = await response.json()
+            return data["requestToken"]
 
     @staticmethod
     def _get_oidc_params(html_txt: str) -> dict[str, str]:
@@ -58,39 +75,37 @@ class Auth:
             "session_state": session_state_elem.attrs.get("value"),
         }
 
-    def is_session_expired(self, response: requests.Response) -> bool:
-        # If the session expired, the client is redirected to the SSO login.
-        for history_response in response.history:
-            if history_response.status_code != 302:
-                continue
-            location_header: str = history_response.headers.get("Location")
-            if location_header is not None and re.search(
-                f"^.*://{urlparse(self.sso_url).netloc}/connect/authorize.*$",
-                location_header,
-            ):
-                return True
+    def is_session_expired(self, response: aiohttp.ClientResponse) -> bool:
+        # Check if the final URL indicates a redirect to SSO login
+        if response.history:
+            for history_response in response.history:
+                if history_response.status != 302:
+                    continue
+                location_header = history_response.headers.get("Location")
+                if location_header and re.search(
+                    f"^.*://{urlparse(self.sso_url).netloc}/connect/authorize.*$",
+                    location_header,
+                ):
+                    return True
 
         # Sometimes we get Forbidden on token expiry
-        if response.status_code == 403:
+        if response.status == 403:
             return True
 
         return False
 
-    def _activate_session(self) -> requests.Session:
-        if self.session:
-            self.session.close()
-
-        self.session = requests.Session()
+    async def _activate_session(self) -> None:
+        """Activate the session by logging in."""
         self.logger.info("Retrieving login cookies")
 
         # Get the antiforgery token
-        antiforgery_token = self._get_antiforgery_token()
+        antiforgery_token = await self._get_antiforgery_token()
 
         # Get the login page to extract returnUrl
-        login_page = self.session.get(self.base_url)
-        login_url = login_page.url
-        return_url_params = parse_qs(urlparse(login_url).query)
-        return_url = return_url_params.get("ReturnUrl", [""])[0]
+        async with self._session.get(self.base_url) as login_page:
+            login_url = str(login_page.url)
+            return_url_params = parse_qs(urlparse(login_url).query)
+            return_url = return_url_params.get("ReturnUrl", [""])[0]
 
         # Perform actual sign in with new parameters
         self.logger.debug("Logging in with username and password")
@@ -114,11 +129,11 @@ class Auth:
 
         # Send login request to the correct endpoint
         login_url = f"{self.sso_url}/api/login"
-        auth_page = self.session.post(login_url, json=login_data, headers=headers)
-        auth_page.raise_for_status()
+        async with self._session.post(login_url, json=login_data, headers=headers) as auth_page:
+            auth_page.raise_for_status()
+            login_response = await auth_page.json()
 
         # Handle the JSON response with redirect URI
-        login_response = auth_page.json()
         if login_response.get("validationProblemDetails"):
             raise LoginError(
                 f"Login validation failed: {login_response['validationProblemDetails']}"
@@ -130,25 +145,30 @@ class Auth:
 
         # Follow the redirect to complete OAuth flow
         self.logger.debug("Following OAuth redirect")
-        oauth_response = self.session.get(f"{self.sso_url}{redirect_uri}")
-        oauth_response.raise_for_status()
+        async with self._session.get(f"{self.sso_url}{redirect_uri}") as oauth_response:
+            oauth_response.raise_for_status()
+            oauth_text = await oauth_response.text()
 
         # Continue with OIDC flow
         self.logger.debug("Signing in using OIDC")
-        oidc_params = self._get_oidc_params(oauth_response.text)
-        response = self.session.post(f"{self.base_url}/signin-oidc", data=oidc_params)
-        response.raise_for_status()
+        oidc_params = self._get_oidc_params(oauth_text)
+        async with self._session.post(f"{self.base_url}/signin-oidc", data=oidc_params) as response:
+            response.raise_for_status()
 
         self.logger.debug("Login success")
-        return self.session
 
-    def refresh_session(self) -> requests.Session:
+    async def refresh_session(self) -> None:
+        """Refresh the session by re-authenticating."""
         self.logger.debug("Session possibly expired, triggering refresh")
         try:
-            self._activate_session()
-        except requests.HTTPError:
+            await self._activate_session()
+        except aiohttp.ClientError as e:
             self.logger.error(
                 "Login failed! Please check your credentials and try again."
             )
-            raise
-        return self.session
+            raise LoginError(f"Authentication failed: {e}")
+
+    async def close_session(self):
+        if self._session:
+            await self._session.close()
+            self._session = None
