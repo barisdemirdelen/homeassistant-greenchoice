@@ -1,76 +1,89 @@
 # Home Assistant Greenchoice Sensor
+
 [![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
 
-This is a Home Assistant custom component (sensor) that connects to the Greenchoice API to retrieve current usage data (daily meter data).
+This is a Home Assistant custom component that connects to the Greenchoice API to retrieve current usage data (daily meter data).
 
-The sensor will check every hour if a new reading can be retrieved but Greenchoice practically only gives us one reading a day over this API. The reading is also delayed by 1 or 2 days (this seems to vary). The sensor will give you the date of the reading as an attribute.
+The integration will check every hour if a new reading can be retrieved but Greenchoice practically only gives us one reading a day over this API. The reading is also delayed by 1 or 2 days (this seems to vary). The sensors will give you the date of the reading as an attribute.
 
-### Install:
+## Installation
 
-1. Place the 'greenchoice' folder in your 'custom_compontents' directory if it exists or create a new one under your config directory.
-2. Add your username and password to the secrets.yaml:
+### HACS Installation (Recommended)
 
-```YAML
-greenchoice_user: your@user.name
-greenchoice_pass: your_secret_password
-```
+1. Add this repository URL as a custom repository in HACS and label it as an integration
+2. Install the "Greenchoice" integration via HACS
+3. Restart Home Assistant
+4. Go to **Settings** > **Devices & Services** > **Add Integration**
+5. Search for "Greenchoice" and follow the configuration steps
 
-3. Restart Home Assistant to make it load the integration.
-4. Finally add the component to your configuration.yaml, an example of a proper config entry:
+### Manual Installation
 
-```YAML
-sensor:
-  - platform: greenchoice
-    name: meter_readings
-    username: !secret greenchoice_user
-    password: !secret greenchoice_pass
-```
+1. Place the `greenchoice` folder in your `custom_components` directory
+2. Restart Home Assistant
+3. Go to **Settings** > **Devices & Services** > **Add Integration**
+4. Search for "Greenchoice" and follow the configuration steps
 
-#### HACS Installation
+## Configuration
 
-You can also install this integration via the HACS. Add this repository url as a custom repository in HACS and label it as an integration. You can then install this sensor via HACS.
+The integration uses Home Assistant's config flow for easy setup through the UI.
 
-### Specifying Contract
+### Basic Setup
 
-By default, this sensor uses the preferred contract for the user. This is what you normally see when you open `https://mijn.greenchoice.nl/`
+1. Go to **Settings** > **Devices & Services**
+2. Click **Add Integration** and search for "Greenchoice"
+3. Enter your Greenchoice credentials:
+   - **Email**: Your Greenchoice login email
+   - **Password**: Your Greenchoice password
+4. Select your contract address from the options. Optionally fill in:
+   - **Sensor Name**: Custom name for this instance (optional, defaults to "Greenchoice")
 
-If you would like to gather results for a specific contract, you can fill in the optional `customer_number` and `agreement_id` config values.
+### Multiple Contracts
 
-You can check what your currently preferred customer number and agreement id is with this url: `https://mijn.greenchoice.nl/api/v2/preferences`
+You can add multiple Greenchoice integrations for different contracts or accounts:
 
-To find all your customer numbers and agreement ids you can use this url: `https://mijn.greenchoice.nl/api/v2/profiles`
+1. Repeat the setup process for each contract
+2. Use different names to distinguish between them (e.g., "House Energy", "Solar System")
+3. Each integration will create its own set of sensors with the custom name as prefix
+
+## Sensors Created
+
+Each integration instance creates the following sensors:
+
+### Electricity Consumption
+- **Electricity Consumption Off Peak** (kWh) - Low tariff consumption
+- **Electricity Consumption Normal** (kWh) - Normal/peak tariff consumption  
+- **Electricity Consumption Total** (kWh) - Total electricity consumed
+
+### Electricity Production/Feed-in
+- **Electricity Feed In Off Peak** (kWh) - Low tariff feed-in to grid
+- **Electricity Feed In Normal** (kWh) - Normal/peak tariff feed-in to grid
+- **Electricity Feed In Total** (kWh) - Total electricity fed back to grid
+
+### Electricity Pricing
+- **Electricity Price Single** (€/kWh) - Single rate electricity price
+- **Electricity Price Off Peak** (€/kWh) - Low tariff electricity price
+- **Electricity Price Normal** (€/kWh) - Normal/peak tariff electricity price
+- **Electricity Feed In Compensation** (€/kWh) - Compensation rate for fed-in electricity
+- **Electricity Feed In Cost** (€/kWh) - Cost/fee for feeding electricity back
+
+### Gas
+- **Gas Consumption** (m³) - Gas consumption
+- **Gas Price** (€/m³) - Gas price per cubic meter
 
 
-```YAML
-sensor:
-  - platform: greenchoice
-    name: meter_readings
-    username: !secret greenchoice_user
-    password: !secret greenchoice_pass
-    customer_number: 12341234
-    agreement_id: 56785678
-```
+All sensors include the reading date as an attribute and are automatically discovered by Home Assistant's Energy dashboard.
 
-### Gathering data for multiple contracts:
+## Migration from YAML Configuration
 
-You can also gather data for multiple contracts, by using multiple copies of this sensor. Here is an example configuration:
+If you're upgrading from the YAML-based version:
 
-```YAML
-sensor:
-  - platform: greenchoice
-    name: greenchoice_user1
-    username: !secret greenchoice_user1
-    password: !secret greenchoice_pass1
-  - platform: greenchoice
-    name: greenchoice_user2_agreement1
-    username: !secret greenchoice_user2
-    password: !secret greenchoice_pass2
-    customer_number: 12341234
-    agreement_id: 11111111
-  - platform: greenchoice
-    name: greenchoice_user2_agreement2
-    username: !secret greenchoice_user2
-    password: !secret greenchoice_pass2
-    customer_number: 12341234
-    agreement_id: 22222222
-```
+1. Remove the old YAML configuration from `configuration.yaml`
+2. Restart Home Assistant
+3. Add the integration through the UI as described above
+4. Your historical data will be preserved if you use the same entity names
+
+## Troubleshooting
+
+- The integration logs to Home Assistant's default logger under the `greenchoice` domain
+
+For issues or feature requests, please use the GitHub repository.
