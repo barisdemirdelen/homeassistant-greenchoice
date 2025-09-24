@@ -1,6 +1,6 @@
 {
   "domain": "greenchoice",
-  "name": "Sensor Greenchoice",
+  "name": "Greenchoice",
   "documentation": "https://github.com/barisdemirdelen/homeassistant-greenchoice/",
   "issue_tracker": "https://github.com/barisdemirdelen/homeassistant-greenchoice/issues",
   "codeowners": ["@jessevl", "@barisdemirdelen"],
