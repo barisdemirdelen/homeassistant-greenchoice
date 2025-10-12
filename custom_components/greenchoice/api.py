@@ -1,9 +1,10 @@
 import asyncio
 import logging
 from datetime import UTC, datetime
+from typing import TypeVar, Type
 
 import aiohttp
-from pydantic import ValidationError
+from pydantic import ValidationError, BaseModel
 
 from .auth import Auth
 from .model import (
@@ -19,6 +20,8 @@ from .model import (
 _LOGGER = logging.getLogger(__name__)
 
 BASE_URL = "https://mijn.greenchoice.nl"
+
+T = TypeVar("T", bound=BaseModel)
 
 
 class ApiError(Exception):
@@ -100,7 +103,7 @@ class GreenchoiceApi:
                 method, endpoint, data, json, _retry_count - 1
             )
 
-    async def request(self, endpoint: str, data=None) -> dict:
+    async def request(self, endpoint: str, data=None) -> dict | list:
         """Async request method."""
         target_url = BASE_URL + endpoint
         return await self._authenticated_request("GET", target_url, json=data)
@@ -112,7 +115,7 @@ class GreenchoiceApi:
 
     async def get_profiles(self) -> list[Profile]:
         profiles_json = await self.request("/api/v2/Profiles/")
-        return [Profile.model_validate(p) for p in profiles_json]
+        return self.validate_list(Profile, profiles_json)
 
     async def get_meter_readings(self) -> MeterReadings:
         meter_json = await self.request(
@@ -123,7 +126,7 @@ class GreenchoiceApi:
             ).build_url(),
         )
         return MeterReadings(
-            product_types=[MeterProduct.model_validate(mp) for mp in meter_json]
+            product_types=self.validate_list(MeterProduct, meter_json),
         )
 
     async def get_rates(self) -> Rates:
@@ -222,6 +225,21 @@ class GreenchoiceApi:
 
         if pricing_details.gas:
             result.gas_price = pricing_details.gas.rates.usage_dependent_gas_rates.all_in_delivery_including_vat
+
+    @staticmethod
+    def validate_list(
+        model: Type[T], data: list[dict], ignore_invalid: bool = False
+    ) -> list[T]:
+        """Validate a list of items against a Pydantic model, optionally ignoring invalid items."""
+        valid_items = []
+        for item in data:
+            try:
+                valid_items.append(model.model_validate(item))
+            except ValidationError as e:
+                if not ignore_invalid:
+                    raise e
+                _LOGGER.warning("Ignoring invalid item: %s", item)
+        return valid_items
 
     # SYNC METHODS (Wrapper around async methods for backward compatibility)
     @staticmethod
