@@ -35,7 +35,7 @@ async def test_update_request(
 
 @pytest.mark.asyncio
 async def test_update_request_without_gas(mock_api):
-    mock_api(has_gas=False, has_rates=True)
+    mock_api(has_gas=False)
 
     async with GreenchoiceApi("fake_user", "fake_password") as greenchoice_api:
         result = await greenchoice_api.update()
@@ -61,7 +61,7 @@ async def test_update_request_without_gas(mock_api):
 
 @pytest.mark.asyncio
 async def test_with_old_tariffs_api(mock_api):
-    mock_api(has_gas=True, has_rates=False)
+    mock_api(has_rates=False)
 
     async with GreenchoiceApi("fake_user", "fake_password") as greenchoice_api:
         result = await greenchoice_api.update()
@@ -89,7 +89,7 @@ async def test_with_old_tariffs_api(mock_api):
 async def test_update_request_with_agreement_id(
     mock_api,
 ):
-    mock_api(has_gas=True, has_rates=True)
+    mock_api()
 
     async with GreenchoiceApi(
         "fake_user", "fake_password", customer_number=2222, agreement_id=1111

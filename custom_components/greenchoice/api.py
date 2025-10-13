@@ -115,7 +115,7 @@ class GreenchoiceApi:
 
     async def get_profiles(self) -> list[Profile]:
         profiles_json = await self.request("/api/v2/Profiles/")
-        return self.validate_list(Profile, profiles_json)
+        return self.validate_list(Profile, profiles_json, ignore_invalid=True)
 
     async def get_meter_readings(self) -> MeterReadings:
         meter_json = await self.request(
@@ -125,9 +125,7 @@ class GreenchoiceApi:
                 year=datetime.now(UTC).year,
             ).build_url(),
         )
-        return MeterReadings(
-            product_types=self.validate_list(MeterProduct, meter_json),
-        )
+        return MeterReadings(product_types=self.validate_list(MeterProduct, meter_json))
 
     async def get_rates(self) -> Rates:
         pricing_details = await self.request(

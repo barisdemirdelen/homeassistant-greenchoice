@@ -153,7 +153,9 @@ def mock_api(
 ):
     with aioresponses() as mocked:
 
-        def _mock_api(has_gas: bool, has_rates: bool):
+        def _mock_api(
+            has_gas: bool = True, has_rates: bool = True, has_profiles: bool = True
+        ):
             mocker.patch(
                 "custom_components.greenchoice.auth.Auth.refresh_session",
                 return_value=None,
@@ -185,10 +187,13 @@ def mock_api(
                     status=404,
                 )
 
-            mocked.get(
-                f"{BASE_URL}/api/v2/Profiles/",
-                payload=profiles_response,
-            )
+            if has_profiles:
+                mocked.get(
+                    f"{BASE_URL}/api/v2/Profiles/",
+                    payload=profiles_response,
+                )
+            else:
+                mocked.get(f"{BASE_URL}/api/v2/Profiles/", payload=[])
 
             mocked.get(
                 f"{BASE_URL}/api/v2/Preferences/",
@@ -222,4 +227,3 @@ def mock_api(
             return mocked
 
         yield _mock_api
-

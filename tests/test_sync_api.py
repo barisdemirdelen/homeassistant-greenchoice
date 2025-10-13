@@ -6,7 +6,7 @@ from custom_components.greenchoice.api import GreenchoiceApi
 def test_update_request(
     mock_api,
 ):
-    mock_api(has_gas=True, has_rates=True)
+    mock_api()
 
     greenchoice_api = GreenchoiceApi("fake_user", "fake_password")
     result = greenchoice_api.sync_update()
@@ -31,7 +31,7 @@ def test_update_request(
 
 
 def test_update_request_without_gas(mock_api):
-    mock_api(has_gas=False, has_rates=True)
+    mock_api(has_gas=False)
 
     greenchoice_api = GreenchoiceApi("fake_user", "fake_password")
     result = greenchoice_api.sync_update()
@@ -56,7 +56,7 @@ def test_update_request_without_gas(mock_api):
 
 
 def test_with_old_tariffs_api(mock_api):
-    mock_api(has_gas=True, has_rates=False)
+    mock_api(has_rates=False)
 
     greenchoice_api = GreenchoiceApi("fake_user", "fake_password")
     result = greenchoice_api.sync_update()
@@ -83,7 +83,7 @@ def test_with_old_tariffs_api(mock_api):
 def test_update_request_with_agreement_id(
     mock_api,
 ):
-    mock_api(has_gas=True, has_rates=True)
+    mock_api()
 
     greenchoice_api = GreenchoiceApi(
         "fake_user", "fake_password", customer_number=2222, agreement_id=1111

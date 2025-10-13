@@ -30,5 +30,21 @@
     "moveInDate": "2020-01-01T00:00:00",
     "hasActiveGasSupply": true,
     "hasActiveElectricitySupply": true
-  }
+  },
+  {
+        "customerNumber": 9876,
+        "agreementId": null,
+        "roleName": "Customer",
+        "name": null,
+        "street": null,
+        "houseNumber": null,
+        "houseNumberAddition": null,
+        "postalCode": null,
+        "city": null,
+        "energySupplyStatus": "None",
+        "moveOutDate": null,
+        "moveInDate": null,
+        "hasActiveGasSupply": false,
+        "hasActiveElectricitySupply": false
+    }
 ]
