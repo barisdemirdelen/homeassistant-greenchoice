@@ -112,7 +112,12 @@ class GreenchoiceApi:
 
     async def get_profiles(self) -> list[Profile]:
         profiles_json = await self.request("/api/v2/Profiles/")
-        return [Profile.model_validate(p) for p in profiles_json]
+        _LOGGER.debug(profiles_json)
+        filtered_profiles = [
+            p for p in profiles_json
+            if p.get("agreementId") is not None
+        ]
+        return [Profile.model_validate(p) for p in filtered_profiles]
 
     async def get_meter_readings(self) -> MeterReadings:
         meter_json = await self.request(
