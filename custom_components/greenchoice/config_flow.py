@@ -157,6 +157,9 @@ class GreenchoiceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if profile.city:
             address_parts.append(profile.city)
 
+        if profile.agreement_id:
+            address_parts.append(f"({profile.agreement_id})")
+
         if address_parts:
             return " ".join(address_parts)
         else:

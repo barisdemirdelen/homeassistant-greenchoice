@@ -135,7 +135,7 @@ async def test_profile_step_creates_entry_without_custom_name(flow, mock_profile
     result = await flow.async_step_profile({CONF_PROFILE: "2222_1111"})
 
     assert result["type"] == FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Greenchoice (Address Street 1 1234AB City)"
+    assert result["title"] == "Greenchoice (Address Street 1 1234AB City (1111))"
 
 
 @pytest.mark.asyncio
