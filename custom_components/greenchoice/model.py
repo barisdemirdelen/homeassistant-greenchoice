@@ -32,16 +32,12 @@ class Profile(CamelCaseModel):
     move_out_date: datetime | None = None
 
 
-class PreferencesSubject(CamelCaseModel):
-    customer_number: int
-    agreement_id: int
-
-
 class Preferences(CamelCaseModel):
     """/api/v2/preferences"""
 
     account_id: uuid.UUID
-    subject: PreferencesSubject
+    customer_number: int
+    agreement_id: int
 
 
 class Account(CamelCaseModel):

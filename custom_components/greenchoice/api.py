@@ -142,8 +142,8 @@ class GreenchoiceApi:
         if not self.customer_number or not self.agreement_id:
             try:
                 preferences = await self.get_preferences()
-                self.customer_number = preferences.subject.customer_number
-                self.agreement_id = preferences.subject.agreement_id
+                self.customer_number = preferences.customer_number
+                self.agreement_id = preferences.agreement_id
             except ApiError:
                 _LOGGER.error("Cant get preferences")
                 return result
