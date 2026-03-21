@@ -43,6 +43,22 @@ def contract_response_current_without_gas(data_folder):
 
 
 @pytest.fixture
+def contract_response_current_without_gas_single(data_folder):
+    with data_folder.joinpath("test_contract_current.json").open() as f:
+        response = json.load(f)
+    del response["contracts"][1]
+
+    rates = response["contracts"][0]["rates"]["usageDependentElectricityRates"]
+    rates["allInDeliveryLowIncludingVat"] = None
+    rates["deliveryLow"] = None
+    rates["allInDeliveryLowVat"] = None
+    rates["allInDeliveryNormalIncludingVat"] = None
+    rates["deliveryNormal"] = None
+    rates["allInDeliveryNormalVat"] = None
+    return response
+
+
+@pytest.fixture
 def meters_response(data_folder):
     with data_folder.joinpath("test_meters.json").open() as f:
         return json.load(f)
@@ -144,6 +160,7 @@ def mock_api(
     contract_response_callback,
     contract_response_current,
     contract_response_current_without_gas,
+    contract_response_current_without_gas_single,
     init_response_without_gas,
     meters_response_without_gas,
     meters_v2_response_without_gas,
@@ -151,7 +168,10 @@ def mock_api(
     with aioresponses() as mocked:
 
         def _mock_api(
-            has_gas: bool = True, has_rates: bool = True, has_profiles: bool = True
+            has_gas: bool = True,
+            has_rates: bool = True,
+            has_profiles: bool = True,
+            double_rate: bool = True,
         ):
             mocker.patch(
                 "custom_components.greenchoice.auth.Auth.refresh_session",
@@ -208,11 +228,14 @@ def mock_api(
             )
 
             if has_rates:
+                payload = contract_response_current
+                if not has_gas:
+                    payload = contract_response_current_without_gas
+                if not has_gas and not double_rate:
+                    payload = contract_response_current_without_gas_single
                 mocked.get(
                     f"{BASE_URL}/api/v2/customers/2222/agreements/1111/contracts/current",
-                    payload=contract_response_current
-                    if has_gas
-                    else contract_response_current_without_gas,
+                    payload=payload,
                 )
             else:
                 mocked.get(
