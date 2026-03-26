@@ -178,15 +178,13 @@ class GreenchoiceApi:
                 electricity_reading.normal_consumption
             )
             result.electricity_consumption_total = (
-                electricity_reading.off_peak_consumption
-                + electricity_reading.normal_consumption
-            )
+                electricity_reading.off_peak_consumption or 0
+            ) + (electricity_reading.normal_consumption or 0)
             result.electricity_feed_in_off_peak = electricity_reading.off_peak_feed_in
             result.electricity_feed_in_normal = electricity_reading.normal_feed_in
             result.electricity_feed_in_total = (
-                electricity_reading.off_peak_feed_in
-                + electricity_reading.normal_feed_in
-            )
+                electricity_reading.off_peak_feed_in or 0
+            ) + (electricity_reading.normal_feed_in or 0)
             result.electricity_reading_date = electricity_reading.reading_date
 
         if gas_reading:
