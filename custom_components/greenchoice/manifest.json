@@ -1,18 +1,18 @@
 {
   "domain": "greenchoice",
   "name": "Greenchoice",
-  "documentation": "https://github.com/barisdemirdelen/homeassistant-greenchoice/",
-  "issue_tracker": "https://github.com/barisdemirdelen/homeassistant-greenchoice/issues",
   "codeowners": [
     "@jessevl",
     "@barisdemirdelen"
   ],
-  "iot_class": "cloud_polling",
   "config_flow": true,
+  "documentation": "https://github.com/barisdemirdelen/homeassistant-greenchoice",
+  "iot_class": "cloud_polling",
+  "issue_tracker": "https://github.com/barisdemirdelen/homeassistant-greenchoice/issues",
   "requirements": [
     "aiohttp>=3.0.0,<4.0.0",
     "beautifulsoup4>=4.0.0,<5.0.0",
     "pydantic>=2.0.0,<3.0.0"
   ],
-  "version": "3.1.1"
+  "version": "3.1.2"
 }

@@ -1,10 +1,15 @@
 # Home Assistant Greenchoice Sensor
 
-[![hacs_badge](https://img.shields.io/badge/HACS-Default-orange.svg)](https://github.com/custom-components/hacs)
+[![hacs][hacs-badge]][hacs-url]
+[![release][release-badge]][release-url]
+![downloads][downloads-badge]
 
-This is a Home Assistant custom component that connects to the Greenchoice API to retrieve current usage data (daily meter data).
+This is a Home Assistant custom component that connects to the Greenchoice API to retrieve current usage data (daily
+meter data).
 
-The integration will check every hour if a new reading can be retrieved but Greenchoice practically only gives us one reading a day over this API. The reading is also delayed by 1 or 2 days (this seems to vary). The sensors will give you the date of the reading as an attribute.
+The integration will check every hour if a new reading can be retrieved but Greenchoice practically only gives us one
+reading a day over this API. The reading is also delayed by 1 or 2 days (this seems to vary). The sensors will give you
+the date of the reading as an attribute.
 
 ## Installation
 
@@ -32,10 +37,10 @@ The integration uses Home Assistant's config flow for easy setup through the UI.
 1. Go to **Settings** > **Devices & Services**
 2. Click **Add Integration** and search for "Greenchoice"
 3. Enter your Greenchoice credentials:
-   - **Email**: Your Greenchoice login email
-   - **Password**: Your Greenchoice password
+    - **Email**: Your Greenchoice login email
+    - **Password**: Your Greenchoice password
 4. Select your contract address from the options. Optionally fill in:
-   - **Sensor Name**: Custom name for this instance (optional, defaults to "Greenchoice")
+    - **Sensor Name**: Custom name for this instance (optional, defaults to "Greenchoice")
 
 ### Multiple Contracts
 
@@ -50,16 +55,19 @@ You can add multiple Greenchoice integrations for different contracts or account
 Each integration instance creates the following sensors:
 
 ### Electricity Consumption
+
 - **Electricity Consumption Off Peak** (kWh) - Low tariff consumption
-- **Electricity Consumption Normal** (kWh) - Normal/peak tariff consumption  
+- **Electricity Consumption Normal** (kWh) - Normal/peak tariff consumption
 - **Electricity Consumption Total** (kWh) - Total electricity consumed
 
 ### Electricity Production/Feed-in
+
 - **Electricity Feed In Off Peak** (kWh) - Low tariff feed-in to grid
 - **Electricity Feed In Normal** (kWh) - Normal/peak tariff feed-in to grid
 - **Electricity Feed In Total** (kWh) - Total electricity fed back to grid
 
 ### Electricity Pricing
+
 - **Electricity Price Single** (€/kWh) - Single rate electricity price
 - **Electricity Price Off Peak** (€/kWh) - Low tariff electricity price
 - **Electricity Price Normal** (€/kWh) - Normal/peak tariff electricity price
@@ -67,11 +75,12 @@ Each integration instance creates the following sensors:
 - **Electricity Feed In Cost** (€/kWh) - Cost/fee for feeding electricity back
 
 ### Gas
+
 - **Gas Consumption** (m³) - Gas consumption
 - **Gas Price** (€/m³) - Gas price per cubic meter
 
-
-All sensors include the reading date as an attribute and are automatically discovered by Home Assistant's Energy dashboard.
+All sensors include the reading date as an attribute and are automatically discovered by Home Assistant's Energy
+dashboard.
 
 ## Migration from YAML Configuration
 
@@ -87,3 +96,15 @@ If you're upgrading from the YAML-based version:
 - The integration logs to Home Assistant's default logger under the `greenchoice` domain
 
 For issues or feature requests, please use the GitHub repository.
+
+<!-- Badges -->
+
+[hacs-url]: https://github.com/hacs/integration
+
+[hacs-badge]: https://img.shields.io/badge/hacs-default-orange.svg?style=flat-square
+
+[release-url]: https://github.com/barisdemirdelen/homeassistant-greenchoice/releases
+
+[release-badge]: https://img.shields.io/github/v/release/barisdemirdelen/homeassistant-greenchoice?style=flat-square
+
+[downloads-badge]: https://img.shields.io/github/downloads/barisdemirdelen/homeassistant-greenchoice/total?style=flat-square
