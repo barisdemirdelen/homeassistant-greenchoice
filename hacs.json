@@ -4,7 +4,7 @@
   "render_readme": true,
   "homeassistant": "2025.4.0",
   "zip_release": true,
-  "filename": "homeassistant-greenchoice.zip",
+  "filename": "greenchoice.zip",
   "hide_default_branch": false,
   "content_in_root": false
 }
