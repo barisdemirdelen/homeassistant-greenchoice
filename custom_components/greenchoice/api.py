@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime
 from typing import TypeVar, Type
 
 import aiohttp
@@ -8,6 +8,7 @@ from pydantic import ValidationError, BaseModel
 
 from .auth import Auth
 from .model import (
+    Consumptions,
     MeterProduct,
     MeterReadings,
     Preferences,
@@ -136,6 +137,21 @@ class GreenchoiceApi:
         )
         return Rates.model_validate(pricing_details)
 
+    async def get_consumptions(
+        self, *, interval: str, start: date, end: date
+    ) -> Consumptions:
+        """Fetch consumptions for a given interval and date range."""
+        consumptions_json = await self.request(
+            Consumptions.Request(
+                customer_number=self.customer_number,
+                agreement_id=self.agreement_id,
+                interval=interval,
+                start=start,
+                end=end,
+            ).build_url()
+        )
+        return Consumptions.model_validate(consumptions_json)
+
     async def update(self) -> SensorUpdate:
         """Async update method."""
         result = SensorUpdate()
@@ -222,7 +238,9 @@ class GreenchoiceApi:
             )
 
         if pricing_details.gas:
-            result.gas_price = pricing_details.gas.rates.usage_dependent_gas_rates.all_in_delivery_including_vat
+            result.gas_price = (
+                pricing_details.gas.rates.usage_dependent_gas_rates.all_in_delivery_including_vat
+            )
 
     @staticmethod
     def validate_list(

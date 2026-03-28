@@ -115,7 +115,9 @@ class Rates(BaseModel):
     contracts: list[Contract]
 
     class Request(BaseModel):
-        request_url: str = "/api/v2/customers/{customer_number}/agreements/{agreement_id}/contracts/current"
+        request_url: str = (
+            "/api/v2/customers/{customer_number}/agreements/{agreement_id}/contracts/current"
+        )
 
         customer_number: int
         agreement_id: int
@@ -163,7 +165,9 @@ class MeterReadings(BaseModel):
     product_types: list[MeterProduct]
 
     class Request(BaseModel):
-        request_url: str = """/api/v2/customers/{customer_number}/agreements/{agreement_id}/meter-readings/{year}/"""
+        request_url: str = (
+            """/api/v2/customers/{customer_number}/agreements/{agreement_id}/meter-readings/{year}/"""
+        )
 
         customer_number: int
         agreement_id: int
@@ -217,3 +221,51 @@ class SensorUpdate(BaseModel):
     gas_consumption: float | None = None
     gas_reading_date: datetime | None = None
     gas_price: float | None = None
+
+
+class ConsumptionCostsElectricity(CamelCaseModel):
+    """Electricity details inside /consumptions response."""
+
+    delivery_low_consumption: float | None = None
+    delivery_normal_consumption: float | None = None
+    feed_in_low_consumption: float | None = None
+    feed_in_normal_consumption: float | None = None
+
+    total_delivery_consumption: float | None = None
+    total_feed_in_consumption: float | None = None
+
+
+class ConsumptionCostsItem(CamelCaseModel):
+    """An hourly consumptionCosts item."""
+
+    consumed_on: datetime
+    electricity: ConsumptionCostsElectricity | None = None
+
+
+class Consumptions(CamelCaseModel):
+    """/api/v2/customers/{customer_number}/agreements/{agreement_id}/consumptions"""
+
+    interval: str
+    start: datetime
+    end: datetime
+    consumption_costs: list[ConsumptionCostsItem] = []
+
+    class Request(BaseModel):
+        request_url: str = (
+            "/api/v2/customers/{customer_number}/agreements/{agreement_id}/consumptions"
+        )
+
+        customer_number: int
+        agreement_id: int
+        interval: str
+        start: date
+        end: date
+
+        def build_url(self) -> str:
+            # Greenchoice expects dates (YYYY-MM-DD) for start/end query params.
+            return (
+                self.request_url.format(
+                    customer_number=self.customer_number, agreement_id=self.agreement_id
+                )
+                + f"?interval={self.interval}&start={self.start.isoformat()}&end={self.end.isoformat()}"
+            )

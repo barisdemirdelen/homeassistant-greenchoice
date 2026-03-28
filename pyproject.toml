@@ -25,3 +25,6 @@ dev = [
     "aioresponses>=0.7.8",
     "pytest-homeassistant-custom-component>=0.13.287",
 ]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"

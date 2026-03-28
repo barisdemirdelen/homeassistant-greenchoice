@@ -1,3 +1,5 @@
+pytest_plugins = ["pytest_homeassistant_custom_component"]
+
 import datetime
 import json
 from pathlib import Path
