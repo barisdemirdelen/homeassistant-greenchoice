@@ -1,4 +1,3 @@
-
 DOMAIN = "greenchoice"
 
 CONF_PROFILE = "profile"

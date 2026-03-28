@@ -45,7 +45,7 @@
       "subAgreementId": 12345
     },
     {
-      "type": "FixedDuration",
+      "type": "Variable",
       "displayName": "Groengarantie 5 jaar (ov) 2025/01/01",
       "beginDate": "2025-01-01",
       "endDate": "2030-01-01",
@@ -73,7 +73,7 @@
           "gridOperatorRatePerDayVat": 0.08
         }
       },
-      "rateType": "DoubleRate",
+      "rateType": "SingleRate",
       "subAgreementId": 54321
     }
   ]

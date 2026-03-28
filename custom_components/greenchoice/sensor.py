@@ -1,5 +1,4 @@
 import logging
-import typing as t
 from collections import namedtuple
 from datetime import timedelta
 
@@ -24,17 +23,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.issue_registry import (
-    IssueSeverity,
-    create_issue,
-)
-from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
     DataUpdateCoordinator,
     UpdateFailed,
 )
-from homeassistant.util import Throttle, slugify
+from homeassistant.util import slugify
 
 from . import CONF_AGREEMENT_ID, CONF_CUSTOMER_NUMBER
 from .api import GreenchoiceApi
@@ -291,120 +285,3 @@ class GreenchoiceHourlyEnergySensor(SensorEntity):
         self._attr_extra_state_attributes = {
             "last_imported": stored.get("last_imported"),
         }
-
-
-# YAML platform setup (DEPRECATED)
-def setup_platform(
-    hass: HomeAssistant,
-    config: ConfigType,
-    add_entities: AddEntitiesCallback,
-    discovery_info: t.Optional[DiscoveryInfoType] = None,
-) -> None:
-    """Set up Greenchoice sensors from YAML configuration (DEPRECATED)."""
-
-    # Create deprecation warning
-    create_issue(
-        hass,
-        "greenchoice",
-        "yaml_deprecation",
-        is_fixable=False,
-        severity=IssueSeverity.WARNING,
-        translation_key="yaml_deprecation",
-        translation_placeholders={
-            "domain": "greenchoice",
-            "integration_title": "Greenchoice",
-        },
-    )
-
-    _LOGGER.warning(
-        "YAML configuration for Greenchoice is deprecated and will be removed "
-        "in the next version. Please migrate to the UI-based configuration "
-        "by removing the YAML configuration and re-adding the integration via "
-        "Settings > Devices & Services"
-    )
-
-    name: str = config.get(CONF_NAME)
-    username: str = config.get(CONF_USERNAME)
-    password: str = config.get(CONF_PASSWORD)
-    customer_number: int | None = config.get(CONF_CUSTOMER_NUMBER) or None
-    agreement_id: int | None = config.get(CONF_AGREEMENT_ID) or None
-
-    _LOGGER.debug("Set up platform")
-    greenchoice_api = GreenchoiceApi(
-        username, password, customer_number=customer_number, agreement_id=agreement_id
-    )
-
-    throttled_api_update(greenchoice_api)
-
-    sensors = [
-        GreenchoiceYamlSensor(
-            greenchoice_api,
-            name,
-            sensor_name,
-        )
-        for sensor_name in sensor_infos
-    ]
-
-    add_entities(sensors, True)
-
-
-# Legacy yaml sensor (DEPRECATED)
-@Throttle(MIN_TIME_BETWEEN_UPDATES)
-def throttled_api_update(api) -> SensorUpdate:
-    _LOGGER.debug("Throttled update called.")
-    api_result = api.sync_update()
-    _LOGGER.debug("Api result: %s", api_result)
-    return api_result
-
-
-# Legacy yaml sensor (DEPRECATED)
-class GreenchoiceYamlSensor(SensorEntity):
-    """Legacy sensor class for YAML configuration (DEPRECATED)."""
-
-    def __init__(
-        self,
-        greenchoice_api: GreenchoiceApi,
-        name: str,
-        measurement_type: str,
-    ):
-        self._api = greenchoice_api
-        self._measurement_type = measurement_type
-        self._measurement_date = None
-        self._measurement_date_key = (
-            "electricity_reading_date"
-            if "electricity" in self._measurement_type
-            else "gas_reading_date"
-        )
-
-        sensor_info = sensor_infos[self._measurement_type]
-
-        self._attr_unique_id = f"{slugify(name)}_{measurement_type}"
-        self._attr_name = self._attr_unique_id
-        self._attr_icon = f"mdi:{sensor_info.icon}"
-
-        self._attr_state_class = SensorStateClass.TOTAL
-        self._attr_device_class = sensor_info.device_class
-        self._attr_native_unit_of_measurement = sensor_info.unit
-
-    def update(self):
-        """Get the latest data from the Greenchoice API."""
-        _LOGGER.debug("Updating %s", self.name)
-        api_result = throttled_api_update(self._api) or self._api.result
-
-        if (
-            not api_result
-            or not hasattr(api_result, self._measurement_type)
-            or not hasattr(api_result, self._measurement_date_key)
-        ):
-            return
-
-        self._attr_native_value = getattr(api_result, self._measurement_type)
-        self._measurement_date = getattr(api_result, self._measurement_date_key)
-
-    @property
-    def measurement_type(self):
-        return self._measurement_type
-
-    @property
-    def measurement_date(self):
-        return self._measurement_date

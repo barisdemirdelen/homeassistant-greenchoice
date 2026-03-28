@@ -3,6 +3,7 @@ pytest_plugins = ["pytest_homeassistant_custom_component"]
 import datetime
 import json
 from pathlib import Path
+from urllib.parse import parse_qs, urlparse
 
 import pytest
 from aioresponses import aioresponses
@@ -40,6 +41,22 @@ def contract_response_current_without_gas(data_folder):
     with data_folder.joinpath("test_contract_current.json").open() as f:
         response = json.load(f)
     del response["contracts"][1]
+    return response
+
+
+@pytest.fixture
+def contract_response_current_without_gas_single(data_folder):
+    with data_folder.joinpath("test_contract_current.json").open() as f:
+        response = json.load(f)
+    del response["contracts"][1]
+
+    rates = response["contracts"][0]["rates"]["usageDependentElectricityRates"]
+    rates["allInDeliveryLowIncludingVat"] = None
+    rates["deliveryLow"] = None
+    rates["allInDeliveryLowVat"] = None
+    rates["allInDeliveryNormalIncludingVat"] = None
+    rates["deliveryNormal"] = None
+    rates["allInDeliveryNormalVat"] = None
     return response
 
 
@@ -106,13 +123,8 @@ def init_response_without_gas(data_folder):
 @pytest.fixture
 def contract_response_callback(contract_response, contract_response_without_gas):
     def _contract_response_callback(url, **kwargs):
-        # Parse query parameters from URL
-        from urllib.parse import urlparse, parse_qs
-
         parsed = urlparse(str(url))
         query_params = parse_qs(parsed.query)
-
-        # Convert to same format as requests_mock
         qs = {k: v for k, v in query_params.items()}
 
         if qs == {
@@ -124,6 +136,7 @@ def contract_response_callback(contract_response, contract_response_without_gas)
             "zipcode": ["1234ab"],
         }:
             return contract_response
+
         if qs == {
             "agreementidelectricity": ["1111"],
             "housenumber": ["1"],
@@ -149,6 +162,7 @@ def mock_api(
     contract_response_callback,
     contract_response_current,
     contract_response_current_without_gas,
+    contract_response_current_without_gas_single,
     init_response_without_gas,
     meters_response_without_gas,
     meters_v2_response_without_gas,
@@ -156,7 +170,10 @@ def mock_api(
     with aioresponses() as mocked:
 
         def _mock_api(
-            has_gas: bool = True, has_rates: bool = True, has_profiles: bool = True
+            has_gas: bool = True,
+            has_rates: bool = True,
+            has_profiles: bool = True,
+            double_rate: bool = True,
         ):
             mocker.patch(
                 "custom_components.greenchoice.auth.Auth.refresh_session",
@@ -213,11 +230,14 @@ def mock_api(
             )
 
             if has_rates:
+                payload = contract_response_current
+                if not has_gas:
+                    payload = contract_response_current_without_gas
+                if not has_gas and not double_rate:
+                    payload = contract_response_current_without_gas_single
                 mocked.get(
                     f"{BASE_URL}/api/v2/customers/2222/agreements/1111/contracts/current",
-                    payload=contract_response_current
-                    if has_gas
-                    else contract_response_current_without_gas,
+                    payload=payload,
                 )
             else:
                 mocked.get(

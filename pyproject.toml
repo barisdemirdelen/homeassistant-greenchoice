@@ -1,29 +1,28 @@
 [project]
 name = "homeassistant-greenchoice"
-version = "3.0.1"
+version = "3.1.1"
 description = "Integration to connect Greenchoice.nl with Home Assistant"
 authors = ["Baris Demirdelen <barisdemirdelen@gmail.com>"]
 readme = "README.md"
-requires-python = ">=3.13.2"
+requires-python = ">=3.14"
 dependencies = [
     "homeassistant>=2024.12.5",
     "aiohttp>=3.12.15",
     "beautifulsoup4>=4.12.3",
-    "pydantic>=2.11.1",
+    "pydantic>=2.12.2",
 ]
 
 [dependency-groups]
 dev = [
-    "coverage>=7.6.10",
-    "pytest-cov>=6.0.0",
-    "pytest>=8.3.4",
-    "mypy>=1.14.1",
-    "ruff>=0.9.4",
-    "pytest-mock>=3.14.0",
-    "ty>=0.0.0a8",
+    "coverage>=7.10.6",
+    "pytest>=9.0.0",
     "pytest-asyncio>=1.2.0",
+    "pytest-cov>=6.0.0",
+    "pytest-mock>=3.14.0",
+    "pytest-homeassistant-custom-component>=0.13.306",
     "aioresponses>=0.7.8",
-    "pytest-homeassistant-custom-component>=0.13.287",
+    "ruff>=0.9.4",
+    "ty>=0.0.0a8",
 ]
 
 [tool.pytest.ini_options]
