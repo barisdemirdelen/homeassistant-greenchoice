@@ -3,3 +3,4 @@
 __pycache__
 .coverage
 scratch.py
+.DS_Store

@@ -1,6 +1,6 @@
 import asyncio
 import logging
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from typing import Type, TypeVar
 
 import aiohttp
@@ -138,9 +138,13 @@ class GreenchoiceApi:
         return Rates.model_validate(pricing_details)
 
     async def get_consumptions(
-        self, *, interval: str, start: date, end: date
+        self, *, interval: str, start: date
     ) -> Consumptions:
         """Fetch consumptions for a given interval and date range."""
+
+        # API only supports 1 day intervals, so end is always start + 1 day
+        end = start + timedelta(days=1)
+        
         consumptions_json = await self.request(
             Consumptions.Request(
                 customer_number=self.customer_number,

@@ -2,6 +2,7 @@
 
 import logging
 
+import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EMAIL,
@@ -9,15 +10,19 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.helpers import config_validation as cv
 
 from .api import GreenchoiceApi
 from .const import CONF_AGREEMENT_ID, CONF_CUSTOMER_NUMBER, DOMAIN
+from .hourly_statistics import async_reimport_hourly_statistics_from
 from .sensor import GreenchoiceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [Platform.SENSOR]
+
+SERVICE_REIMPORT_HOURLY_STATISTICS = "reimport_hourly_statistics"
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -43,10 +48,51 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
+        # Register the reimport action once (shared across all config entries).
+        if not hass.services.has_service(DOMAIN, SERVICE_REIMPORT_HOURLY_STATISTICS):
+            _register_services(hass)
+
         return True
     except Exception as e:
         _LOGGER.error("Failed to setup Greenchoice integration: %s", e)
         return False
+
+
+def _register_services(hass: HomeAssistant) -> None:
+    """Register domain-wide actions."""
+
+    async def handle_reimport_hourly_statistics(call: ServiceCall) -> None:
+        start_date = call.data["start_date"]
+        for entry_id, coordinator in list(hass.data.get(DOMAIN, {}).items()):
+            config_entry = hass.config_entries.async_get_entry(entry_id)
+            if config_entry is None:
+                continue
+            api = GreenchoiceApi(
+                config_entry.data[CONF_EMAIL],
+                config_entry.data[CONF_PASSWORD],
+                config_entry.data.get(CONF_CUSTOMER_NUMBER),
+                config_entry.data.get(CONF_AGREEMENT_ID),
+            )
+            try:
+                async with api:
+                    await async_reimport_hourly_statistics_from(
+                        hass,
+                        api=api,
+                        entry=config_entry,
+                        start_date=start_date,
+                    )
+            except Exception as err:
+                _LOGGER.error(
+                    "Reimport failed for %s: %s", config_entry.title, err
+                )
+
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_REIMPORT_HOURLY_STATISTICS,
+        handle_reimport_hourly_statistics,
+        schema=vol.Schema({vol.Required("start_date"): cv.date}),
+    )
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -57,5 +103,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         ]
         await coordinator.async_shutdown()
         hass.data[DOMAIN].pop(entry.entry_id)
+
+        # Remove the shared service when the last entry is unloaded.
+        if not hass.data.get(DOMAIN):
+            hass.services.async_remove(DOMAIN, SERVICE_REIMPORT_HOURLY_STATISTICS)
 
     return unload_ok
