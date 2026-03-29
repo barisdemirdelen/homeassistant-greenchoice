@@ -115,9 +115,7 @@ class Rates(BaseModel):
     contracts: list[Contract]
 
     class Request(BaseModel):
-        request_url: str = (
-            "/api/v2/customers/{customer_number}/agreements/{agreement_id}/contracts/current"
-        )
+        request_url: str = "/api/v2/customers/{customer_number}/agreements/{agreement_id}/contracts/current"
 
         customer_number: int
         agreement_id: int
@@ -165,9 +163,7 @@ class MeterReadings(BaseModel):
     product_types: list[MeterProduct]
 
     class Request(BaseModel):
-        request_url: str = (
-            """/api/v2/customers/{customer_number}/agreements/{agreement_id}/meter-readings/{year}/"""
-        )
+        request_url: str = """/api/v2/customers/{customer_number}/agreements/{agreement_id}/meter-readings/{year}/"""
 
         customer_number: int
         agreement_id: int

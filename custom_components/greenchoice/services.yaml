@@ -14,4 +14,4 @@ reimport_hourly_statistics:
       required: true
       example: "2026-03-25"
       selector:
-        date: {}
+        date: { }

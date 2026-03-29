@@ -5,8 +5,10 @@
     "@jessevl",
     "@barisdemirdelen"
   ],
-  "dependencies": ["recorder"],
   "config_flow": true,
+  "dependencies": [
+    "recorder"
+  ],
   "documentation": "https://github.com/barisdemirdelen/homeassistant-greenchoice",
   "iot_class": "cloud_polling",
   "issue_tracker": "https://github.com/barisdemirdelen/homeassistant-greenchoice/issues",

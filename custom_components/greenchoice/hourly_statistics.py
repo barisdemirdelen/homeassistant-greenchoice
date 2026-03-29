@@ -6,13 +6,13 @@ import logging
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 
-from homeassistant.const import CONF_NAME, UnitOfEnergy
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_NAME, UnitOfEnergy
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.storage import Store
-from homeassistant.util import slugify
 from homeassistant.util import dt as dt_util
+from homeassistant.util import slugify
 
 from .api import GreenchoiceApi
 from .const import DOMAIN
@@ -324,9 +324,7 @@ async def async_reimport_hourly_statistics_from(
     yesterday = local_now.date() - timedelta(days=1)
 
     if start_date > yesterday:
-        raise ValueError(
-            f"start_date {start_date} must not be today or in the future"
-        )
+        raise ValueError(f"start_date {start_date} must not be today or in the future")
 
     if not api.customer_number or not api.agreement_id:
         prefs = await api.get_preferences()
@@ -351,7 +349,9 @@ async def async_reimport_hourly_statistics_from(
     # Look up the end-of-day sum from the day before start_date so the
     # re-imported series continues the existing cumulative total correctly.
     day_before = start_date - timedelta(days=1)
-    pre_consumption = await _get_days_with_data(hass, consumption_id, day_before, day_before)
+    pre_consumption = await _get_days_with_data(
+        hass, consumption_id, day_before, day_before
+    )
     pre_feed_in = await _get_days_with_data(hass, feed_in_id, day_before, day_before)
     sum_consumption = pre_consumption.get(day_before, 0.0)
     sum_feed_in = pre_feed_in.get(day_before, 0.0)

@@ -12,8 +12,8 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.greenchoice.const import DOMAIN
 from custom_components.greenchoice.hourly_statistics import (
-    async_import_yesterday_hourly_statistics,
     _get_days_with_data,
+    async_import_yesterday_hourly_statistics,
     hourly_consumption_entity_id,
 )
 from custom_components.greenchoice.model import Consumptions, Preferences
@@ -67,7 +67,9 @@ async def test_import_yesterday_hourly_statistics_imports_and_is_idempotent(hass
                 {
                     "interval": "Hour",
                     "start": start.isoformat(),
-                    "end": (start + __import__("datetime").timedelta(days=1)).isoformat(),
+                    "end": (
+                        start + __import__("datetime").timedelta(days=1)
+                    ).isoformat(),
                     "consumptionCosts": [],
                 }
             )
@@ -362,7 +364,9 @@ async def test_import_yesterday_hourly_statistics_backfills_gap(hass):
                 {
                     "interval": "Hour",
                     "start": start.isoformat(),
-                    "end": (start + __import__("datetime").timedelta(days=1)).isoformat(),
+                    "end": (
+                        start + __import__("datetime").timedelta(days=1)
+                    ).isoformat(),
                     "consumptionCosts": [],
                 }
             )
@@ -392,7 +396,9 @@ async def test_import_yesterday_hourly_statistics_backfills_gap(hass):
         assert res.imported is True
         assert res.date == date(2026, 3, 27)
         assert res.points == 2  # one point per missing day
-        assert mock_import.call_count == 4  # consumption + feed-in, twice (once per day)
+        assert (
+            mock_import.call_count == 4
+        )  # consumption + feed-in, twice (once per day)
 
         def _sum(stat):
             return stat["sum"] if isinstance(stat, dict) else stat.sum
@@ -433,7 +439,9 @@ async def test_import_corrects_stale_sums_after_gap(hass):
 
     # Recorder: March 21-25 ok, March 26 MISSING, March 27 present but with a
     # stale sum that was computed without March 26 (wrong baseline).
-    stale_sum_march_27 = 100.0 + day_27_consumption  # built on March 25 end sum, skipping March 26
+    stale_sum_march_27 = (
+        100.0 + day_27_consumption
+    )  # built on March 25 end sum, skipping March 26
     recorder_consumption = {
         date(2026, 3, 21): 40.0,
         date(2026, 3, 22): 55.0,
@@ -468,7 +476,9 @@ async def test_import_corrects_stale_sums_after_gap(hass):
                     {
                         "interval": "Hour",
                         "start": start.isoformat(),
-                        "end": (start + __import__("datetime").timedelta(days=1)).isoformat(),
+                        "end": (
+                            start + __import__("datetime").timedelta(days=1)
+                        ).isoformat(),
                         "consumptionCosts": [],
                     }
                 )
@@ -522,7 +532,9 @@ async def test_import_corrects_stale_sums_after_gap(hass):
 
         # March 26: correct sum = March 25 end (100) + day_26 (10) = 110.
         march_26_stats = mock_import.call_args_list[0].args[2]
-        assert float(_sum(march_26_stats[0])) == pytest.approx(100.0 + day_26_consumption)
+        assert float(_sum(march_26_stats[0])) == pytest.approx(
+            100.0 + day_26_consumption
+        )
 
         # March 27: correct sum = March 26 end (110) + day_27 (6) = 116,
         # NOT the stale value of 106 that was in the recorder.
@@ -565,7 +577,9 @@ async def test_import_yesterday_hourly_statistics_retries_on_empty(hass):
                 {
                     "interval": "Hour",
                     "start": start.isoformat(),
-                    "end": (start + __import__("datetime").timedelta(days=1)).isoformat(),
+                    "end": (
+                        start + __import__("datetime").timedelta(days=1)
+                    ).isoformat(),
                     "consumptionCosts": [],
                 }
             )
@@ -617,9 +631,7 @@ async def test_get_days_with_data_handles_float_timestamps(hass):
         ]
     }
 
-    with patch(
-        "homeassistant.components.recorder.get_instance"
-    ) as mock_get_instance:
+    with patch("homeassistant.components.recorder.get_instance") as mock_get_instance:
         mock_instance = Mock()
         mock_instance.async_add_executor_job = AsyncMock(return_value=fake_stats)
         mock_get_instance.return_value = mock_instance
