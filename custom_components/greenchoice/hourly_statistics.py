@@ -6,6 +6,12 @@ import logging
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 
+from homeassistant.components.recorder.models import (
+    StatisticData,
+    StatisticMeanType,
+    StatisticMetaData,
+)
+from homeassistant.components.recorder.statistics import async_import_statistics
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, UnitOfEnergy
 from homeassistant.core import HomeAssistant
@@ -16,6 +22,7 @@ from homeassistant.util import slugify
 
 from .api import GreenchoiceApi
 from .const import DOMAIN
+from .model import Consumptions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -62,6 +69,45 @@ def _as_utc_start(dt: datetime) -> datetime:
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
     return dt_util.as_utc(dt)
+
+
+def _build_day_stats(
+    consumptions: Consumptions,
+    sum_consumption: float,
+    sum_feed_in: float,
+) -> tuple[list, list, int, float, float]:
+    """Build StatisticData lists for one day of API consumption data.
+
+    Iterates the hourly consumption items, accumulates running sums, and returns
+    ``(stats_consumption, stats_feed_in, points, sum_consumption, sum_feed_in)``.
+    The caller is responsible for checking that ``points > 0`` before importing.
+    This is the single source of truth for how raw API data becomes recorder stats.
+    """
+
+    stats_consumption: list = []
+    stats_feed_in: list = []
+    points = 0
+
+    for item in sorted(consumptions.consumption_costs, key=lambda x: x.consumed_on):
+        if not item.electricity:
+            continue
+
+        start_utc = _as_utc_start(item.consumed_on)
+        delivered = float(item.electricity.total_delivery_consumption or 0.0)
+        fed_in = abs(float(item.electricity.total_feed_in_consumption or 0.0))
+
+        sum_consumption += delivered
+        sum_feed_in += fed_in
+
+        stats_consumption.append(
+            StatisticData(start=start_utc, state=delivered, sum=sum_consumption)
+        )
+        stats_feed_in.append(
+            StatisticData(start=start_utc, state=fed_in, sum=sum_feed_in)
+        )
+        points += 1
+
+    return stats_consumption, stats_feed_in, points, sum_consumption, sum_feed_in
 
 
 async def _get_days_with_data(
@@ -205,17 +251,6 @@ async def async_import_yesterday_hourly_statistics(
         api.customer_number = prefs.customer_number
         api.agreement_id = prefs.agreement_id
 
-    try:
-        from homeassistant.components.recorder.models import (
-            StatisticData,
-            StatisticMeanType,
-            StatisticMetaData,
-        )
-        from homeassistant.components.recorder.statistics import async_import_statistics
-    except Exception as err:  # pragma: no cover
-        _LOGGER.warning("Recorder statistics import unavailable: %s", err)
-        return None
-
     metadata_consumption = StatisticMetaData(
         has_sum=True,
         mean_type=StatisticMeanType.NONE,
@@ -223,6 +258,7 @@ async def async_import_yesterday_hourly_statistics(
         source="recorder",
         statistic_id=consumption_id,
         unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        unit_class=None,
     )
     metadata_feed_in = StatisticMetaData(
         has_sum=True,
@@ -231,6 +267,7 @@ async def async_import_yesterday_hourly_statistics(
         source="recorder",
         statistic_id=feed_in_id,
         unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        unit_class=None,
     )
 
     total_points = 0
@@ -251,28 +288,9 @@ async def async_import_yesterday_hourly_statistics(
 
         consumptions = await api.get_consumptions(interval="Hour", start=target_day)
 
-        stats_consumption: list[StatisticData] = []
-        stats_feed_in: list[StatisticData] = []
-        points = 0
-
-        for item in sorted(consumptions.consumption_costs, key=lambda x: x.consumed_on):
-            if not item.electricity:
-                continue
-
-            start_utc = _as_utc_start(item.consumed_on)
-            delivered = float(item.electricity.total_delivery_consumption or 0.0)
-            fed_in = abs(float(item.electricity.total_feed_in_consumption or 0.0))
-
-            sum_consumption += delivered
-            sum_feed_in += fed_in
-
-            stats_consumption.append(
-                StatisticData(start=start_utc, state=delivered, sum=sum_consumption)
-            )
-            stats_feed_in.append(
-                StatisticData(start=start_utc, state=fed_in, sum=sum_feed_in)
-            )
-            points += 1
+        stats_consumption, stats_feed_in, points, sum_consumption, sum_feed_in = (
+            _build_day_stats(consumptions, sum_consumption, sum_feed_in)
+        )
 
         _LOGGER.debug("Found %d hourly points for %s", points, target_day)
 
@@ -331,17 +349,6 @@ async def async_reimport_hourly_statistics_from(
         api.customer_number = prefs.customer_number
         api.agreement_id = prefs.agreement_id
 
-    try:
-        from homeassistant.components.recorder.models import (
-            StatisticData,
-            StatisticMeanType,
-            StatisticMetaData,
-        )
-        from homeassistant.components.recorder.statistics import async_import_statistics
-    except Exception as err:  # pragma: no cover
-        _LOGGER.warning("Recorder statistics import unavailable: %s", err)
-        return 0
-
     config_name = _config_name(entry)
     consumption_id = hourly_consumption_entity_id(config_name)
     feed_in_id = hourly_feed_in_entity_id(config_name)
@@ -363,6 +370,7 @@ async def async_reimport_hourly_statistics_from(
         source="recorder",
         statistic_id=consumption_id,
         unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        unit_class=None,
     )
     metadata_feed_in = StatisticMetaData(
         has_sum=True,
@@ -371,6 +379,7 @@ async def async_reimport_hourly_statistics_from(
         source="recorder",
         statistic_id=feed_in_id,
         unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        unit_class=None,
     )
 
     num_days = (yesterday - start_date).days + 1
@@ -387,28 +396,9 @@ async def async_reimport_hourly_statistics_from(
         target_day = start_date + timedelta(days=i)
         consumptions = await api.get_consumptions(interval="Hour", start=target_day)
 
-        stats_consumption: list[StatisticData] = []
-        stats_feed_in: list[StatisticData] = []
-        points = 0
-
-        for item in sorted(consumptions.consumption_costs, key=lambda x: x.consumed_on):
-            if not item.electricity:
-                continue
-
-            start_utc = _as_utc_start(item.consumed_on)
-            delivered = float(item.electricity.total_delivery_consumption or 0.0)
-            fed_in = abs(float(item.electricity.total_feed_in_consumption or 0.0))
-
-            sum_consumption += delivered
-            sum_feed_in += fed_in
-
-            stats_consumption.append(
-                StatisticData(start=start_utc, state=delivered, sum=sum_consumption)
-            )
-            stats_feed_in.append(
-                StatisticData(start=start_utc, state=fed_in, sum=sum_feed_in)
-            )
-            points += 1
+        stats_consumption, stats_feed_in, points, sum_consumption, sum_feed_in = (
+            _build_day_stats(consumptions, sum_consumption, sum_feed_in)
+        )
 
         if not points:
             _LOGGER.debug("No API data for %s, skipping", target_day)

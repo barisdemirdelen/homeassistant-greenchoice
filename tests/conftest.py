@@ -1,12 +1,12 @@
-pytest_plugins = ["pytest_homeassistant_custom_component"]
-
 import datetime
 import json
+import re
 from pathlib import Path
+from unittest.mock import AsyncMock, Mock, patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
-from aioresponses import aioresponses
+from aioresponses import CallbackResult, aioresponses
 
 from custom_components.greenchoice.api import BASE_URL
 
@@ -151,6 +151,12 @@ def contract_response_callback(contract_response, contract_response_without_gas)
 
 
 @pytest.fixture
+def consumptions_hour_response(data_folder):
+    with data_folder.joinpath("test_consumptions_hour.json").open() as f:
+        return json.load(f)
+
+
+@pytest.fixture
 def mock_api(
     mocker,
     init_response,
@@ -174,6 +180,7 @@ def mock_api(
             has_rates: bool = True,
             has_profiles: bool = True,
             double_rate: bool = True,
+            consumptions: dict | None = None,
         ):
             mocker.patch(
                 "custom_components.greenchoice.auth.Auth.refresh_session",
@@ -246,6 +253,84 @@ def mock_api(
                     status=404,
                 )
 
+            # Optional: mock hourly consumptions endpoint.
+            # consumptions is a dict of {date_str: payload}, e.g. {"2026-03-27": {...}}.
+            # Any date not in the dict automatically returns an empty consumptions
+            # response, so tests only need to list dates that should carry data.
+            if consumptions is not None:
+                _specific = consumptions
+
+                def _consumptions_cb(url, **kwargs):
+                    params = parse_qs(urlparse(str(url)).query)
+                    start = params.get("start", ["2000-01-01"])[0]
+                    end = params.get("end", ["2000-01-02"])[0]
+                    if start in _specific:
+                        return CallbackResult(payload=_specific[start])
+                    return CallbackResult(
+                        payload={
+                            "interval": "Hour",
+                            "start": f"{start}T00:00:00",
+                            "end": f"{end}T00:00:00",
+                            "consumptionCosts": [],
+                        }
+                    )
+
+                mocked.get(
+                    re.compile(
+                        re.escape(BASE_URL)
+                        + r"/api/v2/customers/\d+/agreements/\d+/consumptions"
+                    ),
+                    callback=_consumptions_cb,
+                    repeat=True,
+                )
+
             return mocked
 
         yield _mock_api
+
+
+@pytest.fixture
+def mock_import_statistics():
+    """Patch async_import_statistics in hourly_statistics for the duration of the test."""
+    with patch(
+        "custom_components.greenchoice.hourly_statistics.async_import_statistics",
+        new=Mock(),
+    ) as m:
+        yield m
+
+
+@pytest.fixture
+def patch_hourly_now():
+    """Factory: returns a context manager that patches dt_util.now in hourly_statistics."""
+
+    def _patch(return_value):
+        return patch(
+            "custom_components.greenchoice.hourly_statistics.dt_util.now",
+            return_value=return_value,
+        )
+
+    return _patch
+
+
+@pytest.fixture
+def patch_recorder_days():
+    """Factory: returns a context manager that patches _get_days_with_data.
+
+    Pass one dict  → that dict is returned for every call (return_value).
+    Pass two dicts → they are returned in order (side_effect), which is needed when
+                     the function calls _get_days_with_data separately for consumption
+                     and feed-in statistic IDs.
+    """
+
+    def _patch(*return_values):
+        mock = (
+            AsyncMock(return_value=return_values[0])
+            if len(return_values) == 1
+            else AsyncMock(side_effect=list(return_values))
+        )
+        return patch(
+            "custom_components.greenchoice.hourly_statistics._get_days_with_data",
+            new=mock,
+        )
+
+    return _patch
