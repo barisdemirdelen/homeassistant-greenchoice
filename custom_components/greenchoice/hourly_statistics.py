@@ -45,7 +45,7 @@ def hourly_feed_in_entity_id(config_name: str) -> str:
     return f"sensor.{slugify(config_name)}_electricity_feed_in_hourly"
 
 
-def get_hourly_store(hass: HomeAssistant, entry_id: str) -> Store[dict]:
+def get_hourly_store(hass: HomeAssistant, entry_id: str) -> Store:
     return Store(hass, _STORE_VERSION, _store_key(entry_id))
 
 
