@@ -231,11 +231,18 @@ class ConsumptionCostsElectricity(CamelCaseModel):
     total_feed_in_consumption: float | None = None
 
 
+class ConsumptionCostsGas(CamelCaseModel):
+    """Gas details inside /consumptions response."""
+
+    total_delivery_consumption: float | None = None
+
+
 class ConsumptionCostsItem(CamelCaseModel):
     """An hourly consumptionCosts item."""
 
     consumed_on: datetime
     electricity: ConsumptionCostsElectricity | None = None
+    gas: ConsumptionCostsGas | None = None
 
 
 class Consumptions(CamelCaseModel):

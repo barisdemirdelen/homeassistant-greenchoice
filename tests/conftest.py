@@ -162,6 +162,12 @@ def consumptions_hour_response(data_folder):
 
 
 @pytest.fixture
+def consumptions_hour_with_gas_response(data_folder):
+    with data_folder.joinpath("test_consumptions_hour_with_gas.json").open() as f:
+        return json.load(f)
+
+
+@pytest.fixture
 def mock_api(
     mocker,
     init_response,
@@ -394,25 +400,32 @@ def entry_factory(hass):
 
 
 def make_consumptions_payload(
-    date_str: str, total_delivery: float, total_feed_in: float = 0.0
+    date_str: str,
+    total_delivery: float,
+    total_feed_in: float = 0.0,
+    gas_delivery: float | None = None,
 ) -> dict:
     """Build a single-point hourly consumptions API response for the given date."""
     end_str = (date.fromisoformat(date_str) + timedelta(days=1)).isoformat()
+    item: dict = {
+        "consumedOn": f"{date_str}T00:00:00",
+        "electricity": {
+            "totalDeliveryConsumption": total_delivery,
+            "totalFeedInConsumption": total_feed_in,
+            "hasConsumption": True,
+        },
+        "hasConsumption": True,
+    }
+    if gas_delivery is not None:
+        item["gas"] = {
+            "totalDeliveryConsumption": gas_delivery,
+            "hasConsumption": True,
+        }
     return {
         "interval": "Hour",
         "start": f"{date_str}T00:00:00",
         "end": f"{end_str}T00:00:00",
-        "consumptionCosts": [
-            {
-                "consumedOn": f"{date_str}T00:00:00",
-                "electricity": {
-                    "totalDeliveryConsumption": total_delivery,
-                    "totalFeedInConsumption": total_feed_in,
-                    "hasConsumption": True,
-                },
-                "hasConsumption": True,
-            }
-        ],
+        "consumptionCosts": [item],
     }
 
 

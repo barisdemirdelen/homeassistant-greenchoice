@@ -1,6 +1,6 @@
 [project]
 name = "homeassistant-greenchoice"
-version = "3.1.3"
+version = "3.2.0"
 description = "Integration to connect Greenchoice.nl with Home Assistant"
 authors = ["Baris Demirdelen <barisdemirdelen@gmail.com>"]
 readme = "README.md"
@@ -10,6 +10,7 @@ dependencies = [
     "aiohttp>=3.12.15",
     "beautifulsoup4>=4.12.3",
     "pydantic>=2.12.2",
+    "voluptuous>=0.15.2",
 ]
 
 [dependency-groups]
@@ -24,6 +25,3 @@ dev = [
     "ruff>=0.9.4",
     "ty>=0.0.0a8",
 ]
-
-[tool.pytest.ini_options]
-asyncio_mode = "auto"

@@ -118,6 +118,13 @@ class GreenchoiceApi:
         profiles_json = await self.request("/api/v2/Profiles/")
         return self.validate_list(Profile, profiles_json, ignore_invalid=True)
 
+    async def _ensure_credentials(self) -> None:
+        """Fetch and cache customer_number / agreement_id if not already set."""
+        if not self.customer_number or not self.agreement_id:
+            prefs = await self.get_preferences()
+            self.customer_number = prefs.customer_number
+            self.agreement_id = prefs.agreement_id
+
     async def get_meter_readings(self) -> MeterReadings:
         meter_json = await self.request(
             MeterReadings.Request(
@@ -139,6 +146,7 @@ class GreenchoiceApi:
 
     async def get_consumptions(self, *, interval: str, start: date) -> Consumptions:
         """Fetch consumptions for a given interval and date range."""
+        await self._ensure_credentials()
 
         # API only supports 1 day intervals, so end is always start + 1 day
         end = start + timedelta(days=1)
@@ -157,14 +165,11 @@ class GreenchoiceApi:
     async def update(self) -> SensorUpdate:
         """Async update method."""
         result = SensorUpdate()
-        if not self.customer_number or not self.agreement_id:
-            try:
-                preferences = await self.get_preferences()
-                self.customer_number = preferences.customer_number
-                self.agreement_id = preferences.agreement_id
-            except ApiError:
-                _LOGGER.error("Cant get preferences")
-                return result
+        try:
+            await self._ensure_credentials()
+        except ApiError:
+            _LOGGER.error("Cant get preferences")
+            return result
 
         try:
             await self.update_usage_values(result)

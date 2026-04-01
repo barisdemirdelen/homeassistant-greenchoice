@@ -1,0 +1,1033 @@
+{
+  "interval": "Hour",
+  "start": "2026-03-01T00:00:00",
+  "end": "2026-03-02T00:00:00",
+  "consumptionCosts": [
+    {
+      "consumedOn": "2026-03-01T00:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.422,
+        "deliveryNormalCosts": 0.11276,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.422,
+        "totalDeliveryCosts": 0.11276,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.005,
+        "deliveryCosts": 0.00653,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.005,
+        "totalDeliveryCosts": 0.00653,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.422,
+        "netElectricityCosts": 0.10897,
+        "netCosts": 0.15749
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T01:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.479,
+        "deliveryNormalCosts": 0.12799,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.479,
+        "totalDeliveryCosts": 0.12799,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.004,
+        "deliveryCosts": 0.00523,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.004,
+        "totalDeliveryCosts": 0.00523,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.479,
+        "netElectricityCosts": 0.12420,
+        "netCosts": 0.17142
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T02:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.565,
+        "deliveryNormalCosts": 0.15097,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.565,
+        "totalDeliveryCosts": 0.15097,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.000,
+        "deliveryCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.000,
+        "totalDeliveryCosts": 0.00000,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.565,
+        "netElectricityCosts": 0.14718,
+        "netCosts": 0.18917
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T03:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.419,
+        "deliveryNormalCosts": 0.11196,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.419,
+        "totalDeliveryCosts": 0.11196,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.004,
+        "deliveryCosts": 0.00523,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.004,
+        "totalDeliveryCosts": 0.00523,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.419,
+        "netElectricityCosts": 0.10817,
+        "netCosts": 0.15539
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T04:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.411,
+        "deliveryNormalCosts": 0.10982,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.411,
+        "totalDeliveryCosts": 0.10982,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.005,
+        "deliveryCosts": 0.00653,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.005,
+        "totalDeliveryCosts": 0.00653,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.411,
+        "netElectricityCosts": 0.10603,
+        "netCosts": 0.15455
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T05:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.426,
+        "deliveryNormalCosts": 0.11383,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.426,
+        "totalDeliveryCosts": 0.11383,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.212,
+        "deliveryCosts": 0.27695,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.212,
+        "totalDeliveryCosts": 0.27695,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.426,
+        "netElectricityCosts": 0.11004,
+        "netCosts": 0.42898
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T06:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.42,
+        "deliveryNormalCosts": 0.11223,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.42,
+        "totalDeliveryCosts": 0.11223,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.229,
+        "deliveryCosts": 0.29916,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.229,
+        "totalDeliveryCosts": 0.29916,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.42,
+        "netElectricityCosts": 0.10844,
+        "netCosts": 0.44959
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T07:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.449,
+        "deliveryNormalCosts": 0.11997,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.449,
+        "totalDeliveryCosts": 0.11997,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.191,
+        "deliveryCosts": 0.24952,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.191,
+        "totalDeliveryCosts": 0.24952,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.449,
+        "netElectricityCosts": 0.11618,
+        "netCosts": 0.40769
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T08:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.284,
+        "deliveryNormalCosts": 0.07589,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": -0.002,
+        "feedInNormalCompensation": -0.00053,
+        "variableFeedInCosts": 0.00028,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.284,
+        "totalDeliveryCosts": 0.07589,
+        "totalFeedInConsumption": -0.002,
+        "totalFeedInCompensation": -0.00053,
+        "totalFeedInCosts": 0.00028,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.172,
+        "deliveryCosts": 0.22470,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.172,
+        "totalDeliveryCosts": 0.22470,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.282,
+        "netElectricityCosts": 0.07185,
+        "netCosts": 0.33854
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T09:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.015,
+        "deliveryNormalCosts": 0.00401,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": -0.004,
+        "feedInNormalCompensation": -0.00107,
+        "variableFeedInCosts": 0.00056,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.015,
+        "totalDeliveryCosts": 0.00401,
+        "totalFeedInConsumption": -0.004,
+        "totalFeedInCompensation": -0.00107,
+        "totalFeedInCosts": 0.00056,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.088,
+        "deliveryCosts": 0.11496,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.088,
+        "totalDeliveryCosts": 0.11496,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.011,
+        "netElectricityCosts": -0.00029,
+        "netCosts": 0.15666
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T10:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.014,
+        "deliveryNormalCosts": 0.00374,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": -0.01,
+        "feedInNormalCompensation": -0.00267,
+        "variableFeedInCosts": 0.00141,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.014,
+        "totalDeliveryCosts": 0.00374,
+        "totalFeedInConsumption": -0.01,
+        "totalFeedInCompensation": -0.00267,
+        "totalFeedInCosts": 0.00141,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.011,
+        "deliveryCosts": 0.01437,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.011,
+        "totalDeliveryCosts": 0.01437,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.004,
+        "netElectricityCosts": -0.00131,
+        "netCosts": 0.05505
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T11:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.006,
+        "deliveryNormalCosts": 0.00160,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": -0.007,
+        "feedInNormalCompensation": -0.00187,
+        "variableFeedInCosts": 0.00098,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.006,
+        "totalDeliveryCosts": 0.00160,
+        "totalFeedInConsumption": -0.007,
+        "totalFeedInCompensation": -0.00187,
+        "totalFeedInCosts": 0.00098,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.005,
+        "deliveryCosts": 0.00653,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.005,
+        "totalDeliveryCosts": 0.00653,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": -0.001,
+        "netElectricityCosts": -0.00308,
+        "netCosts": 0.04544
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T12:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.438,
+        "deliveryNormalCosts": 0.11704,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": -0.01,
+        "feedInNormalCompensation": -0.00267,
+        "variableFeedInCosts": 0.00141,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.438,
+        "totalDeliveryCosts": 0.11704,
+        "totalFeedInConsumption": -0.01,
+        "totalFeedInCompensation": -0.00267,
+        "totalFeedInCosts": 0.00141,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.000,
+        "deliveryCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.000,
+        "totalDeliveryCosts": 0.00000,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.428,
+        "netElectricityCosts": 0.11199,
+        "netCosts": 0.15398
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T13:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.004,
+        "deliveryNormalCosts": 0.00107,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": -0.005,
+        "feedInNormalCompensation": -0.00134,
+        "variableFeedInCosts": 0.00070,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.004,
+        "totalDeliveryCosts": 0.00107,
+        "totalFeedInConsumption": -0.005,
+        "totalFeedInCompensation": -0.00134,
+        "totalFeedInCosts": 0.00070,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.002,
+        "deliveryCosts": 0.00261,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.002,
+        "totalDeliveryCosts": 0.00261,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": -0.001,
+        "netElectricityCosts": -0.00336,
+        "netCosts": 0.04124
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T14:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.006,
+        "deliveryNormalCosts": 0.00160,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": -0.006,
+        "feedInNormalCompensation": -0.00160,
+        "variableFeedInCosts": 0.00084,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.006,
+        "totalDeliveryCosts": 0.00160,
+        "totalFeedInConsumption": -0.006,
+        "totalFeedInCompensation": -0.00160,
+        "totalFeedInCosts": 0.00084,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.002,
+        "deliveryCosts": 0.00261,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.002,
+        "totalDeliveryCosts": 0.00261,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.000,
+        "netElectricityCosts": -0.00295,
+        "netCosts": 0.04165
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T15:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.004,
+        "deliveryNormalCosts": 0.00107,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": -0.002,
+        "feedInNormalCompensation": -0.00053,
+        "variableFeedInCosts": 0.00028,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.004,
+        "totalDeliveryCosts": 0.00107,
+        "totalFeedInConsumption": -0.002,
+        "totalFeedInCompensation": -0.00053,
+        "totalFeedInCosts": 0.00028,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.000,
+        "deliveryCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.000,
+        "totalDeliveryCosts": 0.00000,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.002,
+        "netElectricityCosts": -0.00297,
+        "netCosts": 0.03902
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T16:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.004,
+        "deliveryNormalCosts": 0.00107,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": -0.003,
+        "feedInNormalCompensation": -0.00080,
+        "variableFeedInCosts": 0.00042,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.004,
+        "totalDeliveryCosts": 0.00107,
+        "totalFeedInConsumption": -0.003,
+        "totalFeedInCompensation": -0.00080,
+        "totalFeedInCosts": 0.00042,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.005,
+        "deliveryCosts": 0.00653,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.005,
+        "totalDeliveryCosts": 0.00653,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.001,
+        "netElectricityCosts": -0.00310,
+        "netCosts": 0.04542
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T17:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 1.056,
+        "deliveryNormalCosts": 0.28217,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 1.056,
+        "totalDeliveryCosts": 0.28217,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.012,
+        "deliveryCosts": 0.01568,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.012,
+        "totalDeliveryCosts": 0.01568,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 1.056,
+        "netElectricityCosts": 0.27838,
+        "netCosts": 0.33605
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T18:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.906,
+        "deliveryNormalCosts": 0.24209,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.906,
+        "totalDeliveryCosts": 0.24209,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.000,
+        "deliveryCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.000,
+        "totalDeliveryCosts": 0.00000,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.906,
+        "netElectricityCosts": 0.23830,
+        "netCosts": 0.28029
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T19:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 1.045,
+        "deliveryNormalCosts": 0.27923,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 1.045,
+        "totalDeliveryCosts": 0.27923,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.002,
+        "deliveryCosts": 0.00261,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.002,
+        "totalDeliveryCosts": 0.00261,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 1.045,
+        "netElectricityCosts": 0.27544,
+        "netCosts": 0.32004
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T20:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 1.213,
+        "deliveryNormalCosts": 0.32412,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 1.213,
+        "totalDeliveryCosts": 0.32412,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.002,
+        "deliveryCosts": 0.00261,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.002,
+        "totalDeliveryCosts": 0.00261,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 1.213,
+        "netElectricityCosts": 0.32033,
+        "netCosts": 0.36493
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T21:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.634,
+        "deliveryNormalCosts": 0.16941,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.634,
+        "totalDeliveryCosts": 0.16941,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.005,
+        "deliveryCosts": 0.00653,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.005,
+        "totalDeliveryCosts": 0.00653,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.634,
+        "netElectricityCosts": 0.16562,
+        "netCosts": 0.21414
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T22:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.638,
+        "deliveryNormalCosts": 0.17048,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.638,
+        "totalDeliveryCosts": 0.17048,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.000,
+        "deliveryCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.000,
+        "totalDeliveryCosts": 0.00000,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.638,
+        "netElectricityCosts": 0.16669,
+        "netCosts": 0.20868
+      },
+      "hasConsumption": true
+    },
+    {
+      "consumedOn": "2026-03-01T23:00:00",
+      "electricity": {
+        "deliveryLowConsumption": null,
+        "deliveryLowCosts": null,
+        "deliveryNormalConsumption": 0.483,
+        "deliveryNormalCosts": 0.12906,
+        "feedInLowConsumption": null,
+        "feedInLowCompensation": null,
+        "feedInNormalConsumption": 0,
+        "feedInNormalCompensation": 0.00000,
+        "variableFeedInCosts": 0.00000,
+        "fixedDeliveryCosts": 0.01344,
+        "gridOperatorCosts": 0.05457,
+        "reductionEnergyTax": -0.07180,
+        "totalDeliveryConsumption": 0.483,
+        "totalDeliveryCosts": 0.12906,
+        "totalFeedInConsumption": 0,
+        "totalFeedInCompensation": 0.00000,
+        "totalFeedInCosts": 0.00000,
+        "totalFixedCosts": -0.00379,
+        "hasConsumption": true
+      },
+      "gas": {
+        "deliveryConsumption": 0.035,
+        "deliveryCosts": 0.04572,
+        "fixedDeliveryCosts": 0.01155,
+        "gridOperatorCosts": 0.03044,
+        "totalDeliveryConsumption": 0.035,
+        "totalDeliveryCosts": 0.04572,
+        "totalFixedCosts": 0.04199,
+        "hasConsumption": true
+      },
+      "windVangers": null,
+      "net": {
+        "netElectricityConsumption": 0.483,
+        "netElectricityCosts": 0.12527,
+        "netCosts": 0.21298
+      },
+      "hasConsumption": true
+    }
+  ],
+  "total": {
+    "consumedOn": "2026-03-01T00:00:00",
+    "electricity": {
+      "deliveryLowConsumption": null,
+      "deliveryLowCosts": null,
+      "deliveryNormalConsumption": 10.341,
+      "deliveryNormalCosts": 2.76318,
+      "feedInLowConsumption": null,
+      "feedInLowCompensation": null,
+      "feedInNormalConsumption": -0.049,
+      "feedInNormalCompensation": -0.01308,
+      "variableFeedInCosts": 0.00688,
+      "fixedDeliveryCosts": 0.32256,
+      "gridOperatorCosts": 1.30968,
+      "reductionEnergyTax": -1.72320,
+      "totalDeliveryConsumption": 10.341,
+      "totalDeliveryCosts": 2.76318,
+      "totalFeedInConsumption": -0.049,
+      "totalFeedInCompensation": -0.01308,
+      "totalFeedInCosts": 0.00688,
+      "totalFixedCosts": -0.09096,
+      "hasConsumption": true
+    },
+    "gas": {
+      "deliveryConsumption": 0.991,
+      "deliveryCosts": 1.29461,
+      "fixedDeliveryCosts": 0.27720,
+      "gridOperatorCosts": 0.73056,
+      "totalDeliveryConsumption": 0.991,
+      "totalDeliveryCosts": 1.29461,
+      "totalFixedCosts": 1.00776,
+      "hasConsumption": true
+    },
+    "windVangers": null,
+    "net": {
+      "netElectricityConsumption": 10.292,
+      "netElectricityCosts": 2.66602,
+      "netCosts": 4.96839
+    },
+    "hasConsumption": true
+  },
+  "hasConsumption": true
+}

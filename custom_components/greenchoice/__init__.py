@@ -83,9 +83,7 @@ def _register_services(hass: HomeAssistant) -> None:
                         start_date=start_date,
                     )
             except Exception as err:
-                _LOGGER.error(
-                    "Reimport failed for %s: %s", config_entry.title, err
-                )
+                _LOGGER.error("Reimport failed for %s: %s", config_entry.title, err)
 
     hass.services.async_register(
         DOMAIN,

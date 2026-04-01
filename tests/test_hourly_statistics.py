@@ -10,6 +10,7 @@ from custom_components.greenchoice.api import GreenchoiceApi
 from custom_components.greenchoice.hourly_statistics import (
     _get_days_with_data,
     async_import_yesterday_hourly_statistics,
+    async_reimport_hourly_statistics_from,
     hourly_consumption_entity_id,
 )
 from tests.conftest import make_consumptions_payload, stat_sum
@@ -312,3 +313,146 @@ async def test_get_days_with_data_handles_float_timestamps(hass):
 
     assert target_date in result
     assert result[target_date] == pytest.approx(16.414)
+
+
+@pytest.mark.asyncio
+async def test_import_yesterday_hourly_statistics_with_gas(
+    hass,
+    mock_api,
+    consumptions_hour_with_gas_response,
+    mock_import_statistics,
+    patch_hourly_now,
+    patch_recorder_days,
+    entry_factory,
+):
+    """Gas consumption is imported alongside electricity when the API returns gas data."""
+    dt_util.set_default_time_zone(timezone.utc)
+    hass.config.components.add("recorder")
+    entry = entry_factory("abc123_gas")
+
+    mock_api(consumptions={"2026-03-27": consumptions_hour_with_gas_response})
+
+    with (
+        patch_hourly_now(datetime(2026, 3, 28, 16, 0, tzinfo=UTC)),
+        patch_recorder_days({}),
+    ):
+        async with GreenchoiceApi("fake_user", "fake_password") as api:
+            res = await async_import_yesterday_hourly_statistics(
+                hass, api=api, entry=entry
+            )
+
+    assert res is not None
+    assert res.imported is True
+    assert res.date.isoformat() == "2026-03-27"
+    assert res.points == 24
+    # consumption + feed-in + gas = 3 calls
+    assert mock_import_statistics.call_count == 3
+
+    # electricity consumption: first two cumulative sums (0.422, 0.422+0.479)
+    consumption_stats = mock_import_statistics.call_args_list[0].args[2]
+    assert stat_sum(consumption_stats[0]) == pytest.approx(0.422)
+    assert stat_sum(consumption_stats[1]) == pytest.approx(0.901)
+
+    # gas: first two cumulative sums (0.005, 0.005+0.004); total across 24h = 0.991
+    gas_stats = mock_import_statistics.call_args_list[2].args[2]
+    assert stat_sum(gas_stats[0]) == pytest.approx(0.005)
+    assert stat_sum(gas_stats[1]) == pytest.approx(0.009)
+    assert stat_sum(gas_stats[-1]) == pytest.approx(0.991)
+
+
+@pytest.mark.asyncio
+async def test_import_electricity_only_does_not_call_gas(
+    hass,
+    mock_api,
+    consumptions_hour_response,
+    mock_import_statistics,
+    patch_hourly_now,
+    patch_recorder_days,
+    entry_factory,
+):
+    """When the API returns no gas data, only 2 import calls are made (no gas call)."""
+    dt_util.set_default_time_zone(timezone.utc)
+    hass.config.components.add("recorder")
+    entry = entry_factory("abc123_elec_only")
+
+    mock_api(consumptions={"2026-03-27": consumptions_hour_response})
+
+    with (
+        patch_hourly_now(datetime(2026, 3, 28, 16, 0, tzinfo=UTC)),
+        patch_recorder_days({}),
+    ):
+        async with GreenchoiceApi("fake_user", "fake_password") as api:
+            res = await async_import_yesterday_hourly_statistics(
+                hass, api=api, entry=entry
+            )
+
+    assert res is not None
+    assert res.imported is True
+    assert mock_import_statistics.call_count == 2  # consumption + feed-in only
+
+
+@pytest.mark.asyncio
+async def test_reimport_hourly_statistics_from(
+    hass,
+    mock_api,
+    mock_import_statistics,
+    patch_hourly_now,
+    patch_recorder_days,
+    entry_factory,
+):
+    """Reimport processes all days from start_date to yesterday, anchoring sums to
+    the recorder value of the day immediately before start_date."""
+    dt_util.set_default_time_zone(timezone.utc)
+    hass.config.components.add("recorder")
+    entry = entry_factory("abc123_reimport")
+
+    day_26_consumption, day_27_consumption = 10.0, 6.0
+    prior_day_sum = 100.0  # recorder sum for March 25 (day before start_date)
+
+    mock_api(
+        consumptions={
+            "2026-03-26": make_consumptions_payload("2026-03-26", day_26_consumption),
+            "2026-03-27": make_consumptions_payload("2026-03-27", day_27_consumption),
+        }
+    )
+
+    with (
+        patch_hourly_now(datetime(2026, 3, 28, 16, 0, tzinfo=UTC)),
+        patch_recorder_days({date(2026, 3, 25): prior_day_sum}),
+    ):
+        async with GreenchoiceApi("fake_user", "fake_password") as api:
+            total_points = await async_reimport_hourly_statistics_from(
+                hass, api=api, entry=entry, start_date=date(2026, 3, 26)
+            )
+
+    assert total_points == 2
+    assert mock_import_statistics.call_count == 4  # consumption + feed-in for each day
+
+    # Cumulative sums are anchored to March 25's recorder value (prior_day_sum).
+    assert stat_sum(
+        mock_import_statistics.call_args_list[0].args[2][0]
+    ) == pytest.approx(prior_day_sum + day_26_consumption)
+    assert stat_sum(
+        mock_import_statistics.call_args_list[2].args[2][0]
+    ) == pytest.approx(prior_day_sum + day_26_consumption + day_27_consumption)
+
+
+@pytest.mark.asyncio
+async def test_reimport_raises_for_future_start_date(
+    hass,
+    mock_api,
+    patch_hourly_now,
+    entry_factory,
+):
+    """Passing today or a future date as start_date raises ValueError."""
+    hass.config.components.add("recorder")
+    entry = entry_factory("abc123_future")
+    mock_api()
+
+    with patch_hourly_now(datetime(2026, 3, 28, 16, 0, tzinfo=UTC)):
+        async with GreenchoiceApi("fake_user", "fake_password") as api:
+            with pytest.raises(ValueError):
+                await async_reimport_hourly_statistics_from(
+                    hass, api=api, entry=entry, start_date=date(2026, 3, 28)  # today
+                )
+
