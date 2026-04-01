@@ -4,52 +4,15 @@ from datetime import UTC, date, datetime, timedelta, timezone
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
-from homeassistant.const import CONF_NAME
 from homeassistant.util import dt as dt_util
-from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.greenchoice.api import GreenchoiceApi
-from custom_components.greenchoice.const import DOMAIN
 from custom_components.greenchoice.hourly_statistics import (
     _get_days_with_data,
     async_import_yesterday_hourly_statistics,
     hourly_consumption_entity_id,
 )
-
-
-def _entry(hass, entry_id):
-    """Create and register a MockConfigEntry with standard test values."""
-    e = MockConfigEntry(
-        domain=DOMAIN,
-        entry_id=entry_id,
-        title="Greenchoice (Test)",
-        data={CONF_NAME: "My Home"},
-    )
-    e.add_to_hass(hass)
-    return e
-
-
-def _make_consumptions_payload(
-    date_str: str, total_delivery: float, total_feed_in: float = 0.0
-) -> dict:
-    """Build a single-point hourly consumptions API response for the given date."""
-    end_str = (date.fromisoformat(date_str) + timedelta(days=1)).isoformat()
-    return {
-        "interval": "Hour",
-        "start": f"{date_str}T00:00:00",
-        "end": f"{end_str}T00:00:00",
-        "consumptionCosts": [
-            {
-                "consumedOn": f"{date_str}T00:00:00",
-                "electricity": {
-                    "totalDeliveryConsumption": total_delivery,
-                    "totalFeedInConsumption": total_feed_in,
-                    "hasConsumption": True,
-                },
-                "hasConsumption": True,
-            }
-        ],
-    }
+from tests.conftest import make_consumptions_payload, stat_sum
 
 
 @pytest.mark.asyncio
@@ -60,10 +23,11 @@ async def test_import_yesterday_hourly_statistics_imports_and_is_idempotent(
     mock_import_statistics,
     patch_hourly_now,
     patch_recorder_days,
+    entry_factory,
 ):
     dt_util.set_default_time_zone(timezone.utc)
     hass.config.components.add("recorder")
-    entry = _entry(hass, "abc123")
+    entry = entry_factory("abc123")
 
     fixed_now_early = datetime(2026, 3, 28, 4, 0, tzinfo=UTC)
     fixed_now_later = datetime(2026, 3, 28, 16, 0, tzinfo=UTC)
@@ -115,16 +79,13 @@ async def test_import_yesterday_hourly_statistics_imports_and_is_idempotent(
         assert _stat_id(feed_in_meta) == "sensor.my_home_electricity_feed_in_hourly"
         assert _source(feed_in_meta) == "recorder"
 
-        def _sum(s):
-            return s["sum"] if isinstance(s, dict) else s.sum
-
         consumption_stats = mock_import_statistics.call_args_list[0].args[2]
-        assert float(_sum(consumption_stats[0])) == pytest.approx(0.458)
-        assert float(_sum(consumption_stats[1])) == pytest.approx(0.530)
+        assert stat_sum(consumption_stats[0]) == pytest.approx(0.458)
+        assert stat_sum(consumption_stats[1]) == pytest.approx(0.530)
 
         feed_in_stats = mock_import_statistics.call_args_list[1].args[2]
-        assert float(_sum(feed_in_stats[0])) == pytest.approx(0.0)
-        assert float(_sum(feed_in_stats[1])) == pytest.approx(0.0)
+        assert stat_sum(feed_in_stats[0]) == pytest.approx(0.0)
+        assert stat_sum(feed_in_stats[1]) == pytest.approx(0.0)
 
         # 3. All days present → no import (idempotent).
         mock_import_statistics.reset_mock()
@@ -144,17 +105,18 @@ async def test_import_before_13_still_backfills_older_gaps(
     mock_import_statistics,
     patch_hourly_now,
     patch_recorder_days,
+    entry_factory,
 ):
     """Before 13:00, yesterday is deferred but older missing days are still imported."""
     dt_util.set_default_time_zone(timezone.utc)
     hass.config.components.add("recorder")
-    entry = _entry(hass, "abc123_early")
+    entry = entry_factory("abc123_early")
 
     recorder_has_data = {
         date(2026, 3, 21) + timedelta(days=i): float(i + 1) for i in range(5)
     }
     context = mock_api(
-        consumptions={"2026-03-26": _make_consumptions_payload("2026-03-26", 5.0)}
+        consumptions={"2026-03-26": make_consumptions_payload("2026-03-26", 5.0)}
     )
 
     with (
@@ -170,9 +132,7 @@ async def test_import_before_13_still_backfills_older_gaps(
     assert res.imported is True
     assert res.date == date(2026, 3, 26)
     assert res.points == 1
-    assert (
-        mock_import_statistics.call_count == 2
-    )  # consumption + feed-in for March 26 only
+    assert mock_import_statistics.call_count == 2
     # March 27 (yesterday) must NOT have been fetched — deferred until after 13:00.
     assert not any("start=2026-03-27" in str(url) for (_, url) in context.requests)
 
@@ -184,11 +144,12 @@ async def test_import_yesterday_hourly_statistics_backfills_gap(
     mock_import_statistics,
     patch_hourly_now,
     patch_recorder_days,
+    entry_factory,
 ):
     """Two missing days are imported with correctly chained cumulative sums."""
     dt_util.set_default_time_zone(timezone.utc)
     hass.config.components.add("recorder")
-    entry = _entry(hass, "abc123_gap")
+    entry = entry_factory("abc123_gap")
 
     recorder_has_data = {
         date(2026, 3, 21): 40.0,
@@ -200,8 +161,8 @@ async def test_import_yesterday_hourly_statistics_backfills_gap(
     day_26_consumption, day_27_consumption = 10.0, 6.0
     mock_api(
         consumptions={
-            "2026-03-26": _make_consumptions_payload("2026-03-26", day_26_consumption),
-            "2026-03-27": _make_consumptions_payload("2026-03-27", day_27_consumption),
+            "2026-03-26": make_consumptions_payload("2026-03-26", day_26_consumption),
+            "2026-03-27": make_consumptions_payload("2026-03-27", day_27_consumption),
         }
     )
 
@@ -219,14 +180,11 @@ async def test_import_yesterday_hourly_statistics_backfills_gap(
     assert res.points == 2
     assert mock_import_statistics.call_count == 4  # consumption + feed-in, twice
 
-    def _sum(s):
-        return s["sum"] if isinstance(s, dict) else s.sum
-
-    assert float(
-        _sum(mock_import_statistics.call_args_list[0].args[2][0])
+    assert stat_sum(
+        mock_import_statistics.call_args_list[0].args[2][0]
     ) == pytest.approx(100.0 + day_26_consumption)
-    assert float(
-        _sum(mock_import_statistics.call_args_list[2].args[2][0])
+    assert stat_sum(
+        mock_import_statistics.call_args_list[2].args[2][0]
     ) == pytest.approx(100.0 + day_26_consumption + day_27_consumption)
 
 
@@ -237,11 +195,12 @@ async def test_import_corrects_stale_sums_after_gap(
     mock_import_statistics,
     patch_hourly_now,
     patch_recorder_days,
+    entry_factory,
 ):
     """Days after a gap are re-imported to correct their stale cumulative sums."""
     dt_util.set_default_time_zone(timezone.utc)
     hass.config.components.add("recorder")
-    entry = _entry(hass, "abc123_stale")
+    entry = entry_factory("abc123_stale")
 
     day_26_consumption, day_27_consumption = 10.0, 6.0
     stale_sum_march_27 = (
@@ -258,8 +217,8 @@ async def test_import_corrects_stale_sums_after_gap(
     }
     mock_api(
         consumptions={
-            "2026-03-26": _make_consumptions_payload("2026-03-26", day_26_consumption),
-            "2026-03-27": _make_consumptions_payload("2026-03-27", day_27_consumption),
+            "2026-03-26": make_consumptions_payload("2026-03-26", day_26_consumption),
+            "2026-03-27": make_consumptions_payload("2026-03-27", day_27_consumption),
         }
     )
 
@@ -276,18 +235,15 @@ async def test_import_corrects_stale_sums_after_gap(
     assert res.points == 2
     assert mock_import_statistics.call_count == 4
 
-    def _sum(s):
-        return s["sum"] if isinstance(s, dict) else s.sum
-
-    assert float(
-        _sum(mock_import_statistics.call_args_list[0].args[2][0])
+    assert stat_sum(
+        mock_import_statistics.call_args_list[0].args[2][0]
     ) == pytest.approx(100.0 + day_26_consumption)
     correct_sum = 100.0 + day_26_consumption + day_27_consumption
-    assert float(
-        _sum(mock_import_statistics.call_args_list[2].args[2][0])
+    assert stat_sum(
+        mock_import_statistics.call_args_list[2].args[2][0]
     ) == pytest.approx(correct_sum)
-    assert float(
-        _sum(mock_import_statistics.call_args_list[2].args[2][0])
+    assert stat_sum(
+        mock_import_statistics.call_args_list[2].args[2][0]
     ) != pytest.approx(stale_sum_march_27)
 
 
@@ -297,18 +253,19 @@ async def test_import_yesterday_hourly_statistics_retries_on_empty(
     mock_api,
     patch_hourly_now,
     patch_recorder_days,
+    entry_factory,
+    patch_store_save,
 ):
     """If the API returns no data, last sums are NOT saved so the next cycle retries."""
     dt_util.set_default_time_zone(timezone.utc)
     hass.config.components.add("recorder")
-    entry = _entry(hass, "abc123_empty")
+    entry = entry_factory("abc123_empty")
 
     mock_api(consumptions={})  # all dates return empty automatically
 
     with (
         patch_hourly_now(datetime(2026, 3, 28, 15, 0, tzinfo=UTC)),
         patch_recorder_days({}),
-        patch("homeassistant.helpers.storage.Store.async_save") as mock_save,
     ):
         async with GreenchoiceApi("fake_user", "fake_password") as api:
             res = await async_import_yesterday_hourly_statistics(
@@ -318,14 +275,16 @@ async def test_import_yesterday_hourly_statistics_retries_on_empty(
     assert res is not None
     assert res.imported is False
     assert res.points == 0
-    mock_save.assert_not_called()
+    patch_store_save.assert_not_called()
 
 
 @pytest.mark.asyncio
 async def test_get_days_with_data_handles_float_timestamps(hass):
-    """Recorder in newer HA versions returns start as a Unix timestamp (float).
-    _get_days_with_data must convert it to a datetime before calling dt_util.as_local,
-    otherwise a 'float object has no attribute tzinfo' error is raised at runtime.
+    """Regression test: recorder returns start as a Unix timestamp (float) in newer HA.
+
+    patch_recorder_days always supplies datetime objects, so this test is the only
+    place that exercises the float-to-datetime conversion inside _get_days_with_data.
+    Without it, a 'float object has no attribute tzinfo' error would go undetected.
     """
     dt_util.set_default_time_zone(timezone.utc)
     hass.config.components.add("recorder")
@@ -342,7 +301,9 @@ async def test_get_days_with_data_handles_float_timestamps(hass):
         ]
     }
 
-    with patch("homeassistant.components.recorder.get_instance") as mock_get_instance:
+    with patch(
+        "custom_components.greenchoice.hourly_statistics.get_instance"
+    ) as mock_get_instance:
         mock_instance = Mock()
         mock_instance.async_add_executor_job = AsyncMock(return_value=fake_stats)
         mock_get_instance.return_value = mock_instance

@@ -1,14 +1,19 @@
 import datetime
 import json
 import re
+from contextlib import contextmanager
+from datetime import UTC, date, time, timedelta
 from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 from urllib.parse import parse_qs, urlparse
 
 import pytest
 from aioresponses import CallbackResult, aioresponses
+from homeassistant.const import CONF_NAME
+from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.greenchoice.api import BASE_URL
+from custom_components.greenchoice.const import DOMAIN
 
 
 @pytest.fixture
@@ -314,23 +319,111 @@ def patch_hourly_now():
 
 @pytest.fixture
 def patch_recorder_days():
-    """Factory: returns a context manager that patches _get_days_with_data.
+    """Factory: returns a context manager that stubs the HA recorder statistics API.
 
-    Pass one dict  → that dict is returned for every call (return_value).
-    Pass two dicts → they are returned in order (side_effect), which is needed when
-                     the function calls _get_days_with_data separately for consumption
-                     and feed-in statistic IDs.
+    Patches ``get_instance`` and ``statistics_during_period`` — the actual recorder
+    boundary our code crosses — rather than the internal ``_get_days_with_data``
+    helper, so tests survive internal refactoring.
+
+    Pass one dict  → {date: sum} returned for every statistics query.
+    Pass two dicts → returned in order (consumption query first, feed-in second).
     """
 
-    def _patch(*return_values):
-        mock = (
-            AsyncMock(return_value=return_values[0])
-            if len(return_values) == 1
-            else AsyncMock(side_effect=list(return_values))
-        )
-        return patch(
-            "custom_components.greenchoice.hourly_statistics._get_days_with_data",
-            new=mock,
+    def _patch(*day_sums_per_call):
+        results = list(day_sums_per_call) if day_sums_per_call else [{}]
+        state = {"calls": 0}
+
+        def _fake_statistics_during_period(
+            _hass, _start, _end, statistic_ids, _period, _units, _types
+        ):
+            day_sums = results[min(state["calls"], len(results) - 1)]
+            state["calls"] += 1
+            if not statistic_ids:
+                return {}
+            sid = next(iter(statistic_ids))
+            # One row per day at 23:00 UTC — the highest sum of the day — so
+            # dt_util.as_local gives back the same calendar date in UTC-based tests.
+            rows = [
+                {"start": datetime.datetime.combine(d, time(23, 0), tzinfo=UTC), "sum": s}
+                for d, s in sorted(day_sums.items())
+            ]
+            return {sid: rows} if rows else {}
+
+        mock_recorder_instance = Mock()
+        mock_recorder_instance.async_add_executor_job = AsyncMock(
+            side_effect=lambda func, *args, **kwargs: func(*args, **kwargs)
         )
 
+        @contextmanager
+        def _ctx():
+            with (
+                patch(
+                    "custom_components.greenchoice.hourly_statistics.get_instance",
+                    return_value=mock_recorder_instance,
+                ),
+                patch(
+                    "custom_components.greenchoice.hourly_statistics.statistics_during_period",
+                    side_effect=_fake_statistics_during_period,
+                ),
+            ):
+                yield
+
+        return _ctx()
+
     return _patch
+
+
+@pytest.fixture
+def entry_factory(hass):
+    """Factory: create and register a MockConfigEntry with standard test values.
+
+    Usage: ``entry = entry_factory("my_entry_id")``
+    """
+
+    def _make(entry_id: str, name: str = "My Home", title: str = "Greenchoice (Test)"):
+        e = MockConfigEntry(
+            domain=DOMAIN,
+            entry_id=entry_id,
+            title=title,
+            data={CONF_NAME: name},
+        )
+        e.add_to_hass(hass)
+        return e
+
+    return _make
+
+
+def make_consumptions_payload(
+    date_str: str, total_delivery: float, total_feed_in: float = 0.0
+) -> dict:
+    """Build a single-point hourly consumptions API response for the given date."""
+    end_str = (date.fromisoformat(date_str) + timedelta(days=1)).isoformat()
+    return {
+        "interval": "Hour",
+        "start": f"{date_str}T00:00:00",
+        "end": f"{end_str}T00:00:00",
+        "consumptionCosts": [
+            {
+                "consumedOn": f"{date_str}T00:00:00",
+                "electricity": {
+                    "totalDeliveryConsumption": total_delivery,
+                    "totalFeedInConsumption": total_feed_in,
+                    "hasConsumption": True,
+                },
+                "hasConsumption": True,
+            }
+        ],
+    }
+
+
+def stat_sum(s) -> float:
+    """Extract the sum value from a StatisticData object or dict."""
+    return float(s["sum"] if isinstance(s, dict) else s.sum)
+
+
+@pytest.fixture
+def patch_store_save():
+    """Patch homeassistant.helpers.storage.Store.async_save for the duration of the test."""
+    with patch("homeassistant.helpers.storage.Store.async_save") as mock_save:
+        yield mock_save
+

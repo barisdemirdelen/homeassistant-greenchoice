@@ -6,12 +6,16 @@ import logging
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 
+from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.models import (
     StatisticData,
     StatisticMeanType,
     StatisticMetaData,
 )
-from homeassistant.components.recorder.statistics import async_import_statistics
+from homeassistant.components.recorder.statistics import (
+    async_import_statistics,
+    statistics_during_period,
+)
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, UnitOfEnergy
 from homeassistant.core import HomeAssistant
@@ -45,8 +49,8 @@ def hourly_feed_in_entity_id(config_name: str) -> str:
     return f"sensor.{slugify(config_name)}_electricity_feed_in_hourly"
 
 
-def get_hourly_store(hass: HomeAssistant, entry_id: str) -> Store:
-    return Store(hass, _STORE_VERSION, _store_key(entry_id))
+def get_hourly_store(hass: HomeAssistant, entry_id: str) -> Store[dict]:
+    return Store[dict](hass, _STORE_VERSION, _store_key(entry_id))
 
 
 @dataclass(frozen=True)
@@ -60,15 +64,44 @@ def _store_key(entry_id: str) -> str:
     return f"{DOMAIN}.hourly_statistics.{entry_id}"
 
 
-def _config_name(entry: ConfigEntry) -> str:
-    return entry.data.get(CONF_NAME) or entry.title or DOMAIN
-
-
 def _as_utc_start(dt: datetime) -> datetime:
     """Convert an API datetime to an aware UTC datetime used by recorder statistics."""
     if dt.tzinfo is None:
         dt = dt.replace(tzinfo=dt_util.DEFAULT_TIME_ZONE)
     return dt_util.as_utc(dt)
+
+
+def _build_metadata_pair(
+    entry: ConfigEntry, consumption_id: str, feed_in_id: str
+) -> tuple[StatisticMetaData, StatisticMetaData]:
+    """Return the consumption and feed-in StatisticMetaData for *entry*."""
+    common = dict(
+        has_sum=True,
+        mean_type=StatisticMeanType.NONE,
+        source="recorder",
+        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        unit_class=None,
+    )
+    return (
+        StatisticMetaData(
+            **common,
+            name=f"{entry.title} Electricity consumption (hourly)",
+            statistic_id=consumption_id,
+        ),
+        StatisticMetaData(
+            **common,
+            name=f"{entry.title} Electricity feed-in (hourly)",
+            statistic_id=feed_in_id,
+        ),
+    )
+
+
+async def _ensure_credentials(api: GreenchoiceApi) -> None:
+    """Fetch and cache customer_number / agreement_id on the API if not already set."""
+    if not api.customer_number or not api.agreement_id:
+        prefs = await api.get_preferences()
+        api.customer_number = prefs.customer_number
+        api.agreement_id = prefs.agreement_id
 
 
 def _build_day_stats(
@@ -120,13 +153,6 @@ async def _get_days_with_data(
     hourly statistics in [start_date, end_date]. Days with no records are absent
     from the returned dict, which is how callers detect gaps.
     """
-    try:
-        from homeassistant.components.recorder import get_instance
-        from homeassistant.components.recorder.statistics import (
-            statistics_during_period,
-        )
-    except Exception:
-        return {}
 
     tz = dt_util.DEFAULT_TIME_ZONE
     start_dt = dt_util.as_utc(datetime.combine(start_date, time.min).replace(tzinfo=tz))
@@ -154,8 +180,8 @@ async def _get_days_with_data(
 
     day_sums: dict[date, float] = {}
     for stat in raw.get(statistic_id, []):
-        stat_start = stat["start"] if isinstance(stat, dict) else stat.start
-        stat_sum = stat["sum"] if isinstance(stat, dict) else stat.sum
+        stat_start = stat["start"]
+        stat_sum = stat["sum"]
         if stat_sum is None:
             continue
         # Newer HA recorder versions return start as a Unix timestamp (float).
@@ -192,7 +218,7 @@ async def async_import_yesterday_hourly_statistics(
     store = get_hourly_store(hass, entry.entry_id)
     stored = await store.async_load() or {}
 
-    config_name = _config_name(entry)
+    config_name = entry.data.get(CONF_NAME) or entry.title or DOMAIN
     consumption_id = hourly_consumption_entity_id(config_name)
     feed_in_id = hourly_feed_in_entity_id(config_name)
 
@@ -246,28 +272,9 @@ async def async_import_yesterday_hourly_statistics(
         max_process_day.isoformat(),
     )
 
-    if not api.customer_number or not api.agreement_id:
-        prefs = await api.get_preferences()
-        api.customer_number = prefs.customer_number
-        api.agreement_id = prefs.agreement_id
-
-    metadata_consumption = StatisticMetaData(
-        has_sum=True,
-        mean_type=StatisticMeanType.NONE,
-        name=f"{entry.title} Electricity consumption (hourly)",
-        source="recorder",
-        statistic_id=consumption_id,
-        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        unit_class=None,
-    )
-    metadata_feed_in = StatisticMetaData(
-        has_sum=True,
-        mean_type=StatisticMeanType.NONE,
-        name=f"{entry.title} Electricity feed-in (hourly)",
-        source="recorder",
-        statistic_id=feed_in_id,
-        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        unit_class=None,
+    await _ensure_credentials(api)
+    metadata_consumption, metadata_feed_in = _build_metadata_pair(
+        entry, consumption_id, feed_in_id
     )
 
     total_points = 0
@@ -344,12 +351,9 @@ async def async_reimport_hourly_statistics_from(
     if start_date > yesterday:
         raise ValueError(f"start_date {start_date} must not be today or in the future")
 
-    if not api.customer_number or not api.agreement_id:
-        prefs = await api.get_preferences()
-        api.customer_number = prefs.customer_number
-        api.agreement_id = prefs.agreement_id
+    await _ensure_credentials(api)
 
-    config_name = _config_name(entry)
+    config_name = entry.data.get(CONF_NAME) or entry.title or DOMAIN
     consumption_id = hourly_consumption_entity_id(config_name)
     feed_in_id = hourly_feed_in_entity_id(config_name)
 
@@ -363,23 +367,8 @@ async def async_reimport_hourly_statistics_from(
     sum_consumption = pre_consumption.get(day_before, 0.0)
     sum_feed_in = pre_feed_in.get(day_before, 0.0)
 
-    metadata_consumption = StatisticMetaData(
-        has_sum=True,
-        mean_type=StatisticMeanType.NONE,
-        name=f"{entry.title} Electricity consumption (hourly)",
-        source="recorder",
-        statistic_id=consumption_id,
-        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        unit_class=None,
-    )
-    metadata_feed_in = StatisticMetaData(
-        has_sum=True,
-        mean_type=StatisticMeanType.NONE,
-        name=f"{entry.title} Electricity feed-in (hourly)",
-        source="recorder",
-        statistic_id=feed_in_id,
-        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        unit_class=None,
+    metadata_consumption, metadata_feed_in = _build_metadata_pair(
+        entry, consumption_id, feed_in_id
     )
 
     num_days = (yesterday - start_date).days + 1
