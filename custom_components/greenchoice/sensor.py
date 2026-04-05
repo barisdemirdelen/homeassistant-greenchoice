@@ -25,7 +25,6 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import slugify
 
-from . import CONF_AGREEMENT_ID, CONF_CUSTOMER_NUMBER
 from .api import GreenchoiceApi
 from .const import DEFAULT_NAME, DOMAIN
 from .hourly_statistics import (
