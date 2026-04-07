@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections import namedtuple
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
@@ -14,7 +15,7 @@ from homeassistant.components.recorder.models import (
     StatisticMetaData,
 )
 from homeassistant.components.recorder.statistics import (
-    async_import_statistics,
+    async_add_external_statistics,
     statistics_during_period,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -59,7 +60,14 @@ _STATISTIC_SPECS: dict[str, _StatisticSpec] = {
 
 
 def hourly_statistic_id(config_name: str, kind: str) -> str:
-    return f"{DOMAIN}:{slugify(config_name)}_{kind}"
+    # slugify may produce consecutive underscores (e.g. "Name (Sub)" → "name__sub")
+    # which HA's statistic_id validator rejects.  Collapse them and strip edge underscores.
+    slug = re.sub(r"_+", "_", slugify(config_name)).strip("_")
+    statistic_id = f"{DOMAIN}:{slug}_{kind}"
+    _LOGGER.debug(
+        "Computed statistic_id: %s (from config_name=%r)", statistic_id, config_name
+    )
+    return statistic_id
 
 
 @dataclass(frozen=True)
@@ -269,7 +277,13 @@ async def _process_day_range(
 
         for kind, stat_list in day_stats.stats.items():
             if stat_list:
-                async_import_statistics(hass, metadata[kind], stat_list)
+                stat_id = metadata[kind]["statistic_id"]
+                try:
+                    async_add_external_statistics(hass, metadata[kind], stat_list)
+                except Exception as err:
+                    raise RuntimeError(
+                        f"async_add_external_statistics failed for statistic_id={stat_id!r}: {err}"
+                    ) from err
 
         total_points += day_stats.points
         last_imported_day = day

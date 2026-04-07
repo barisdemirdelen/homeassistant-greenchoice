@@ -302,9 +302,9 @@ def mock_api(
 
 @pytest.fixture
 def mock_import_statistics():
-    """Patch async_import_statistics in hourly_statistics for the duration of the test."""
+    """Patch async_add_external_statistics in hourly_statistics for the duration of the test."""
     with patch(
-        "custom_components.greenchoice.hourly_statistics.async_import_statistics",
+        "custom_components.greenchoice.hourly_statistics.async_add_external_statistics",
         new=Mock(),
     ) as m:
         yield m
