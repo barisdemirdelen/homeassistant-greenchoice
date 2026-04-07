@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import logging
-import re
 from collections import namedtuple
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
@@ -35,38 +34,32 @@ _BACKFILL_DAYS = 7
 # Days to re-fetch on every subsequent update (retry recent days for late-published data).
 _RETRY_DAYS = 3
 
-_StatisticSpec = namedtuple("_StatisticSpec", ["name_suffix", "unit"])
+_StatisticSpec = namedtuple("_StatisticSpec", ["name_suffix", "unit", "unit_class"])
 # Order matters: it determines the async_import_statistics call order relied on by tests.
 _STATISTIC_SPECS: dict[str, _StatisticSpec] = {
     "electricity_consumption": _StatisticSpec(
-        "Electricity consumption (hourly)", UnitOfEnergy.KILO_WATT_HOUR
+        "Electricity consumption (hourly)", UnitOfEnergy.KILO_WATT_HOUR, "energy"
     ),
     "electricity_feed_in": _StatisticSpec(
-        "Electricity feed-in (hourly)", UnitOfEnergy.KILO_WATT_HOUR
+        "Electricity feed-in (hourly)", UnitOfEnergy.KILO_WATT_HOUR, "energy"
     ),
     "electricity_consumption_cost": _StatisticSpec(
-        "Electricity consumption cost (hourly)", CURRENCY_EURO
+        "Electricity consumption cost (hourly)", CURRENCY_EURO, None
     ),
     "electricity_feed_in_compensation": _StatisticSpec(
-        "Electricity feed-in compensation (hourly)", CURRENCY_EURO
+        "Electricity feed-in compensation (hourly)", CURRENCY_EURO, None
     ),
     "gas_consumption": _StatisticSpec(
-        "Gas consumption (hourly)", UnitOfVolume.CUBIC_METERS
+        "Gas consumption (hourly)", UnitOfVolume.CUBIC_METERS, "volume"
     ),
     "gas_consumption_cost": _StatisticSpec(
-        "Gas consumption cost (hourly)", CURRENCY_EURO
+        "Gas consumption cost (hourly)", CURRENCY_EURO, None
     ),
 }
 
 
 def hourly_statistic_id(config_name: str, kind: str) -> str:
-    # slugify may produce consecutive underscores (e.g. "Name (Sub)" → "name__sub")
-    # which HA's statistic_id validator rejects.  Collapse them and strip edge underscores.
-    slug = re.sub(r"_+", "_", slugify(config_name)).strip("_")
-    statistic_id = f"{DOMAIN}:{slug}_{kind}"
-    _LOGGER.debug(
-        "Computed statistic_id: %s (from config_name=%r)", statistic_id, config_name
-    )
+    statistic_id = f"{DOMAIN}:{slugify(config_name)}_{kind}"
     return statistic_id
 
 
@@ -102,7 +95,7 @@ def _build_all_metadata(
             name=f"{entry.title} {spec.name_suffix}",
             statistic_id=hourly_statistic_id(config_name, kind),
             unit_of_measurement=spec.unit,
-            unit_class=None,
+            unit_class=spec.unit_class,
         )
         for kind, spec in _STATISTIC_SPECS.items()
     }
