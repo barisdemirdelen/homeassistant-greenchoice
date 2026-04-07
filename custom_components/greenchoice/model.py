@@ -229,12 +229,18 @@ class ConsumptionCostsElectricity(CamelCaseModel):
 
     total_delivery_consumption: float | None = None
     total_feed_in_consumption: float | None = None
+    total_delivery_costs: float | None = None
+    total_feed_in_compensation: float | None = None
+    total_feed_in_costs: float | None = None
+    total_fixed_costs: float | None = None
 
 
 class ConsumptionCostsGas(CamelCaseModel):
     """Gas details inside /consumptions response."""
 
     total_delivery_consumption: float | None = None
+    total_delivery_costs: float | None = None
+    total_fixed_costs: float | None = None
 
 
 class ConsumptionCostsItem(CamelCaseModel):

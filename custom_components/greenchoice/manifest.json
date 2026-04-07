@@ -2,7 +2,6 @@
   "domain": "greenchoice",
   "name": "Greenchoice",
   "codeowners": [
-    "@jessevl",
     "@barisdemirdelen"
   ],
   "config_flow": true,
@@ -17,5 +16,5 @@
     "beautifulsoup4>=4.0.0,<5.0.0",
     "pydantic>=2.0.0,<3.0.0"
   ],
-  "version": "3.2.1"
+  "version": "3.3.0"
 }

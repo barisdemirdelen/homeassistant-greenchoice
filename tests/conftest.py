@@ -311,10 +311,22 @@ def mock_import_statistics():
 
 
 @pytest.fixture
-def patch_hourly_now():
-    """Factory: returns a context manager that patches dt_util.now in hourly_statistics."""
+def patch_now():
+    """Factory: patches dt_util.now in hourly_statistics to control which day is 'yesterday'.
+
+    Usage: ``with patch_now(date(2026, 3, 28)):``
+    Pass a ``date`` (midnight UTC is assumed) or a full ``datetime``.
+    """
 
     def _patch(return_value):
+        if isinstance(return_value, date) and not isinstance(
+            return_value, datetime.datetime
+        ):
+            from datetime import UTC
+
+            return_value = datetime.datetime(
+                return_value.year, return_value.month, return_value.day, tzinfo=UTC
+            )
         return patch(
             "custom_components.greenchoice.hourly_statistics.dt_util.now",
             return_value=return_value,
@@ -327,31 +339,34 @@ def patch_hourly_now():
 def patch_recorder_days():
     """Factory: returns a context manager that stubs the HA recorder statistics API.
 
-    Patches ``get_instance`` and ``statistics_during_period`` — the actual recorder
-    boundary our code crosses — rather than the internal ``_get_days_with_data``
-    helper, so tests survive internal refactoring.
+    Patches ``get_instance`` and ``statistics_during_period`` — the recorder
+    boundary our code crosses — so tests remain independent of internal implementation.
 
-    Pass one dict  → {date: sum} returned for every statistics query.
-    Pass two dicts → returned in order (consumption query first, feed-in second).
+    Pass a ``{date: sum}`` dict to represent end-of-day cumulative sums already
+    present in the recorder.  When ``_get_sum_before`` queries a 25-hour window
+    the fixture returns the latest entry whose 23:00 UTC timestamp falls inside
+    the queried range, matching the lazy-seed logic in ``_process_day_range``.
     """
 
-    def _patch(*day_sums_per_call):
-        results = list(day_sums_per_call) if day_sums_per_call else [{}]
-        state = {"calls": 0}
+    def _patch(day_sums: dict[date, float] = None):
+        if not day_sums:
+            day_sums = {}
 
         def _fake_statistics_during_period(
             _hass, _start, _end, statistic_ids, _period, _units, _types
         ):
-            day_sums = results[min(state["calls"], len(results) - 1)]
-            state["calls"] += 1
             if not statistic_ids:
                 return {}
             sid = next(iter(statistic_ids))
-            # One row per day at 23:00 UTC — the highest sum of the day — so
-            # dt_util.as_local gives back the same calendar date in UTC-based tests.
             rows = [
-                {"start": datetime.datetime.combine(d, time(23, 0), tzinfo=UTC), "sum": s}
+                {
+                    "start": datetime.datetime.combine(d, time(23, 0), tzinfo=UTC),
+                    "sum": s,
+                }
                 for d, s in sorted(day_sums.items())
+                if _start
+                <= datetime.datetime.combine(d, time(23, 0), tzinfo=UTC)
+                < _end
             ]
             return {sid: rows} if rows else {}
 
@@ -439,4 +454,3 @@ def patch_store_save():
     """Patch homeassistant.helpers.storage.Store.async_save for the duration of the test."""
     with patch("homeassistant.helpers.storage.Store.async_save") as mock_save:
         yield mock_save
-

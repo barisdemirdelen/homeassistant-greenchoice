@@ -25,6 +25,18 @@
       "unknown": "Unknown error occurred."
     }
   },
+  "services": {
+    "reimport_hourly_statistics": {
+      "name": "Reimport hourly statistics",
+      "description": "Force a full reimport of hourly electricity statistics from the Greenchoice API starting from the given date up to and including yesterday. Existing recorder data for the range is overwritten and cumulative sums are recalculated, which fixes gaps, negative spikes, or other artefacts in the Energy dashboard.",
+      "fields": {
+        "start_date": {
+          "name": "Start date",
+          "description": "The first day to reimport (inclusive). All days through yesterday will be fetched from the API and written to the recorder."
+        }
+      }
+    }
+  },
   "issues": {
     "yaml_deprecation": {
       "title": "YAML configuration is deprecated",

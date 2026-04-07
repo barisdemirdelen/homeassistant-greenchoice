@@ -64,7 +64,11 @@ def _register_services(hass: HomeAssistant) -> None:
 
     async def handle_reimport_hourly_statistics(call: ServiceCall) -> None:
         start_date = call.data["start_date"]
-        for entry_id, coordinator in list(hass.data.get(DOMAIN, {}).items()):
+        target_entry_id: str | None = call.data.get("config_entry_id")
+        entries = hass.data.get(DOMAIN, {})
+        if target_entry_id:
+            entries = {target_entry_id: entries[target_entry_id]} if target_entry_id in entries else {}
+        for entry_id, coordinator in list(entries.items()):
             config_entry = hass.config_entries.async_get_entry(entry_id)
             if config_entry is None:
                 continue
@@ -89,7 +93,10 @@ def _register_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_REIMPORT_HOURLY_STATISTICS,
         handle_reimport_hourly_statistics,
-        schema=vol.Schema({vol.Required("start_date"): cv.date}),
+        schema=vol.Schema({
+            vol.Required("start_date"): cv.date,
+            vol.Optional("config_entry_id"): cv.string,
+        }),
     )
 
 

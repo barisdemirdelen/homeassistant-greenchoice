@@ -5,8 +5,8 @@
 ![downloads][downloads-badge]
 
 This is a Home Assistant custom component that connects to the Greenchoice API to retrieve current usage and pricing
-data. The integration refreshes every hour and provides both daily meter readings and hourly energy statistics for use
-in the Energy dashboard.
+data. The integration refreshes every 6 hours and provides both daily meter readings and hourly energy statistics for
+use in the Energy dashboard.
 
 ## Installation
 
@@ -79,18 +79,50 @@ In addition to the daily sensors, the integration automatically imports **hourly
 Assistant's recorder statistics. This makes your energy usage visible at the per-hour granularity in the
 **Energy dashboard**.
 
-Three statistics series are created per integration instance:
+Six statistics series are created per integration instance:
 
-| Sensor                           | Unit | Description                                   |
-|----------------------------------|------|-----------------------------------------------|
-| Electricity consumption (hourly) | kWh  | Electricity delivered from the grid, per hour |
-| Electricity feed-in (hourly)     | kWh  | Electricity fed back to the grid, per hour    |
-| Gas consumption (hourly)         | m³   | Gas consumed, per hour                        |
+| Sensor                                      | Unit | Description                                          |
+|---------------------------------------------|------|------------------------------------------------------|
+| Electricity consumption (hourly)            | kWh  | Electricity delivered from the grid, per hour        |
+| Electricity feed-in (hourly)                | kWh  | Electricity fed back to the grid, per hour           |
+| Gas consumption (hourly)                    | m³   | Gas consumed, per hour                               |
+| Electricity consumption cost (hourly)       | €    | Cost of electricity delivered, per hour              |
+| Electricity feed-in compensation (hourly)   | €    | Compensation received for electricity fed in, per hour |
+| Gas consumption cost (hourly)               | €    | Cost of gas consumed, per hour                       |
 
-Hourly data is imported automatically on each refresh cycle. The integration also self-heals: if data is missing for
-up to 7 days (e.g. after an internet outage), the gaps are backfilled on the next successful refresh.
+Hourly data is imported automatically on each refresh cycle. On the first run the last 7 days are backfilled so the
+Energy dashboard is populated immediately after installation. On every subsequent refresh the last 3 days are
+re-fetched to pick up any data that was not yet published on the previous cycle.
 
-> **Note:** Yesterday's data is only imported after 13:00 local time to allow Greenchoice time to publish it.
+> **Note:** If yesterday's data is not published yet when a refresh runs, the API returns an empty response and the
+> day is silently skipped. It will be retried automatically on the next refresh cycle.
+
+### Energy Dashboard Setup
+
+Go to **Settings** > **Dashboards** > **Energy** and configure the sources below. Entity IDs use the sensor name
+you chose during setup (default: `greenchoice`). Replace `greenchoice` with your custom name if you used one.
+
+> **Note:** These are recorder **statistics** imported under the `greenchoice` domain, not live sensor states.
+> They appear in the Energy dashboard picker as `greenchoice:*` — not under `sensor.*`.
+
+#### Electricity grid
+
+1. Under **Electricity grid**, click **Add consumption** and select
+   `greenchoice:greenchoice_electricity_consumption` (*Greenchoice Electricity consumption (hourly)*).
+2. Click **Add return** and select
+   `greenchoice:greenchoice_electricity_feed_in` (*Greenchoice Electricity feed-in (hourly)*).
+3. For **Cost tracking**, choose **Use an entity tracking the total costs** and select
+   `greenchoice:greenchoice_electricity_consumption_cost`.
+4. For **Export compensation**, choose **Use an entity tracking the total compensation** and select
+   `greenchoice:greenchoice_electricity_feed_in_compensation`.
+   *(Only relevant if you have solar panels.)*
+
+#### Gas
+
+1. Under **Gas consumption**, click **Add gas source** and select
+   `greenchoice:greenchoice_gas_consumption` (*Greenchoice Gas consumption (hourly)*).
+2. For **Cost**, choose **Use an entity tracking the total costs** and select
+   `greenchoice:greenchoice_gas_consumption_cost`.
 
 ## Services
 

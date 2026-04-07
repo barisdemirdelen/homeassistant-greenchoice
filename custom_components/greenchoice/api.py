@@ -1,4 +1,5 @@
 import asyncio
+import json
 import logging
 from datetime import UTC, date, datetime, timedelta
 from typing import Type, TypeVar
@@ -160,6 +161,9 @@ class GreenchoiceApi:
                 end=end,
             ).build_url()
         )
+
+        print(json.dumps(consumptions_json))
+
         return Consumptions.model_validate(consumptions_json)
 
     async def update(self) -> SensorUpdate:

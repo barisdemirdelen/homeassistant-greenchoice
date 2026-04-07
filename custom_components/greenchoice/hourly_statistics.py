@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from collections import namedtuple
 from dataclasses import dataclass
 from datetime import date, datetime, time, timedelta
 
@@ -17,10 +18,8 @@ from homeassistant.components.recorder.statistics import (
     statistics_during_period,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_NAME, UnitOfEnergy, UnitOfVolume
+from homeassistant.const import CONF_NAME, CURRENCY_EURO, UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.storage import Store
 from homeassistant.util import dt as dt_util
 from homeassistant.util import slugify
 
@@ -30,31 +29,37 @@ from .model import Consumptions
 
 _LOGGER = logging.getLogger(__name__)
 
-_STORE_VERSION = 1
-_SIGNAL_PREFIX = f"{DOMAIN}_hourly_statistics_updated"
+# Days of history to fetch on the very first run (backfill).
+_BACKFILL_DAYS = 7
+# Days to re-fetch on every subsequent update (retry recent days for late-published data).
+_RETRY_DAYS = 3
 
-# How many days back to scan the recorder for gaps on each import cycle.
-_MAX_BACKFILL_DAYS = 7
+_StatisticSpec = namedtuple("_StatisticSpec", ["name_suffix", "unit"])
+# Order matters: it determines the async_import_statistics call order relied on by tests.
+_STATISTIC_SPECS: dict[str, _StatisticSpec] = {
+    "electricity_consumption": _StatisticSpec(
+        "Electricity consumption (hourly)", UnitOfEnergy.KILO_WATT_HOUR
+    ),
+    "electricity_feed_in": _StatisticSpec(
+        "Electricity feed-in (hourly)", UnitOfEnergy.KILO_WATT_HOUR
+    ),
+    "electricity_consumption_cost": _StatisticSpec(
+        "Electricity consumption cost (hourly)", CURRENCY_EURO
+    ),
+    "electricity_feed_in_compensation": _StatisticSpec(
+        "Electricity feed-in compensation (hourly)", CURRENCY_EURO
+    ),
+    "gas_consumption": _StatisticSpec(
+        "Gas consumption (hourly)", UnitOfVolume.CUBIC_METERS
+    ),
+    "gas_consumption_cost": _StatisticSpec(
+        "Gas consumption cost (hourly)", CURRENCY_EURO
+    ),
+}
 
 
-def hourly_statistics_signal(entry_id: str) -> str:
-    return f"{_SIGNAL_PREFIX}_{entry_id}"
-
-
-def hourly_consumption_entity_id(config_name: str) -> str:
-    return f"sensor.{slugify(config_name)}_electricity_consumption_hourly"
-
-
-def hourly_feed_in_entity_id(config_name: str) -> str:
-    return f"sensor.{slugify(config_name)}_electricity_feed_in_hourly"
-
-
-def hourly_gas_entity_id(config_name: str) -> str:
-    return f"sensor.{slugify(config_name)}_gas_consumption_hourly"
-
-
-def get_hourly_store(hass: HomeAssistant, entry_id: str) -> Store[dict]:
-    return Store[dict](hass, _STORE_VERSION, _store_key(entry_id))
+def hourly_statistic_id(config_name: str, kind: str) -> str:
+    return f"{DOMAIN}:{slugify(config_name)}_{kind}"
 
 
 @dataclass(frozen=True)
@@ -64,8 +69,10 @@ class HourlyImportResult:
     points: int
 
 
-def _store_key(entry_id: str) -> str:
-    return f"{DOMAIN}.hourly_statistics.{entry_id}"
+def _day_start_utc(day: date) -> datetime:
+    """Return the UTC datetime for midnight of *day* in the local timezone."""
+    tz = dt_util.DEFAULT_TIME_ZONE
+    return dt_util.as_utc(datetime.combine(day, time.min).replace(tzinfo=tz))
 
 
 def _as_utc_start(dt: datetime) -> datetime:
@@ -75,71 +82,46 @@ def _as_utc_start(dt: datetime) -> datetime:
     return dt_util.as_utc(dt)
 
 
-def _build_electricity_metadata(
-    entry: ConfigEntry, consumption_id: str, feed_in_id: str
-) -> tuple[StatisticMetaData, StatisticMetaData]:
-    """Return the electricity consumption and feed-in StatisticMetaData for *entry*."""
-    common = dict(
-        has_sum=True,
-        mean_type=StatisticMeanType.NONE,
-        source="recorder",
-        unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        unit_class=None,
-    )
-    return (
-        StatisticMetaData(
-            **common,
-            name=f"{entry.title} Electricity consumption (hourly)",
-            statistic_id=consumption_id,
-        ),
-        StatisticMetaData(
-            **common,
-            name=f"{entry.title} Electricity feed-in (hourly)",
-            statistic_id=feed_in_id,
-        ),
-    )
-
-
-def _build_gas_metadata(entry: ConfigEntry, gas_id: str) -> StatisticMetaData:
-    """Return the gas consumption StatisticMetaData for *entry*."""
-    return StatisticMetaData(
-        has_sum=True,
-        mean_type=StatisticMeanType.NONE,
-        name=f"{entry.title} Gas consumption (hourly)",
-        source="recorder",
-        statistic_id=gas_id,
-        unit_of_measurement=UnitOfVolume.CUBIC_METERS,
-        unit_class=None,
-    )
+def _build_all_metadata(
+    entry: ConfigEntry, config_name: str
+) -> dict[str, StatisticMetaData]:
+    """Return a StatisticMetaData for every statistic kind, keyed by kind."""
+    return {
+        kind: StatisticMetaData(
+            has_sum=True,
+            mean_type=StatisticMeanType.NONE,
+            source="greenchoice",
+            name=f"{entry.title} {spec.name_suffix}",
+            statistic_id=hourly_statistic_id(config_name, kind),
+            unit_of_measurement=spec.unit,
+            unit_class=None,
+        )
+        for kind, spec in _STATISTIC_SPECS.items()
+    }
 
 
 @dataclass
 class _DayStats:
-    electricity_consumption: list[StatisticData]
-    electricity_feed_in: list[StatisticData]
-    gas_consumption: list[StatisticData]
+    """StatisticData lists and running sums for one day of API consumption data."""
+
+    stats: dict[str, list[StatisticData]]
+    sums: dict[str, float]
     points: int
-    sum_electricity_consumption: float
-    sum_electricity_feed_in: float
-    sum_gas_consumption: float
 
 
-def _build_day_stats(
+def _build_hourly_stats(
     consumptions: Consumptions,
-    sum_electricity_consumption: float,
-    sum_electricity_feed_in: float,
-    sum_gas_consumption: float,
+    seed_sums: dict[str, float],
 ) -> _DayStats:
     """Build StatisticData lists for one day of API consumption data.
 
     Iterates the hourly items, accumulates running sums for electricity and gas,
-    and returns a _DayStats with the stats lists and updated sums.
+    and returns a _DayStats with per-kind stats lists, updated sums, and point count.
     ``points`` is the number of hours that had any data (electricity or gas).
     The caller is responsible for checking that ``points > 0`` before importing.
     """
-    stats_consumption: list[StatisticData] = []
-    stats_feed_in: list[StatisticData] = []
-    stats_gas: list[StatisticData] = []
+    stats: dict[str, list[StatisticData]] = {kind: [] for kind in _STATISTIC_SPECS}
+    sums = dict(seed_sums)
     points = 0
 
     for item in sorted(consumptions.consumption_costs, key=lambda x: x.consumed_on):
@@ -149,278 +131,187 @@ def _build_day_stats(
         start_utc = _as_utc_start(item.consumed_on)
 
         if item.electricity:
-            delivered = float(item.electricity.total_delivery_consumption or 0.0)
-            fed_in = abs(float(item.electricity.total_feed_in_consumption or 0.0))
-            sum_electricity_consumption += delivered
-            sum_electricity_feed_in += fed_in
-            stats_consumption.append(
-                StatisticData(
-                    start=start_utc, state=delivered, sum=sum_electricity_consumption
+            elec_values: dict[str, float] = {
+                "electricity_consumption": float(
+                    item.electricity.total_delivery_consumption or 0.0
+                ),
+                "electricity_feed_in": -float(
+                    item.electricity.total_feed_in_consumption or 0.0
+                ),
+                "electricity_consumption_cost": float(
+                    item.electricity.total_delivery_costs or 0.0
                 )
-            )
-            stats_feed_in.append(
-                StatisticData(
-                    start=start_utc, state=fed_in, sum=sum_electricity_feed_in
+                + float(item.electricity.total_fixed_costs or 0.0),
+                "electricity_feed_in_compensation": float(
+                    item.electricity.total_feed_in_compensation or 0.0
                 )
-            )
+                + float(item.electricity.total_feed_in_costs or 0.0),
+            }
+            for kind, value in elec_values.items():
+                sums[kind] += value
+                stats[kind].append(
+                    StatisticData(start=start_utc, state=value, sum=sums[kind])
+                )
 
         if item.gas:
-            gas_delivered = float(item.gas.total_delivery_consumption or 0.0)
-            sum_gas_consumption += gas_delivered
-            stats_gas.append(
-                StatisticData(
-                    start=start_utc, state=gas_delivered, sum=sum_gas_consumption
+            gas_values: dict[str, float] = {
+                "gas_consumption": float(item.gas.total_delivery_consumption or 0.0),
+                "gas_consumption_cost": float(item.gas.total_delivery_costs or 0.0)
+                + float(item.gas.total_fixed_costs or 0.0),
+            }
+            for kind, value in gas_values.items():
+                sums[kind] += value
+                stats[kind].append(
+                    StatisticData(start=start_utc, state=value, sum=sums[kind])
                 )
-            )
 
         points += 1
 
-    return _DayStats(
-        electricity_consumption=stats_consumption,
-        electricity_feed_in=stats_feed_in,
-        gas_consumption=stats_gas,
-        points=points,
-        sum_electricity_consumption=sum_electricity_consumption,
-        sum_electricity_feed_in=sum_electricity_feed_in,
-        sum_gas_consumption=sum_gas_consumption,
-    )
+    return _DayStats(stats=stats, sums=sums, points=points)
 
 
 @dataclass
 class _ImportLoopResult:
     total_points: int
     last_imported_day: date | None
-    sum_electricity_consumption: float
-    sum_electricity_feed_in: float
-    sum_gas_consumption: float
 
 
-async def _import_days(
-    hass: HomeAssistant,
-    *,
-    api: GreenchoiceApi,
-    entry: ConfigEntry,
-    days: list[date],
-    sum_electricity_consumption: float,
-    sum_electricity_feed_in: float,
-    sum_gas_consumption: float,
-) -> _ImportLoopResult:
-    """Fetch API data and import hourly statistics for each day in *days*.
-
-    Builds StatisticData series with correctly chained cumulative sums starting
-    from the supplied initial values, and writes them to the HA recorder.
-    Returns the total points imported, the last successfully imported day, and
-    the final cumulative sums (to be persisted by the caller).
-    """
-    config_name = entry.data.get(CONF_NAME) or entry.title or DOMAIN
-    metadata_consumption, metadata_feed_in = _build_electricity_metadata(
-        entry,
-        hourly_consumption_entity_id(config_name),
-        hourly_feed_in_entity_id(config_name),
-    )
-    metadata_gas = _build_gas_metadata(entry, hourly_gas_entity_id(config_name))
-
-    total_points = 0
-    last_imported_day: date | None = None
-
-    for target_day in days:
-        consumptions = await api.get_consumptions(interval="Hour", start=target_day)
-        day_stats = _build_day_stats(
-            consumptions,
-            sum_electricity_consumption,
-            sum_electricity_feed_in,
-            sum_gas_consumption,
-        )
-        sum_electricity_consumption = day_stats.sum_electricity_consumption
-        sum_electricity_feed_in = day_stats.sum_electricity_feed_in
-        sum_gas_consumption = day_stats.sum_gas_consumption
-
-        _LOGGER.debug("Found %d hourly points for %s", day_stats.points, target_day)
-        if not day_stats.points:
-            continue
-
-        if day_stats.electricity_consumption:
-            async_import_statistics(
-                hass, metadata_consumption, day_stats.electricity_consumption
-            )
-            async_import_statistics(
-                hass, metadata_feed_in, day_stats.electricity_feed_in
-            )
-        if day_stats.gas_consumption:
-            async_import_statistics(hass, metadata_gas, day_stats.gas_consumption)
-
-        total_points += day_stats.points
-        last_imported_day = target_day
-
-    return _ImportLoopResult(
-        total_points=total_points,
-        last_imported_day=last_imported_day,
-        sum_electricity_consumption=sum_electricity_consumption,
-        sum_electricity_feed_in=sum_electricity_feed_in,
-        sum_gas_consumption=sum_gas_consumption,
-    )
-
-
-async def _get_days_with_data(
+async def _get_sum_before(
     hass: HomeAssistant,
     statistic_id: str,
-    start_date: date,
-    end_date: date,
-) -> dict[date, float]:
-    """Query the HA recorder and return {date: end_of_day_sum} for days that have
-    hourly statistics in [start_date, end_date]. Days with no records are absent
-    from the returned dict, which is how callers detect gaps.
+    before_dt: datetime,
+) -> float:
+    """Return the last recorded cumulative sum strictly before *before_dt*.
+
+    Queries a 25-hour window to cover DST transition days (23/25 h days).
+    Falls back to 0.0 if no prior statistics exist.
     """
-
-    tz = dt_util.DEFAULT_TIME_ZONE
-    start_dt = dt_util.as_utc(datetime.combine(start_date, time.min).replace(tzinfo=tz))
-    end_dt = dt_util.as_utc(
-        datetime.combine(end_date + timedelta(days=1), time.min).replace(tzinfo=tz)
-    )
-
+    query_start = before_dt - timedelta(hours=25)
     try:
-        instance = get_instance(hass)
-        raw = await instance.async_add_executor_job(
+        result = await get_instance(hass).async_add_executor_job(
             statistics_during_period,
             hass,
-            start_dt,
-            end_dt,
+            query_start,
+            before_dt,
             {statistic_id},
             "hour",
             None,
             {"sum"},
         )
     except Exception as err:
-        _LOGGER.warning(
-            "Failed to query existing statistics for %s: %s", statistic_id, err
+        _LOGGER.warning("Failed to query statistics for %s: %s", statistic_id, err)
+        return 0.0
+
+    entries = result.get(statistic_id, [])
+    if not entries:
+        return 0.0
+    last = entries[-1]
+    raw_sum = last.get("sum") if isinstance(last, dict) else getattr(last, "sum", None)
+    return float(raw_sum or 0.0)
+
+
+async def _seed_sums_from_db(
+    hass: HomeAssistant,
+    metadata: dict[str, StatisticMetaData],
+    day: date,
+) -> dict[str, float]:
+    """Query the recorder for the cumulative sum before *day* for each statistic kind."""
+    day_start_utc = _day_start_utc(day)
+    result: dict[str, float] = {}
+    for kind in _STATISTIC_SPECS:
+        result[kind] = await _get_sum_before(
+            hass, metadata[kind]["statistic_id"], day_start_utc
         )
-        return {}
-
-    day_sums: dict[date, float] = {}
-    for stat in raw.get(statistic_id, []):
-        stat_start = stat["start"]
-        stat_sum = stat["sum"]
-        if stat_sum is None:
-            continue
-        # Newer HA recorder versions return start as a Unix timestamp (float).
-        if isinstance(stat_start, (int, float)):
-            stat_start = datetime.fromtimestamp(stat_start, tz=dt_util.UTC)
-        local_date = dt_util.as_local(stat_start).date()
-        if start_date <= local_date <= end_date:
-            # Keep the highest sum seen for each day (= the last hour's cumulative value).
-            if float(stat_sum) > day_sums.get(local_date, float("-inf")):
-                day_sums[local_date] = float(stat_sum)
-
-    return day_sums
+    return result
 
 
-async def async_import_yesterday_hourly_statistics(
-    hass: HomeAssistant, *, api: GreenchoiceApi, entry: ConfigEntry
-) -> HourlyImportResult | None:
-    """Scan the last 7 days of recorder statistics for gaps and backfill them from the API.
+async def _process_day_range(
+    hass: HomeAssistant,
+    *,
+    api: GreenchoiceApi,
+    entry: ConfigEntry,
+    days: list[date],
+) -> _ImportLoopResult:
+    """Fetch and import hourly statistics for each day in *days* (oldest first).
 
-    Idempotent: days that already have hourly records in the HA recorder are skipped,
-    regardless of whether this function has run before. This means the integration
-    self-heals after multi-day internet outages without any manual intervention.
+    Seeds cumulative sums lazily from the recorder before the first day (and after
+    any empty day), then chains them forward across consecutive days without extra
+    DB queries — the same pattern as scratch2.py's ``_async_process_day_range``.
     """
+    config_name = entry.data.get(CONF_NAME) or entry.title or DOMAIN
+    metadata = _build_all_metadata(entry, config_name)
 
+    # None = "query the recorder before processing this day"
+    seed_sums: dict[str, float] | None = None
+
+    total_points = 0
+    last_imported_day: date | None = None
+
+    for day in days:
+        consumptions = await api.get_consumptions(interval="Hour", start=day)
+
+        # Lazy seed: only hit the DB at the start of a new run or after an empty day.
+        if seed_sums is None:
+            seed_sums = await _seed_sums_from_db(hass, metadata, day)
+
+        day_stats = _build_hourly_stats(consumptions, seed_sums)
+
+        if not day_stats.points:
+            _LOGGER.debug(
+                "No hourly data available for %s — will retry on next update", day
+            )
+            # Reset seed so the next day re-queries the recorder for a safe baseline.
+            seed_sums = None
+            continue
+
+        # Chain seeds into the next day (avoids extra DB queries for consecutive days).
+        seed_sums = day_stats.sums
+
+        for kind, stat_list in day_stats.stats.items():
+            if stat_list:
+                async_import_statistics(hass, metadata[kind], stat_list)
+
+        total_points += day_stats.points
+        last_imported_day = day
+        _LOGGER.debug("Imported %d hourly points for %s", day_stats.points, day)
+
+    return _ImportLoopResult(
+        total_points=total_points,
+        last_imported_day=last_imported_day,
+    )
+
+
+async def async_import_hourly_statistics(
+    hass: HomeAssistant,
+    *,
+    api: GreenchoiceApi,
+    entry: ConfigEntry,
+    first_run: bool,
+) -> HourlyImportResult | None:
+    """Import hourly statistics from Greenchoice into the HA recorder.
+
+    On *first_run* (``True``): backfills the last ``_BACKFILL_DAYS`` days so the
+    Energy Dashboard is populated right after installation.
+    On subsequent calls (``False``): retries the last ``_RETRY_DAYS`` days to pick
+    up data that was not yet published on the previous cycle.
+
+    Yesterday is deferred until 13:00 as Greenchoice typically publishes the
+    previous day's data in the morning.
+    """
     if "recorder" not in hass.config.components:
         _LOGGER.debug("Recorder not loaded; skipping hourly statistics import")
         return None
 
-    local_now = dt_util.now()
-    local_today = local_now.date()
-    yesterday = local_today - timedelta(days=1)
-    scan_start = yesterday - timedelta(days=_MAX_BACKFILL_DAYS - 1)
+    yesterday = dt_util.now().date() - timedelta(days=1)
+    num_days = _BACKFILL_DAYS if first_run else _RETRY_DAYS
 
-    store = get_hourly_store(hass, entry.entry_id)
-    stored = await store.async_load() or {}
+    # Build the day range oldest-first.
+    days = [yesterday - timedelta(days=i) for i in range(num_days - 1, -1, -1)]
 
-    config_name = entry.data.get(CONF_NAME) or entry.title or DOMAIN
-    consumption_id = hourly_consumption_entity_id(config_name)
-    feed_in_id = hourly_feed_in_entity_id(config_name)
-    gas_id = hourly_gas_entity_id(config_name)
-
-    # Ask the recorder which days already have data so we can find the gaps.
-    consumption_day_sums = await _get_days_with_data(
-        hass, consumption_id, scan_start, yesterday
-    )
-    feed_in_day_sums = await _get_days_with_data(
-        hass, feed_in_id, scan_start, yesterday
-    )
-    gas_day_sums = await _get_days_with_data(hass, gas_id, scan_start, yesterday)
-
-    missing_days = [
-        scan_start + timedelta(days=i)
-        for i in range(_MAX_BACKFILL_DAYS)
-        if (scan_start + timedelta(days=i)) not in consumption_day_sums
-    ]
-
-    # Yesterday's data may not be published yet; hold it back until 13:00.
-    # Data for any day older than yesterday is already available at any hour.
-    max_process_day = yesterday
-    if local_now.hour < 13 and yesterday in missing_days:
-        _LOGGER.debug(
-            "Deferring yesterday (%s) until 13:00 (now: %02d:%02d)",
-            yesterday,
-            local_now.hour,
-            local_now.minute,
-        )
-        missing_days.remove(yesterday)
-        max_process_day = yesterday - timedelta(days=1)
-        if not missing_days:
-            # Nothing older to backfill right now; come back after 13:00.
-            return None
-
-    if not missing_days:
-        _LOGGER.debug("No missing days found in the last %d days", _MAX_BACKFILL_DAYS)
-        return HourlyImportResult(imported=False, date=yesterday, points=0)
-
-    # Starting from the first gap, also re-import every day that already exists in
-    # the recorder up to max_process_day. Their cumulative sums were computed from a
-    # different baseline and would cause discontinuities in the Energy dashboard.
-    first_gap = missing_days[0]
-    days_to_process = [
-        first_gap + timedelta(days=i)
-        for i in range((max_process_day - first_gap).days + 1)
-    ]
-
-    _LOGGER.debug(
-        "Gap detected at %s; processing %s through %s",
-        first_gap.isoformat(),
-        first_gap.isoformat(),
-        max_process_day.isoformat(),
-    )
-
-    # Use the day immediately before the first gap as the cumulative-sum anchor.
-    # That entry is already present in the recorder dicts we fetched for gap detection.
-    day_before_gap = first_gap - timedelta(days=1)
-    import_result = await _import_days(
-        hass,
-        api=api,
-        entry=entry,
-        days=days_to_process,
-        sum_electricity_consumption=consumption_day_sums.get(
-            day_before_gap, float(stored.get("last_sum_consumption") or 0.0)
-        ),
-        sum_electricity_feed_in=feed_in_day_sums.get(
-            day_before_gap, float(stored.get("last_sum_feed_in") or 0.0)
-        ),
-        sum_gas_consumption=gas_day_sums.get(
-            day_before_gap, float(stored.get("last_sum_gas") or 0.0)
-        ),
-    )
+    import_result = await _process_day_range(hass, api=api, entry=entry, days=days)
 
     if import_result.last_imported_day is None:
         return HourlyImportResult(imported=False, date=yesterday, points=0)
-
-    # Persist the most recent end-of-day sums as a fallback for the next cycle in
-    # case the recorder query returns nothing (e.g. recorder not yet warmed up).
-    stored["last_sum_consumption"] = import_result.sum_electricity_consumption
-    stored["last_sum_feed_in"] = import_result.sum_electricity_feed_in
-    stored["last_sum_gas"] = import_result.sum_gas_consumption
-    await store.async_save(stored)
-    async_dispatcher_send(hass, hourly_statistics_signal(entry.entry_id))
 
     return HourlyImportResult(
         imported=True,
@@ -436,12 +327,12 @@ async def async_reimport_hourly_statistics_from(
     entry: ConfigEntry,
     start_date: date,
 ) -> int:
-    """Force-reimport hourly statistics from start_date up to yesterday.
+    """Force-reimport hourly statistics from *start_date* up to yesterday.
 
     Fetches fresh data from the API for every day in the range and writes it to
     the recorder, overwriting whatever is already there. Cumulative sums are
-    anchored to the recorder data that precedes start_date so the series remains
-    monotonically correct. Returns the total number of data points imported.
+    anchored to the recorder data that precedes *start_date* so the series
+    remains monotonically correct. Returns the total number of data points imported.
     """
     local_now = dt_util.now()
     yesterday = local_now.date() - timedelta(days=1)
@@ -449,24 +340,8 @@ async def async_reimport_hourly_statistics_from(
     if start_date > yesterday:
         raise ValueError(f"start_date {start_date} must not be today or in the future")
 
-    config_name = entry.data.get(CONF_NAME) or entry.title or DOMAIN
-    consumption_id = hourly_consumption_entity_id(config_name)
-    feed_in_id = hourly_feed_in_entity_id(config_name)
-    gas_id = hourly_gas_entity_id(config_name)
-
-    # Look up the end-of-day sum from the day before start_date so the
-    # re-imported series continues the existing cumulative total correctly.
-    day_before = start_date - timedelta(days=1)
-    pre_consumption = await _get_days_with_data(
-        hass, consumption_id, day_before, day_before
-    )
-    pre_feed_in = await _get_days_with_data(hass, feed_in_id, day_before, day_before)
-    pre_gas = await _get_days_with_data(hass, gas_id, day_before, day_before)
-    sum_electricity_consumption = pre_consumption.get(day_before, 0.0)
-    sum_electricity_feed_in = pre_feed_in.get(day_before, 0.0)
-    sum_gas_consumption = pre_gas.get(day_before, 0.0)
-
     num_days = (yesterday - start_date).days + 1
+    days = [start_date + timedelta(days=i) for i in range(num_days)]
 
     _LOGGER.info(
         "Force-reimporting %d day(s) of hourly statistics from %s for %s",
@@ -475,15 +350,7 @@ async def async_reimport_hourly_statistics_from(
         entry.title,
     )
 
-    import_result = await _import_days(
-        hass,
-        api=api,
-        entry=entry,
-        days=[start_date + timedelta(days=i) for i in range(num_days)],
-        sum_electricity_consumption=sum_electricity_consumption,
-        sum_electricity_feed_in=sum_electricity_feed_in,
-        sum_gas_consumption=sum_gas_consumption,
-    )
+    import_result = await _process_day_range(hass, api=api, entry=entry, days=days)
 
     _LOGGER.info(
         "Force-reimport complete: %d hourly data point(s) over %d day(s) for %s",
@@ -491,14 +358,5 @@ async def async_reimport_hourly_statistics_from(
         num_days,
         entry.title,
     )
-
-    if import_result.total_points > 0:
-        store = get_hourly_store(hass, entry.entry_id)
-        stored = await store.async_load() or {}
-        stored["last_sum_consumption"] = import_result.sum_electricity_consumption
-        stored["last_sum_feed_in"] = import_result.sum_electricity_feed_in
-        stored["last_sum_gas"] = import_result.sum_gas_consumption
-        await store.async_save(stored)
-        async_dispatcher_send(hass, hourly_statistics_signal(entry.entry_id))
 
     return import_result.total_points
