@@ -58,11 +58,6 @@ _STATISTIC_SPECS: dict[str, _StatisticSpec] = {
 }
 
 
-def hourly_statistic_id(config_name: str, kind: str) -> str:
-    statistic_id = f"{DOMAIN}:{slugify(config_name)}_{kind}"
-    return statistic_id
-
-
 @dataclass(frozen=True)
 class HourlyImportResult:
     imported: bool
@@ -93,7 +88,7 @@ def _build_all_metadata(
             mean_type=StatisticMeanType.NONE,
             source="greenchoice",
             name=f"{entry.title} {spec.name_suffix}",
-            statistic_id=hourly_statistic_id(config_name, kind),
+            statistic_id=f"{DOMAIN}:{slugify(config_name)}_{kind}",
             unit_of_measurement=spec.unit,
             unit_class=spec.unit_class,
         )
