@@ -162,8 +162,6 @@ class GreenchoiceApi:
             ).build_url()
         )
 
-        print(json.dumps(consumptions_json))
-
         return Consumptions.model_validate(consumptions_json)
 
     async def update(self) -> SensorUpdate:
