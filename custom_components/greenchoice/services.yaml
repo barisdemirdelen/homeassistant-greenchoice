@@ -1,11 +1,26 @@
 reimport_hourly_statistics:
+  name: Reimport hourly statistics
+  description: >
+    Force a full reimport of hourly electricity and gas statistics from the
+    Greenchoice API starting from the given date up to and including yesterday.
+    Existing recorder data for the range is overwritten and cumulative sums are
+    recalculated, which fixes gaps, negative spikes, or other artefacts in the
+    Energy dashboard.
   fields:
     config_entry_id:
+      name: Account
+      description: >
+        Which Greenchoice account to reimport. Leave empty to reimport all
+        configured accounts.
       required: false
       selector:
         config_entry:
           integration: greenchoice
     start_date:
+      name: Start date
+      description: >
+        The first day to reimport (inclusive). All days through yesterday will
+        be fetched from the API and written to the recorder.
       required: true
       example: "2026-03-25"
       selector:
