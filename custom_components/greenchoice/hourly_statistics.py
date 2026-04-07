@@ -138,10 +138,10 @@ def _build_hourly_stats(
                     item.electricity.total_delivery_costs or 0.0
                 )
                 + float(item.electricity.total_fixed_costs or 0.0),
-                "electricity_feed_in_compensation": float(
-                    item.electricity.total_feed_in_compensation or 0.0
-                )
-                + float(item.electricity.total_feed_in_costs or 0.0),
+                "electricity_feed_in_compensation": -(
+                    float(item.electricity.total_feed_in_compensation or 0.0)
+                    + float(item.electricity.total_feed_in_costs or 0.0)
+                ),
             }
             for kind, value in elec_values.items():
                 sums[kind] += value

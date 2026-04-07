@@ -10,7 +10,6 @@ from custom_components.greenchoice.hourly_statistics import (
     _get_sum_before,
     async_import_hourly_statistics,
     async_reimport_hourly_statistics_from,
-    hourly_statistic_id,
 )
 from tests.conftest import make_consumptions_payload, stat_sum
 
@@ -70,7 +69,6 @@ async def test_import_imports_yesterday(
     assert res.points == 24
     # consumption + feed-in + elec_cost + feed_in_comp (no gas)
     assert mock_import_statistics.call_count == 4
-
 
     consumption_meta = mock_import_statistics.call_args_list[0].args[1]
     feed_in_meta = mock_import_statistics.call_args_list[1].args[1]
@@ -284,8 +282,13 @@ async def test_import_cost_stats(
     elec_cost_meta = mock_import_statistics.call_args_list[2].args[1]
     feed_in_comp_meta = mock_import_statistics.call_args_list[3].args[1]
     gas_cost_meta = mock_import_statistics.call_args_list[5].args[1]
-    assert _stat_id(elec_cost_meta) == "greenchoice:my_home_electricity_consumption_cost"
-    assert _stat_id(feed_in_comp_meta) == "greenchoice:my_home_electricity_feed_in_compensation"
+    assert (
+        _stat_id(elec_cost_meta) == "greenchoice:my_home_electricity_consumption_cost"
+    )
+    assert (
+        _stat_id(feed_in_comp_meta)
+        == "greenchoice:my_home_electricity_feed_in_compensation"
+    )
     assert _stat_id(gas_cost_meta) == "greenchoice:my_home_gas_consumption_cost"
 
 
@@ -295,7 +298,7 @@ async def test_get_sum_before_handles_float_timestamps(hass):
 
     _get_sum_before must not crash with 'float has no attribute tzinfo'.
     """
-    statistic_id = hourly_statistic_id("My Home", "electricity_consumption")
+    statistic_id = "greenchoice:my_home_electricity_consumption"
     march_27_23_utc = datetime(2026, 3, 27, 23, 0, tzinfo=UTC)
     fake_stats = {statistic_id: [{"start": march_27_23_utc.timestamp(), "sum": 16.414}]}
 
