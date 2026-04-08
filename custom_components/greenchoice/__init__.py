@@ -15,7 +15,6 @@ from homeassistant.helpers import config_validation as cv
 
 from .api import GreenchoiceApi
 from .const import CONF_AGREEMENT_ID, CONF_CUSTOMER_NUMBER, DOMAIN
-from .hourly_statistics import async_reimport_hourly_statistics_from
 from .sensor import GreenchoiceDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -42,7 +41,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_session)
 
-        # This is where failures likely happen - add error handling
         await coordinator.async_config_entry_first_refresh()
 
         hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
@@ -69,25 +67,12 @@ def _register_services(hass: HomeAssistant) -> None:
         if target_entry_id:
             entries = {target_entry_id: entries[target_entry_id]} if target_entry_id in entries else {}
         for entry_id, coordinator in list(entries.items()):
-            config_entry = hass.config_entries.async_get_entry(entry_id)
-            if config_entry is None:
-                continue
-            api = GreenchoiceApi(
-                config_entry.data[CONF_EMAIL],
-                config_entry.data[CONF_PASSWORD],
-                config_entry.data.get(CONF_CUSTOMER_NUMBER),
-                config_entry.data.get(CONF_AGREEMENT_ID),
-            )
             try:
-                async with api:
-                    await async_reimport_hourly_statistics_from(
-                        hass,
-                        api=api,
-                        entry=config_entry,
-                        start_date=start_date,
-                    )
+                await coordinator.async_force_reimport(start_date)
             except Exception as err:
-                _LOGGER.error("Reimport failed for %s: %s", config_entry.title, err)
+                config_entry = hass.config_entries.async_get_entry(entry_id)
+                title = config_entry.title if config_entry else entry_id
+                _LOGGER.error("Reimport failed for %s: %s", title, err)
 
     hass.services.async_register(
         DOMAIN,

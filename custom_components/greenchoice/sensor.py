@@ -1,6 +1,6 @@
 import logging
 from collections import namedtuple
-from datetime import timedelta
+from datetime import date, timedelta
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,8 +25,10 @@ from homeassistant.util import slugify
 
 from .api import GreenchoiceApi
 from .const import DEFAULT_NAME, DOMAIN
-from .hourly_statistics import async_import_hourly_statistics
+from .hourly_statistics import _day_start_utc, _make_statistics
 from .model import SensorUpdate
+from .recorder import async_inject_day
+from .statistics_mixin import StatisticsLoopMixin
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -90,7 +92,9 @@ async def async_setup_entry(
     async_add_entities(sensors)
 
 
-class GreenchoiceDataUpdateCoordinator(DataUpdateCoordinator[SensorUpdate]):
+class GreenchoiceDataUpdateCoordinator(
+    StatisticsLoopMixin, DataUpdateCoordinator[SensorUpdate]
+):
     """Class to manage fetching data from the API."""
 
     def __init__(
@@ -98,15 +102,18 @@ class GreenchoiceDataUpdateCoordinator(DataUpdateCoordinator[SensorUpdate]):
     ) -> None:
         """Initialize."""
         self.api = api
-        self.config_entry = config_entry
-        self._backfilled = False
         coordinator_name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
         super().__init__(
             hass,
             _LOGGER,
             name=f"{DOMAIN}_{slugify(coordinator_name)}",
             update_interval=timedelta(hours=6),
+            backfill_days=7,
+            retry_days=3,
         )
+        # Set after super().__init__ so DataUpdateCoordinator's own
+        # self.config_entry = None assignment doesn't overwrite ours.
+        self.config_entry = config_entry
 
     async def _async_update_data(self) -> SensorUpdate:
         """Update data via library."""
@@ -115,23 +122,60 @@ class GreenchoiceDataUpdateCoordinator(DataUpdateCoordinator[SensorUpdate]):
                 data = await self.api.update()
 
                 # Side-effect: import/backfill hourly consumption into recorder stats.
-                # On the first run, _BACKFILL_DAYS of history is fetched; on subsequent
-                # runs the last _RETRY_DAYS are retried to catch late-published data.
-                try:
-                    await async_import_hourly_statistics(
-                        self.hass,
-                        api=self.api,
-                        entry=self.config_entry,
-                        first_run=not self._backfilled,
-                    )
-                    self._backfilled = True
-                except Exception as err:
-                    _LOGGER.debug("Hourly statistics import failed: %s", err)
+                if "recorder" in self.hass.config.components:
+                    try:
+                        await self.async_run_statistics_update()
+                    except Exception as err:
+                        _LOGGER.debug("Hourly statistics import failed: %s", err)
 
                 return data
         except Exception as exception:
             _LOGGER.error("Failed to update data: %s", exception)
             raise UpdateFailed() from exception
+
+    async def _process_day(
+        self,
+        day: date,
+        seed_sums: dict[str, float] | None,
+    ) -> dict[str, float] | None:
+        """Fetch and inject hourly statistics for *day*.
+
+        Returns statistic_id-keyed seed sums for the next consecutive day,
+        or ``None`` if no data was available yet.
+        Called from within an open ``async with self.api:`` context.
+        """
+        config_name = (
+            self.config_entry.data.get(CONF_NAME) or self.config_entry.title or DOMAIN
+        )
+        elec_stats, gas_stats = _make_statistics(self.config_entry, config_name)
+
+        consumptions = await self.api.get_consumptions(interval="Hour", start=day)
+        items = sorted(consumptions.consumption_costs, key=lambda x: x.consumed_on)
+        elec_items = [item for item in items if item.electricity]
+        gas_items = [item for item in items if item.gas]
+
+        if not elec_items and not gas_items:
+            _LOGGER.debug("No hourly data for %s — will retry on next update", day)
+            return None
+
+        stats_entries = [
+            *(  (stat, elec_items) for stat in elec_stats  ),
+            *(  (stat, gas_items) for stat in gas_stats  ),
+        ]
+        # Drop stats whose item list is empty (e.g. no gas on electricity-only day).
+        stats_entries = [(stat, entries) for stat, entries in stats_entries if entries]
+
+        day_start = _day_start_utc(day)
+        new_sums = await async_inject_day(
+            self.hass, stats_entries, day, day_start, seed_sums
+        )
+        _LOGGER.debug("Imported hourly data for %s", day)
+        return new_sums
+
+    async def async_force_reimport(self, start_date: date) -> None:
+        """Open the API session and reimport statistics from *start_date*."""
+        async with self.api:
+            await self.async_reimport_statistics(start_date)
 
 
 class GreenchoiceSensor(CoordinatorEntity, SensorEntity):
