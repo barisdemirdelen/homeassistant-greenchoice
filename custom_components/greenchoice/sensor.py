@@ -23,12 +23,17 @@ from homeassistant.helpers.update_coordinator import (
 )
 from homeassistant.util import slugify
 
+from custom_components.greenchoice.ha_external_statistics.recorder import (
+    async_inject_day,
+)
+from custom_components.greenchoice.ha_external_statistics.statistics_mixin import (
+    StatisticsLoopMixin,
+)
+
 from .api import GreenchoiceApi
 from .const import DEFAULT_NAME, DOMAIN
 from .hourly_statistics import _day_start_utc, _make_statistics
 from .model import SensorUpdate
-from .recorder import async_inject_day
-from .statistics_mixin import StatisticsLoopMixin
 
 _LOGGER = logging.getLogger(__name__)
 

@@ -8,11 +8,14 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from custom_components.greenchoice.external_statistic import ExternalStatistic
-
-_STAT_PATH = (
-    "custom_components.greenchoice.external_statistic.async_add_external_statistics"
+from custom_components.greenchoice.ha_external_statistics import (
+    external_statistic as _ext_stat_mod,
 )
+from custom_components.greenchoice.ha_external_statistics.external_statistic import (
+    ExternalStatistic,
+)
+
+_STAT_PATH = f"{_ext_stat_mod.__name__}.async_add_external_statistics"
 
 # ---------------------------------------------------------------------------
 # Minimal entry type used across all tests

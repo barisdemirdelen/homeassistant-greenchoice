@@ -8,17 +8,23 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from custom_components.greenchoice.external_statistic import ExternalStatistic
-from custom_components.greenchoice.recorder import (
+from custom_components.greenchoice.ha_external_statistics import (
+    external_statistic as _ext_stat_mod,
+)
+from custom_components.greenchoice.ha_external_statistics import (
+    recorder as _recorder_mod,
+)
+from custom_components.greenchoice.ha_external_statistics.external_statistic import (
+    ExternalStatistic,
+)
+from custom_components.greenchoice.ha_external_statistics.recorder import (
     async_get_last_sum,
     async_inject_day,
 )
 
-_GET_INSTANCE_PATH = "custom_components.greenchoice.recorder.get_instance"
-_SDP_PATH = "custom_components.greenchoice.recorder.statistics_during_period"
-_ADD_STAT_PATH = (
-    "custom_components.greenchoice.external_statistic.async_add_external_statistics"
-)
+_GET_INSTANCE_PATH = f"{_recorder_mod.__name__}.get_instance"
+_SDP_PATH = f"{_recorder_mod.__name__}.statistics_during_period"
+_ADD_STAT_PATH = f"{_ext_stat_mod.__name__}.async_add_external_statistics"
 
 
 # ---------------------------------------------------------------------------

@@ -6,6 +6,12 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 
 from custom_components.greenchoice.api import GreenchoiceApi
+from custom_components.greenchoice.ha_external_statistics import (
+    recorder as _recorder_mod,
+)
+from custom_components.greenchoice.ha_external_statistics.recorder import (
+    async_get_last_sum,
+)
 from custom_components.greenchoice.sensor import GreenchoiceDataUpdateCoordinator
 from tests.conftest import make_consumptions_payload, stat_sum
 
@@ -14,9 +20,7 @@ _TODAY = date(2026, 3, 28)
 _YESTERDAY = date(2026, 3, 27)
 
 
-# ---------------------------------------------------------------------------
-# Helpers
-# ---------------------------------------------------------------------------
+_PATCH_GET_INSTANCE = f"{_recorder_mod.__name__}.get_instance"
 
 
 def _make_coordinator(hass, entry):
@@ -259,8 +263,13 @@ async def test_import_cost_stats(
     elec_cost_meta = mock_import_statistics.call_args_list[2].args[1]
     feed_in_comp_meta = mock_import_statistics.call_args_list[3].args[1]
     gas_cost_meta = mock_import_statistics.call_args_list[5].args[1]
-    assert _stat_id(elec_cost_meta) == "greenchoice:my_home_electricity_consumption_cost"
-    assert _stat_id(feed_in_comp_meta) == "greenchoice:my_home_electricity_feed_in_compensation"
+    assert (
+        _stat_id(elec_cost_meta) == "greenchoice:my_home_electricity_consumption_cost"
+    )
+    assert (
+        _stat_id(feed_in_comp_meta)
+        == "greenchoice:my_home_electricity_feed_in_compensation"
+    )
     assert _stat_id(gas_cost_meta) == "greenchoice:my_home_gas_consumption_cost"
 
 
@@ -270,15 +279,12 @@ async def test_async_get_last_sum_handles_dict_with_float_start(hass):
 
     async_get_last_sum must extract 'sum' correctly regardless of 'start' type.
     """
-    from custom_components.greenchoice.recorder import async_get_last_sum
 
     statistic_id = "greenchoice:my_home_electricity_consumption"
     march_27_23_utc = datetime(2026, 3, 27, 23, 0, tzinfo=UTC)
     fake_stats = {statistic_id: [{"start": march_27_23_utc.timestamp(), "sum": 16.414}]}
 
-    with patch(
-        "custom_components.greenchoice.recorder.get_instance"
-    ) as mock_get_instance:
+    with patch(_PATCH_GET_INSTANCE) as mock_get_instance:
         mock_instance = Mock()
         mock_instance.async_add_executor_job = AsyncMock(return_value=fake_stats)
         mock_get_instance.return_value = mock_instance

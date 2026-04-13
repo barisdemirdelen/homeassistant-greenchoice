@@ -8,7 +8,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from custom_components.greenchoice.statistics_mixin import StatisticsLoopMixin
+from custom_components.greenchoice.ha_external_statistics.statistics_mixin import (
+    StatisticsLoopMixin,
+)
 
 # ---------------------------------------------------------------------------
 # Minimal concrete implementation

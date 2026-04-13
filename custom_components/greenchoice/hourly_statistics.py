@@ -9,8 +9,11 @@ from homeassistant.const import CURRENCY_EURO, UnitOfEnergy, UnitOfVolume
 from homeassistant.util import dt as dt_util
 from homeassistant.util import slugify
 
+from custom_components.greenchoice.ha_external_statistics.external_statistic import (
+    ExternalStatistic,
+)
+
 from .const import DOMAIN
-from .external_statistic import ExternalStatistic
 from .model import ConsumptionCostsItem
 
 
