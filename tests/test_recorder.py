@@ -60,7 +60,8 @@ def _make_stat(stat_id: str = "dom:stat") -> ExternalStatistic[Entry]:
 
 
 class TestAsyncGetLastSum:
-    def _mock_hass(self, recorder_result: dict) -> MagicMock:
+    @staticmethod
+    def _mock_hass(recorder_result: dict) -> tuple[MagicMock, MagicMock]:
         hass = MagicMock()
         recorder_instance = MagicMock()
         recorder_instance.async_add_executor_job = AsyncMock(
