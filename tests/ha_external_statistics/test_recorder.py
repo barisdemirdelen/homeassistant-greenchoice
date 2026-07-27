@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from datetime import date, datetime, timedelta, timezone
+from datetime import UTC, date, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
@@ -39,12 +39,12 @@ class Entry:
 
 
 _DATE = date(2024, 3, 15)
-_DAY_START = datetime(2024, 3, 15, 0, 0, tzinfo=timezone.utc)
+_DAY_START = datetime(2024, 3, 15, 0, 0, tzinfo=UTC)
 
 
 def _ts(entry: Entry, for_date: date) -> datetime:
     return datetime(
-        for_date.year, for_date.month, for_date.day, entry.hour, 0, tzinfo=timezone.utc
+        for_date.year, for_date.month, for_date.day, entry.hour, 0, tzinfo=UTC
     )
 
 
@@ -107,7 +107,7 @@ class TestAsyncGetLastSum:
     @pytest.mark.asyncio
     async def test_query_window_uses_lookback_hours(self):
         hass = MagicMock()
-        before_dt = datetime(2024, 3, 15, 0, 0, tzinfo=timezone.utc)
+        before_dt = datetime(2024, 3, 15, 0, 0, tzinfo=UTC)
         recorder_instance = MagicMock()
         # Invoke the lambda so statistics_during_period is actually called
         recorder_instance.async_add_executor_job = AsyncMock(
@@ -125,7 +125,7 @@ class TestAsyncGetLastSum:
     @pytest.mark.asyncio
     async def test_default_lookback_is_25_hours(self):
         hass = MagicMock()
-        before_dt = datetime(2024, 3, 15, 0, 0, tzinfo=timezone.utc)
+        before_dt = datetime(2024, 3, 15, 0, 0, tzinfo=UTC)
         recorder_instance = MagicMock()
         recorder_instance.async_add_executor_job = AsyncMock(
             side_effect=lambda fn: fn()

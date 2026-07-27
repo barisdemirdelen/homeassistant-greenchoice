@@ -64,7 +64,11 @@ def _register_services(hass: HomeAssistant) -> None:
         target_entry_id: str | None = call.data.get("config_entry_id")
         entries = hass.data.get(DOMAIN, {})
         if target_entry_id:
-            entries = {target_entry_id: entries[target_entry_id]} if target_entry_id in entries else {}
+            entries = (
+                {target_entry_id: entries[target_entry_id]}
+                if target_entry_id in entries
+                else {}
+            )
         for entry_id, coordinator in list(entries.items()):
             try:
                 await coordinator.async_force_reimport(start_date)
@@ -77,10 +81,12 @@ def _register_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_REIMPORT_HOURLY_STATISTICS,
         handle_reimport_hourly_statistics,
-        schema=vol.Schema({
-            vol.Required("start_date"): cv.date,
-            vol.Optional("config_entry_id"): cv.string,
-        }),
+        schema=vol.Schema(
+            {
+                vol.Required("start_date"): cv.date,
+                vol.Optional("config_entry_id"): cv.string,
+            }
+        ),
     )
 
 

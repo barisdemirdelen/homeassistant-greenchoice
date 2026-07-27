@@ -1,7 +1,6 @@
-import asyncio
 import logging
 from datetime import UTC, date, datetime, timedelta
-from typing import Type, TypeVar
+from typing import TypeVar
 
 import aiohttp
 from pydantic import BaseModel, ValidationError
@@ -93,7 +92,7 @@ class GreenchoiceApi:
                 response.raise_for_status()
                 return await response.json()
 
-        except (aiohttp.ClientError, asyncio.TimeoutError) as e:
+        except (TimeoutError, aiohttp.ClientError) as e:
             _LOGGER.error("HTTP Error: %s", e)
             if _retry_count == 0:
                 raise ApiError(f"HTTP Error: {e}")
@@ -184,13 +183,11 @@ class GreenchoiceApi:
             await self.update_usage_values(result)
         except ApiError:
             _LOGGER.error("Cant update usage values")
-            pass
 
         try:
             await self.update_contract_values(result)
         except ApiError:
             _LOGGER.error("Cant update contract values")
-            pass
 
         return result
 
@@ -258,7 +255,7 @@ class GreenchoiceApi:
 
     @staticmethod
     def validate_list(
-        model: Type[T], data: dict | list, ignore_invalid: bool = False
+        model: type[T], data: dict | list, ignore_invalid: bool = False
     ) -> list[T]:
         """Validate a list of items against a Pydantic model, optionally ignoring invalid items."""
         valid_items = []

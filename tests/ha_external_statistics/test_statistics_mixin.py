@@ -2,8 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Awaitable
 from datetime import date, timedelta
-from typing import Awaitable, cast
+from typing import cast
 from unittest.mock import AsyncMock, patch
 
 import pytest
@@ -64,7 +65,6 @@ class TestProcessDayRange:
             if day == date(2026, 3, 26):
                 raise RuntimeError("HTTP 500")
             processed.append(day)
-            return None
 
         mixin.process_day = AsyncMock(side_effect=_process)
         await mixin._async_process_day_range(
@@ -98,7 +98,7 @@ class TestProcessDayRange:
             [date(2026, 3, 25), date(2026, 3, 26), date(2026, 3, 27)]
         )
 
-        assert seeds_received[date(2026, 3, 25)] is None   # no prior seed
+        assert seeds_received[date(2026, 3, 25)] is None  # no prior seed
         assert seeds_received[date(2026, 3, 26)] == {"stat": 1.0}  # chained from 25
         # Seed must be preserved (not reset) so the next day's cumulative sum
         # continues from the same baseline instead of producing a negative spike.
@@ -182,7 +182,6 @@ class TestBackfill:
             if day == fail_day:
                 raise RuntimeError("HTTP 500")
             processed.append(day)
-            return None
 
         mixin.process_day = AsyncMock(side_effect=_process)
         with _patch_today():
@@ -228,9 +227,8 @@ class TestRetryRecentDays:
         """If every retry day fails, the last exception must propagate."""
         mixin = _FakeMixin(retry_days=2)
         mixin.process_day = AsyncMock(side_effect=RuntimeError("HTTP 500"))
-        with _patch_today():
-            with pytest.raises(RuntimeError, match="HTTP 500"):
-                await mixin._async_retry_recent_days(2)
+        with _patch_today(), pytest.raises(RuntimeError, match="HTTP 500"):
+            await mixin._async_retry_recent_days(2)
 
 
 # ---------------------------------------------------------------------------
@@ -305,8 +303,8 @@ class TestReimportStatistics:
         """
         # today = March 31 → yesterday = March 30, so the range covers all 30 days.
         _MARCH_31 = date(2026, 3, 31)
-        START = date(2026, 3, 1)   # first day of full reimport
-        MID = date(2026, 3, 15)    # first day of partial reimport
+        START = date(2026, 3, 1)  # first day of full reimport
+        MID = date(2026, 3, 15)  # first day of partial reimport
 
         # Each day returns sum = day-of-month * 10.0  (e.g. March 14 → 140.0).
         def _end_sum(day: date) -> dict[str, float]:
@@ -325,10 +323,10 @@ class TestReimportStatistics:
             await mixin.async_reimport_statistics(START)
 
         # Spot-check seed chaining in the first reimport.
-        assert seeds_first[START] is None                    # first day → DB lookup
-        assert seeds_first[date(2026, 3, 2)] == {"stat": 10.0}   # chained from Mar 1
-        assert seeds_first[date(2026, 3, 15)] == {"stat": 140.0} # chained from Mar 14
-        assert seeds_first[date(2026, 3, 30)] == {"stat": 290.0} # chained from Mar 29
+        assert seeds_first[START] is None  # first day → DB lookup
+        assert seeds_first[date(2026, 3, 2)] == {"stat": 10.0}  # chained from Mar 1
+        assert seeds_first[date(2026, 3, 15)] == {"stat": 140.0}  # chained from Mar 14
+        assert seeds_first[date(2026, 3, 30)] == {"stat": 290.0}  # chained from Mar 29
 
         # ── Second reimport: 15th → 30th ────────────────────────────────────
         seeds_second: dict[date, object] = {}
@@ -344,10 +342,10 @@ class TestReimportStatistics:
         # Day 15 is the first day of the partial reimport → seed must be None.
         # In real code this causes async_get_last_sum to read the correct
         # end-of-day-14 value (140.0) from the DB, so the sums stay correct.
-        assert seeds_second[MID] is None                          # DB lookup triggered
+        assert seeds_second[MID] is None  # DB lookup triggered
         # Days 16–30 chain directly from the previous day's return value.
-        assert seeds_second[date(2026, 3, 16)] == {"stat": 150.0} # chained from Mar 15
-        assert seeds_second[date(2026, 3, 30)] == {"stat": 290.0} # chained from Mar 29
+        assert seeds_second[date(2026, 3, 16)] == {"stat": 150.0}  # chained from Mar 15
+        assert seeds_second[date(2026, 3, 30)] == {"stat": 290.0}  # chained from Mar 29
         # Days 1–14 were never called in the second reimport.
         assert START not in seeds_second
         assert date(2026, 3, 14) not in seeds_second
@@ -363,7 +361,6 @@ class TestReimportStatistics:
             if day == fail_day:
                 raise RuntimeError("HTTP 500")
             processed.append(day)
-            return None
 
         mixin.process_day = AsyncMock(side_effect=_process)
         with _patch_today():

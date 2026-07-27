@@ -225,9 +225,7 @@ def mock_api(
                     f"{BASE_URL}/api/v2/customers/2222/agreements/1111/meter-readings/"
                     f"{datetime.datetime.now(datetime.UTC).year}/"
                 ),
-                payload=meters_response
-                if has_gas
-                else meters_response_without_gas,
+                payload=meters_response if has_gas else meters_response_without_gas,
             )
 
             if has_rates:

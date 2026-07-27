@@ -76,17 +76,21 @@ def _make_statistics(
             "Electricity consumption cost (hourly)",
             CURRENCY_EURO,
             None,
-            lambda item: float(item.electricity.total_delivery_costs or 0.0)
-            + float(item.electricity.total_fixed_costs or 0.0),
+            lambda item: (
+                float(item.electricity.total_delivery_costs or 0.0)
+                + float(item.electricity.total_fixed_costs or 0.0)
+            ),
         ),
         _stat(
             "electricity_feed_in_compensation",
             "Electricity feed-in compensation (hourly)",
             CURRENCY_EURO,
             None,
-            lambda item: -(
-                float(item.electricity.total_feed_in_compensation or 0.0)
-                + float(item.electricity.total_feed_in_costs or 0.0)
+            lambda item: (
+                -(
+                    float(item.electricity.total_feed_in_compensation or 0.0)
+                    + float(item.electricity.total_feed_in_costs or 0.0)
+                )
             ),
         ),
     ]
@@ -104,8 +108,10 @@ def _make_statistics(
             "Gas consumption cost (hourly)",
             CURRENCY_EURO,
             None,
-            lambda item: float(item.gas.total_delivery_costs or 0.0)
-            + float(item.gas.total_fixed_costs or 0.0),
+            lambda item: (
+                float(item.gas.total_delivery_costs or 0.0)
+                + float(item.gas.total_fixed_costs or 0.0)
+            ),
         ),
     ]
 
