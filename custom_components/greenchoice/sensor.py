@@ -30,7 +30,8 @@ from custom_components.greenchoice.ha_external_statistics.statistics_mixin impor
     StatisticsLoopMixin,
 )
 
-from .api import GreenchoiceApi
+from .api import ApiError, GreenchoiceApi
+from .auth import LoginError
 from .const import DEFAULT_NAME, DOMAIN
 from .hourly_statistics import _day_start_utc, _make_statistics
 from .model import SensorUpdate
@@ -136,9 +137,13 @@ class GreenchoiceDataUpdateCoordinator(
                         _LOGGER.debug("Hourly statistics import failed: %s", err)
 
                 return data
-        except Exception as exception:
-            _LOGGER.error("Failed to update data: %s", exception)
-            raise UpdateFailed() from exception
+        except (ApiError, LoginError) as exception:
+            # Expected upstream failures: let the coordinator log them concisely
+            # and retry. Anything else propagates so Home Assistant logs a full
+            # traceback instead of an empty "Failed to update data".
+            raise UpdateFailed(
+                str(exception) or type(exception).__name__
+            ) from exception
 
     async def _process_day(
         self,

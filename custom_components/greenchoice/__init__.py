@@ -26,35 +26,34 @@ SERVICE_REIMPORT_HOURLY_STATISTICS = "reimport_hourly_statistics"
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up this integration using UI."""
-    try:
-        api = GreenchoiceApi(
-            entry.data[CONF_EMAIL],
-            entry.data[CONF_PASSWORD],
-            entry.data.get(CONF_CUSTOMER_NUMBER),
-            entry.data.get(CONF_AGREEMENT_ID),
-        )
-        coordinator = GreenchoiceDataUpdateCoordinator(hass, api, entry)
+    api = GreenchoiceApi(
+        entry.data[CONF_EMAIL],
+        entry.data[CONF_PASSWORD],
+        entry.data.get(CONF_CUSTOMER_NUMBER),
+        entry.data.get(CONF_AGREEMENT_ID),
+    )
+    coordinator = GreenchoiceDataUpdateCoordinator(hass, api, entry)
 
-        # Register shutdown handler
-        async def async_close_session(event):
-            await coordinator.async_shutdown()
+    # Register shutdown handler
+    async def async_close_session(event):
+        await coordinator.async_shutdown()
 
-        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_session)
+    hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, async_close_session)
 
-        await coordinator.async_config_entry_first_refresh()
+    # Raises ConfigEntryNotReady when the first fetch fails, so Home Assistant
+    # retries with backoff. Catching it here would park the entry in
+    # SETUP_ERROR permanently, requiring a manual reload or restart.
+    await coordinator.async_config_entry_first_refresh()
 
-        hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
+    hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-        # Register the reimport action once (shared across all config entries).
-        if not hass.services.has_service(DOMAIN, SERVICE_REIMPORT_HOURLY_STATISTICS):
-            _register_services(hass)
+    # Register the reimport action once (shared across all config entries).
+    if not hass.services.has_service(DOMAIN, SERVICE_REIMPORT_HOURLY_STATISTICS):
+        _register_services(hass)
 
-        return True
-    except Exception as e:
-        _LOGGER.error("Failed to setup Greenchoice integration: %s", e)
-        return False
+    return True
 
 
 def _register_services(hass: HomeAssistant) -> None:
