@@ -14,6 +14,7 @@ from abc import ABC, abstractmethod
 from datetime import date, timedelta
 
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,8 +41,11 @@ class StatisticsLoopMixin(ABC):
 
     @staticmethod
     def _today() -> date:
-        """Return today's date. Exists as a method so tests can override it."""
-        return date.today()
+        """Return today's date in HA's local timezone.
+
+        Exists as a method so tests can override it.
+        """
+        return dt_util.now().date()
 
     # ── Abstract interface ───────────────────────────────────────────────────
 

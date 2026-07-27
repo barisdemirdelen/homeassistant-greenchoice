@@ -55,8 +55,8 @@ class GreenchoiceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     # Move to profile selection step
                     return await self.async_step_profile()
 
-            except Exception as e:
-                _LOGGER.exception("Authentication failed: %s", e)
+            except Exception:
+                _LOGGER.exception("Authentication failed")
                 errors["base"] = "cannot_connect"
 
         return self.async_show_form(
@@ -109,8 +109,8 @@ class GreenchoiceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                         data=entry_data,
                     )
 
-            except Exception as e:
-                _LOGGER.exception("Profile selection failed: %s", e)
+            except Exception:
+                _LOGGER.exception("Profile selection failed")
                 errors["base"] = "unknown"
 
         # Create profile options for dropdown

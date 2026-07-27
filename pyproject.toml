@@ -2,7 +2,7 @@
 name = "homeassistant-greenchoice"
 version = "3.3.4"
 description = "Integration to connect Greenchoice.nl with Home Assistant"
-authors = ["Baris Demirdelen <barisdemirdelen@gmail.com>"]
+authors = [{ name = "Baris Demirdelen", email = "barisdemirdelen@gmail.com" }]
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
@@ -26,3 +26,8 @@ dev = [
     "ty>=0.0.39",
     "python-dotenv>=1.2.2",
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# The upstream API reports naive local timestamps, so the models and their
+# expected test values are naive by design.
+"tests/**" = ["DTZ001"]

@@ -249,9 +249,10 @@ class GreenchoiceApi:
                     electricity_usage.feed_in_cost_including_vat
                 )
 
-        if gas_details := pricing_details.gas:
-            if gas_details.rates.usage_dependent_gas_rates:
-                result.gas_price = gas_details.rates.usage_dependent_gas_rates.all_in_delivery_including_vat
+        if (gas_details := pricing_details.gas) and (
+            gas_rates := gas_details.rates.usage_dependent_gas_rates
+        ):
+            result.gas_price = gas_rates.all_in_delivery_including_vat
 
     @staticmethod
     def validate_list(
@@ -262,8 +263,8 @@ class GreenchoiceApi:
         for item in data:
             try:
                 valid_items.append(model.model_validate(item))
-            except ValidationError as e:
+            except ValidationError:
                 if not ignore_invalid:
-                    raise e
+                    raise
                 _LOGGER.warning("Ignoring invalid item: %s", item)
         return valid_items

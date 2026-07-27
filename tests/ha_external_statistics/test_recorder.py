@@ -114,10 +114,12 @@ class TestAsyncGetLastSum:
             side_effect=lambda fn: fn()
         )
 
-        with patch(_GET_INSTANCE_PATH, return_value=recorder_instance):
-            with patch(_SDP_PATH) as mock_sdp:
-                mock_sdp.return_value = {}
-                await async_get_last_sum(hass, "dom:stat", before_dt, lookback_hours=10)
+        with (
+            patch(_GET_INSTANCE_PATH, return_value=recorder_instance),
+            patch(_SDP_PATH) as mock_sdp,
+        ):
+            mock_sdp.return_value = {}
+            await async_get_last_sum(hass, "dom:stat", before_dt, lookback_hours=10)
 
         assert mock_sdp.call_args[0][1] == before_dt - timedelta(hours=10)
         assert mock_sdp.call_args[0][2] == before_dt
@@ -131,10 +133,12 @@ class TestAsyncGetLastSum:
             side_effect=lambda fn: fn()
         )
 
-        with patch(_GET_INSTANCE_PATH, return_value=recorder_instance):
-            with patch(_SDP_PATH) as mock_sdp:
-                mock_sdp.return_value = {}
-                await async_get_last_sum(hass, "dom:stat", before_dt)
+        with (
+            patch(_GET_INSTANCE_PATH, return_value=recorder_instance),
+            patch(_SDP_PATH) as mock_sdp,
+        ):
+            mock_sdp.return_value = {}
+            await async_get_last_sum(hass, "dom:stat", before_dt)
 
         assert mock_sdp.call_args[0][1] == before_dt - timedelta(hours=25)
 
@@ -170,11 +174,13 @@ class TestAsyncInjectDay:
             return_value={"dom:a": [{"sum": 50.0}]}
         )
 
-        with patch(_GET_INSTANCE_PATH, return_value=recorder_instance):
-            with patch(_ADD_STAT_PATH):
-                result = await async_inject_day(
-                    hass, [(stat, entries)], _DATE, _DAY_START, None
-                )
+        with (
+            patch(_GET_INSTANCE_PATH, return_value=recorder_instance),
+            patch(_ADD_STAT_PATH),
+        ):
+            result = await async_inject_day(
+                hass, [(stat, entries)], _DATE, _DAY_START, None
+            )
 
         assert result["dom:a"] == pytest.approx(53.0)
 
@@ -225,15 +231,17 @@ class TestAsyncInjectDay:
             return_value={"dom:b": [{"sum": 7.0}]}
         )
 
-        with patch(_GET_INSTANCE_PATH, return_value=recorder_instance):
-            with patch(_ADD_STAT_PATH):
-                result = await async_inject_day(
-                    hass,
-                    [(stat_a, [Entry(0, 1.0)]), (stat_b, [Entry(0, 2.0)])],
-                    _DATE,
-                    _DAY_START,
-                    seed_sums={"dom:a": 5.0},  # dom:b absent → DB lookup
-                )
+        with (
+            patch(_GET_INSTANCE_PATH, return_value=recorder_instance),
+            patch(_ADD_STAT_PATH),
+        ):
+            result = await async_inject_day(
+                hass,
+                [(stat_a, [Entry(0, 1.0)]), (stat_b, [Entry(0, 2.0)])],
+                _DATE,
+                _DAY_START,
+                seed_sums={"dom:a": 5.0},  # dom:b absent → DB lookup
+            )
 
         assert result["dom:a"] == pytest.approx(6.0)
         assert result["dom:b"] == pytest.approx(9.0)

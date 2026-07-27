@@ -134,7 +134,9 @@ class GreenchoiceDataUpdateCoordinator(
                     try:
                         await self.async_run_statistics_update()
                     except Exception as err:
-                        _LOGGER.debug("Hourly statistics import failed: %s", err)
+                        _LOGGER.debug(
+                            "Hourly statistics import failed: %s", err, exc_info=True
+                        )
 
                 return data
         except (ApiError, LoginError) as exception:

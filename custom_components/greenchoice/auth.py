@@ -87,10 +87,7 @@ class Auth:
                     return True
 
         # Sometimes we get Forbidden on token expiry
-        if response.status == 403:
-            return True
-
-        return False
+        return response.status == 403
 
     async def _activate_session(self) -> None:
         """Activate the session by logging in."""

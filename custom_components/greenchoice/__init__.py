@@ -72,10 +72,10 @@ def _register_services(hass: HomeAssistant) -> None:
         for entry_id, coordinator in list(entries.items()):
             try:
                 await coordinator.async_force_reimport(start_date)
-            except Exception as err:
+            except Exception:
                 config_entry = hass.config_entries.async_get_entry(entry_id)
                 title = config_entry.title if config_entry else entry_id
-                _LOGGER.error("Reimport failed for %s: %s", title, err)
+                _LOGGER.exception("Reimport failed for %s", title)
 
     hass.services.async_register(
         DOMAIN,

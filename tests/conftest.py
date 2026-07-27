@@ -45,7 +45,7 @@ if "stream_writer" in inspect.signature(_response_init).parameters:
         kwargs.setdefault("stream_writer", Mock(output_size=0))
         _response_init(self, *args, **kwargs)
 
-    aiohttp.ClientResponse.__init__ = _patched_response_init  # ty:ignore[invalid-assignment]
+    aiohttp.ClientResponse.__init__ = _patched_response_init
 
 
 @pytest.fixture
@@ -170,19 +170,14 @@ def consumptions_hour_with_gas_response(data_folder):
 @pytest.fixture
 def mock_api(
     mocker,
-    init_response,
     meters_response,
-    meters_v2_response,
     profiles_response,
     preferences_response,
-    tariffs_v1_response,
     contract_response_callback,
     contract_response_current,
     contract_response_current_without_gas,
     contract_response_current_without_gas_single,
-    init_response_without_gas,
     meters_response_without_gas,
-    meters_v2_response_without_gas,
 ):
     with aioresponses() as mocked:
 

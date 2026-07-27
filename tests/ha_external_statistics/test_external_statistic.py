@@ -41,15 +41,15 @@ def _ts(entry: Entry, for_date: date) -> datetime:
 
 
 def _make_stat(**kwargs) -> ExternalStatistic[Entry]:
-    defaults: dict = dict(
-        statistic_id="test_domain:test_stat",
-        name="Test Stat",
-        source="test_domain",
-        unit_of_measurement="kWh",
-        unit_class="energy",
-        period_start_fn=_ts,
-        value_fn=lambda e: e.value,
-    )
+    defaults: dict = {
+        "statistic_id": "test_domain:test_stat",
+        "name": "Test Stat",
+        "source": "test_domain",
+        "unit_of_measurement": "kWh",
+        "unit_class": "energy",
+        "period_start_fn": _ts,
+        "value_fn": lambda e: e.value,
+    }
     defaults.update(kwargs)
     return ExternalStatistic[Entry](**defaults)
 
