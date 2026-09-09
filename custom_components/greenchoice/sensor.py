@@ -39,6 +39,20 @@ from .model import ConsumptionCostsElectricity, ConsumptionCostsGas, SensorUpdat
 _LOGGER = logging.getLogger(__name__)
 
 
+# Charges Greenchoice bills per hour whether or not anything was used. They can
+# be filled in on a day whose usage figures are still unpublished, so they never
+# count as evidence that the day has been reported.
+_FIXED_CHARGE_FIELDS = frozenset(
+    {
+        "has_consumption",
+        "fixed_delivery_costs",
+        "grid_operator_costs",
+        "reduction_energy_tax",
+        "total_fixed_costs",
+    }
+)
+
+
 def _has_reported_data(
     detail: ConsumptionCostsElectricity | ConsumptionCostsGas | None,
 ) -> bool:
@@ -51,13 +65,19 @@ def _has_reported_data(
     the day then counts as imported, is never revisited once the real figures
     appear.
 
-    ``hasConsumption`` is the API's own verdict, so it decides. The value scan
-    is a fallback for responses that omit the flag.
+    ``hasConsumption: false`` is the API's own verdict and is decisive. A true
+    or absent flag is not enough on its own: a figure has to actually be
+    there, and the fixed charges in ``_FIXED_CHARGE_FIELDS`` do not count —
+    they are billed per hour regardless of usage, so an unpublished hour that
+    carries them would otherwise pass as reported. An hour of genuinely zero
+    use reports ``0.0``, not ``null``, so it still passes.
     """
     if detail is None or detail.has_consumption is False:
         return False
     return any(
-        value is not None for field, value in detail if field != "has_consumption"
+        value is not None
+        for field, value in detail
+        if field not in _FIXED_CHARGE_FIELDS
     )
 
 

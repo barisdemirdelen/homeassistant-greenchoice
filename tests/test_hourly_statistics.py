@@ -448,6 +448,81 @@ async def test_unpublished_day_signals_retry(
 
 
 @pytest.mark.asyncio
+async def test_import_skips_unpublished_day_carrying_fixed_charges(
+    hass,
+    mock_api,
+    mock_import_statistics,
+    patch_today,
+    patch_recorder_days,
+    entry_factory,
+):
+    """Fixed charges alone are not evidence that a day has been published.
+
+    Standing charges are billed per hour whether or not anything was used, so
+    an unpublished hour can carry them while every usage figure is still null.
+    Counting them as data would import the row of zeros this guard exists to
+    prevent.
+    """
+    hass.config.components.add("recorder")
+    entry = entry_factory("abc123_fixed_only")
+    day = _YESTERDAY.isoformat()
+    payload = _unpublished_day_payload(day)
+    item = payload["consumptionCosts"][0]
+    # No `hasConsumption` anywhere, so the value scan is what has to decide.
+    del payload["hasConsumption"]
+    del item["hasConsumption"]
+    del item["electricity"]["hasConsumption"]
+    del item["gas"]["hasConsumption"]
+    item["electricity"]["totalFixedCosts"] = 0.21
+    item["electricity"]["gridOperatorCosts"] = 0.05
+    item["electricity"]["reductionEnergyTax"] = -0.14
+    item["gas"]["totalFixedCosts"] = 0.11
+    item["gas"]["gridOperatorCosts"] = 0.03
+    mock_api(consumptions={day: payload})
+
+    with patch_today(_TODAY), patch_recorder_days({}):
+        await _run_update(hass, entry)
+
+    assert mock_import_statistics.call_count == 0
+
+
+@pytest.mark.asyncio
+async def test_import_accepts_zero_usage_hour(
+    hass,
+    mock_api,
+    mock_import_statistics,
+    patch_today,
+    patch_recorder_days,
+    entry_factory,
+):
+    """A published hour of genuinely zero use reports 0.0 and must be imported."""
+    hass.config.components.add("recorder")
+    entry = entry_factory("abc123_real_zero")
+    day = _YESTERDAY.isoformat()
+    payload = _unpublished_day_payload(day)
+    item = payload["consumptionCosts"][0]
+    payload["hasConsumption"] = True
+    item["hasConsumption"] = True
+    item["electricity"] |= {
+        "totalDeliveryConsumption": 0.0,
+        "totalDeliveryCosts": 0.0,
+        "totalFeedInConsumption": 0.0,
+        "hasConsumption": True,
+    }
+    item["gas"] |= {
+        "totalDeliveryConsumption": 0.0,
+        "totalDeliveryCosts": 0.0,
+        "hasConsumption": True,
+    }
+    mock_api(consumptions={day: payload})
+
+    with patch_today(_TODAY), patch_recorder_days({}):
+        await _run_update(hass, entry)
+
+    assert mock_import_statistics.call_count > 0
+
+
+@pytest.mark.asyncio
 async def test_backfill_horizon_defaults_to_a_week(hass, entry_factory):
     """Without the option set, the first run imports seven days."""
     entry = entry_factory("abc123_default_horizon")

@@ -51,7 +51,7 @@
     "step": {
       "init": {
         "title": "Greenchoice options",
-        "description": "How many days of history to import the next time this account does a first run. The default of 7 days is what the API keeps reliably available; a longer horizon costs one API call per extra day, once, and only imports days Greenchoice has actually published. Use the 'Reimport hourly statistics' action to re-fetch a range you already have.",
+        "description": "How many days of history to import on the first refresh after each Home Assistant start. The default of 7 days is what the API keeps reliably available. A longer horizon costs one API call per extra day every time Home Assistant restarts, so raise it only if you accept that; only days Greenchoice has actually published are imported. To fetch one specific range instead, use the 'Reimport hourly statistics' action.",
         "data": {
           "backfill_days": "Days of history to import"
         }

@@ -103,11 +103,16 @@ The first run backfills **7 days** by default, which is the window the API keeps
 history, set **Days of history to import** in the integration's options (Settings → Devices & Services → Greenchoice
 → Configure), up to three years.
 
-A longer horizon is one API call per day, paid once on the next first run — a year is ~365 calls. Days from before
-your consumption reporting starts simply return nothing and are skipped, so it is safe to ask for more history than
-exists: the import stops producing rows where the data stops. Changing the option reloads the integration; the new
-horizon applies the next time that account does a first run, so use the
-[`reimport_hourly_statistics`](#greenchoicereimport_hourly_statistics) action to fetch a specific range right away.
+A longer horizon costs one API call per day of history, and that cost is **not** paid only once: the
+"already backfilled" marker lives in memory, so the whole horizon is walked again on every Home Assistant restart
+and on every reload of the integration. A year of history is therefore ~365 API calls each time Home Assistant
+starts — raise the horizon well above the default only if you accept that. Days from before your consumption
+reporting starts return nothing and are skipped, so it is safe to ask for more history than exists: the import
+stops producing rows where the data stops.
+
+Saving the option reloads the integration, so a new horizon takes effect immediately. To pull in one specific range
+without raising the horizon permanently, use the
+[`reimport_hourly_statistics`](#greenchoicereimport_hourly_statistics) action instead.
 
 ### Energy Dashboard Setup
 

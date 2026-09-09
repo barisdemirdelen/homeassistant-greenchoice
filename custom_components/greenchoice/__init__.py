@@ -47,8 +47,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
-    # The backfill horizon is read when the coordinator is constructed, so a
-    # changed option only takes effect on reload.
+    # The backfill horizon is read when the coordinator is constructed, so the
+    # entry has to be reloaded for a changed option to take effect.
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

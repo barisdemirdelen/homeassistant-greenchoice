@@ -75,6 +75,11 @@ class StatisticsLoopMixin(ABC):
         On subsequent calls: retry the last ``_retry_days`` days to pick up
         late-published data.
 
+        "First call" is per coordinator instance — the marker is in memory, so
+        a restart or reload walks the whole backfill horizon again. That is
+        cheap at the default horizon and expensive at a long one; callers pick
+        the horizon knowing that.
+
         Raises ``UpdateFailed`` on unhandled errors.
         """
         try:
