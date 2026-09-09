@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -349,4 +349,99 @@ async def test_reimport_ignores_today_or_future(
     with patch_today(_TODAY):
         await _run_reimport(hass, entry, start_date=_TODAY)
 
+    assert mock_import_statistics.call_count == 0
+
+
+def _unpublished_day_payload(date_str: str) -> dict:
+    """A day Greenchoice has not published: objects present, every figure null.
+
+    Shape copied from a live response for an account whose hourly consumption is
+    not available; `hasConsumption` is false at every level.
+    """
+    end_str = (date.fromisoformat(date_str) + timedelta(days=1)).isoformat()
+    return {
+        "interval": "Hour",
+        "start": f"{date_str}T00:00:00",
+        "end": f"{end_str}T00:00:00",
+        "hasConsumption": False,
+        "consumptionCosts": [
+            {
+                "consumedOn": f"{date_str}T00:00:00",
+                "hasConsumption": False,
+                "electricity": {
+                    "deliveryLowConsumption": None,
+                    "deliveryNormalConsumption": None,
+                    "totalDeliveryConsumption": None,
+                    "totalDeliveryCosts": None,
+                    "totalFeedInConsumption": None,
+                    "totalFixedCosts": None,
+                    "hasConsumption": False,
+                },
+                "gas": {
+                    "deliveryConsumption": None,
+                    "totalDeliveryConsumption": None,
+                    "totalDeliveryCosts": None,
+                    "totalFixedCosts": None,
+                    "hasConsumption": False,
+                },
+            }
+        ],
+    }
+
+
+@pytest.mark.asyncio
+async def test_import_skips_unpublished_day(
+    hass,
+    mock_api,
+    mock_import_statistics,
+    patch_today,
+    patch_recorder_days,
+    entry_factory,
+):
+    """An unpublished day must import nothing, not a row of zeros.
+
+    The API returns the electricity/gas objects with every figure null and
+    `hasConsumption: false`. Importing that writes zeros which cannot be told
+    apart from real zero use, and marks the day done so the real figures are
+    never picked up.
+    """
+    hass.config.components.add("recorder")
+    entry = entry_factory("abc123_unpublished")
+    mock_api(
+        consumptions={
+            _YESTERDAY.isoformat(): _unpublished_day_payload(_YESTERDAY.isoformat())
+        }
+    )
+
+    with patch_today(_TODAY), patch_recorder_days({}):
+        await _run_update(hass, entry)
+
+    assert mock_import_statistics.call_count == 0
+
+
+@pytest.mark.asyncio
+async def test_unpublished_day_signals_retry(
+    hass,
+    mock_api,
+    mock_import_statistics,
+    patch_today,
+    patch_recorder_days,
+    entry_factory,
+):
+    """An unpublished day returns None, the mixin's "no data yet" signal.
+
+    That is what keeps the day in the retry window, so the figures are picked
+    up once Greenchoice publishes them.
+    """
+    hass.config.components.add("recorder")
+    entry = entry_factory("abc123_retry")
+    day = _YESTERDAY.isoformat()
+    mock_api(consumptions={day: _unpublished_day_payload(day)})
+
+    coordinator = _make_coordinator(hass, entry)
+    with patch_today(_TODAY), patch_recorder_days({}):
+        async with coordinator.api:
+            result = await coordinator._process_day(_YESTERDAY, None)
+
+    assert result is None
     assert mock_import_statistics.call_count == 0

@@ -34,9 +34,31 @@ from .api import ApiError, GreenchoiceApi
 from .auth import LoginError
 from .const import DEFAULT_NAME, DOMAIN
 from .hourly_statistics import _day_start_utc, _make_statistics
-from .model import SensorUpdate
+from .model import ConsumptionCostsElectricity, ConsumptionCostsGas, SensorUpdate
 
 _LOGGER = logging.getLogger(__name__)
+
+
+def _has_reported_data(
+    detail: ConsumptionCostsElectricity | ConsumptionCostsGas | None,
+) -> bool:
+    """Whether Greenchoice actually reported figures in this hour's detail.
+
+    A day that is not published yet still comes back with the ``electricity``
+    and ``gas`` objects present and every figure ``null``, alongside
+    ``hasConsumption: false``. Treating those as data imports a row of zeros,
+    which is indistinguishable from an hour of genuinely zero use and, because
+    the day then counts as imported, is never revisited once the real figures
+    appear.
+
+    ``hasConsumption`` is the API's own verdict, so it decides. The value scan
+    is a fallback for responses that omit the flag.
+    """
+    if detail is None or detail.has_consumption is False:
+        return False
+    return any(
+        value is not None for field, value in detail if field != "has_consumption"
+    )
 
 
 class Unit:
@@ -165,8 +187,10 @@ class GreenchoiceDataUpdateCoordinator(
 
         consumptions = await self.api.get_consumptions(interval="Hour", start=day)
         items = sorted(consumptions.consumption_costs, key=lambda x: x.consumed_on)
-        electricity_items = [item for item in items if item.electricity]
-        gas_items = [item for item in items if item.gas]
+        electricity_items = [
+            item for item in items if _has_reported_data(item.electricity)
+        ]
+        gas_items = [item for item in items if _has_reported_data(item.gas)]
 
         if not electricity_items and not gas_items:
             _LOGGER.debug("No hourly data for %s — will retry on next update", day)
