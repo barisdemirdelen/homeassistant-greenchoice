@@ -445,3 +445,47 @@ async def test_unpublished_day_signals_retry(
 
     assert result is None
     assert mock_import_statistics.call_count == 0
+
+
+@pytest.mark.asyncio
+async def test_backfill_horizon_defaults_to_a_week(hass, entry_factory):
+    """Without the option set, the first run imports seven days."""
+    entry = entry_factory("abc123_default_horizon")
+    assert _make_coordinator(hass, entry)._backfill_days == 7
+
+
+@pytest.mark.asyncio
+async def test_backfill_horizon_read_from_options(hass, entry_factory):
+    """The configured horizon is what the first run uses."""
+    entry = entry_factory("abc123_long_horizon", options={"backfill_days": 400})
+    assert _make_coordinator(hass, entry)._backfill_days == 400
+
+
+@pytest.mark.asyncio
+async def test_backfill_processes_every_day_in_the_horizon(
+    hass,
+    mock_api,
+    mock_import_statistics,
+    patch_today,
+    patch_recorder_days,
+    entry_factory,
+):
+    """A horizon of N asks the API for each of the N days before today."""
+    entry = entry_factory("abc123_horizon_walk", options={"backfill_days": 5})
+    hass.config.components.add("recorder")
+    mock_api(consumptions={})
+
+    coordinator = _make_coordinator(hass, entry)
+    coordinator._stats_backfilled = False
+    seen: list[date] = []
+
+    async def _record(day, seed_sums):
+        # None is the mixin's "no data" signal; the range walk is what matters.
+        seen.append(day)
+
+    coordinator._process_day = _record
+    with patch_today(_TODAY), patch_recorder_days({}):
+        async with coordinator.api:
+            await coordinator.async_run_statistics_update()
+
+    assert seen == [_TODAY - timedelta(days=offset) for offset in range(5, 0, -1)]

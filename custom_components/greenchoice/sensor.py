@@ -32,7 +32,7 @@ from custom_components.greenchoice.ha_external_statistics.statistics_mixin impor
 
 from .api import ApiError, GreenchoiceApi
 from .auth import LoginError
-from .const import DEFAULT_NAME, DOMAIN
+from .const import CONF_BACKFILL_DAYS, DEFAULT_BACKFILL_DAYS, DEFAULT_NAME, DOMAIN
 from .hourly_statistics import _day_start_utc, _make_statistics
 from .model import ConsumptionCostsElectricity, ConsumptionCostsGas, SensorUpdate
 
@@ -138,7 +138,9 @@ class GreenchoiceDataUpdateCoordinator(
             _LOGGER,
             name=f"{DOMAIN}_{slugify(coordinator_name)}",
             update_interval=timedelta(hours=6),
-            backfill_days=7,
+            backfill_days=config_entry.options.get(
+                CONF_BACKFILL_DAYS, DEFAULT_BACKFILL_DAYS
+            ),
             retry_days=3,
         )
         # Set after super().__init__ so DataUpdateCoordinator's own

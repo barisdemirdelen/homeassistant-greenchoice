@@ -7,14 +7,18 @@ import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD
+from homeassistant.core import callback
 
 from .api import GreenchoiceApi
 from .const import (
     CONF_AGREEMENT_ID,
+    CONF_BACKFILL_DAYS,
     CONF_CUSTOMER_NUMBER,
     CONF_PROFILE,
+    DEFAULT_BACKFILL_DAYS,
     DEFAULT_NAME,
     DOMAIN,
+    MAX_BACKFILL_DAYS,
 )
 from .model import Profile
 
@@ -25,6 +29,14 @@ class GreenchoiceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Greenchoice."""
 
     VERSION = 1
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> GreenchoiceOptionsFlow:
+        """Return the options flow."""
+        return GreenchoiceOptionsFlow()
 
     def __init__(self):
         """Initialize config flow."""
@@ -165,3 +177,28 @@ class GreenchoiceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         else:
             # Fallback if address info is missing
             return f"Profile {profile.customer_number}/{profile.agreement_id}"
+
+
+class GreenchoiceOptionsFlow(config_entries.OptionsFlow):
+    """Options for an existing Greenchoice account."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """How far back to import history on the next first run."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        current = self.config_entry.options.get(
+            CONF_BACKFILL_DAYS, DEFAULT_BACKFILL_DAYS
+        )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_BACKFILL_DAYS, default=current): vol.All(
+                        vol.Coerce(int), vol.Range(min=1, max=MAX_BACKFILL_DAYS)
+                    )
+                }
+            ),
+        )

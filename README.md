@@ -89,12 +89,25 @@ Six statistics series are created per integration instance:
 | Electricity feed-in compensation (hourly) | €    | Compensation received for electricity fed in, per hour |
 | Gas consumption cost (hourly)             | €    | Cost of gas consumed, per hour                         |
 
-Hourly data is imported automatically on each refresh cycle. On the first run the last 7 days are backfilled so the
-Energy dashboard is populated immediately after installation. On every subsequent refresh the last 3 days are
-re-fetched to pick up any data that was not yet published on the previous cycle.
+Hourly data is imported automatically on each refresh cycle. On the first run a window of history is backfilled so
+the Energy dashboard is populated immediately after installation, and on every subsequent refresh the last 3 days
+are re-fetched to pick up data that was not yet published on the previous cycle.
 
-> **Note:** If yesterday's data is not published yet when a refresh runs, the API returns an empty response and the
-> day is silently skipped. It will be retried automatically on the next refresh cycle.
+> **Note:** A day Greenchoice has not published yet is skipped rather than imported as zeros, and stays in the retry
+> window until the real figures appear. The API signals this with `hasConsumption: false` and null figures — not with
+> an empty response — so a day of zeros in your statistics is a bug, not "no usage".
+
+#### How far back to backfill
+
+The first run backfills **7 days** by default, which is the window the API keeps reliably available. To pull in more
+history, set **Days of history to import** in the integration's options (Settings → Devices & Services → Greenchoice
+→ Configure), up to three years.
+
+A longer horizon is one API call per day, paid once on the next first run — a year is ~365 calls. Days from before
+your consumption reporting starts simply return nothing and are skipped, so it is safe to ask for more history than
+exists: the import stops producing rows where the data stops. Changing the option reloads the integration; the new
+horizon applies the next time that account does a first run, so use the
+[`reimport_hourly_statistics`](#greenchoicereimport_hourly_statistics) action to fetch a specific range right away.
 
 ### Energy Dashboard Setup
 

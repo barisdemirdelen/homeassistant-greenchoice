@@ -47,6 +47,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     hass.data.setdefault(DOMAIN, {})[entry.entry_id] = coordinator
 
+    # The backfill horizon is read when the coordinator is constructed, so a
+    # changed option only takes effect on reload.
+    entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     # Register the reimport action once (shared across all config entries).
@@ -104,3 +108,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             hass.services.async_remove(DOMAIN, SERVICE_REIMPORT_HOURLY_STATISTICS)
 
     return unload_ok
+
+
+async def _async_reload_entry(hass: HomeAssistant, entry: ConfigEntry) -> None:
+    """Reload the entry so changed options are picked up."""
+    await hass.config_entries.async_reload(entry.entry_id)

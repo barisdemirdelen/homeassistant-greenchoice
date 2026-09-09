@@ -46,5 +46,16 @@
       "title": "YAML configuration is deprecated",
       "description": "Configuring {integration_title} using YAML is deprecated and will be removed in a future version.\n\nTo continue using this integration, please:\n1. Remove the `{domain}` configuration from your configuration.yaml file\n2. Restart Home Assistant\n3. Go to Settings > Devices & Services\n4. Click 'Add Integration' and find {integration_title}\n5. Follow the setup wizard to configure the integration."
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Greenchoice options",
+        "description": "How many days of history to import the next time this account does a first run. The default of 7 days is what the API keeps reliably available; a longer horizon costs one API call per extra day, once, and only imports days Greenchoice has actually published. Use the 'Reimport hourly statistics' action to re-fetch a range you already have.",
+        "data": {
+          "backfill_days": "Days of history to import"
+        }
+      }
+    }
   }
 }

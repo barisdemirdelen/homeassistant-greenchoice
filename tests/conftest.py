@@ -369,12 +369,18 @@ def entry_factory(hass):
     Usage: ``entry = entry_factory("my_entry_id")``
     """
 
-    def _make(entry_id: str, name: str = "My Home", title: str = "Greenchoice (Test)"):
+    def _make(
+        entry_id: str,
+        name: str = "My Home",
+        title: str = "Greenchoice (Test)",
+        options: dict | None = None,
+    ):
         e = MockConfigEntry(
             domain=DOMAIN,
             entry_id=entry_id,
             title=title,
             data={CONF_NAME: name},
+            options=options or {},
         )
         e.add_to_hass(hass)
         return e
