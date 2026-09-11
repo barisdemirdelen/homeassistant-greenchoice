@@ -95,13 +95,11 @@ class GreenchoiceApi:
                         timeout=aiohttp.ClientTimeout(total=30),
                     ) as retry_response:
                         if retry_response.status == 404:
-                            _LOGGER.warning("Endpoint not found: %s", endpoint)
                             return {}
                         retry_response.raise_for_status()
                         return await retry_response.json()
 
                 if response.status == 404:
-                    _LOGGER.warning("Endpoint not found: %s", endpoint)
                     return {}
 
                 response.raise_for_status()
