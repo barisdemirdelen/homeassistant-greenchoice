@@ -93,12 +93,23 @@ def rate_details_response_empty(data_folder):
 
 
 @pytest.fixture
+def rate_details_live_response(data_folder):
+    """A real in-contract /rate-details response, captured from a live account.
+
+    The other rate fixtures are hand-written; this one is what Greenchoice
+    actually sends, and is what verifies the electricity field names.
+    """
+    with data_folder.joinpath("test_rate_details_live.json").open() as f:
+        return json.load(f)
+
+
+@pytest.fixture
 def rate_details_response_bad_electricity(data_folder):
     """Electricity in a shape the model doesn't expect, gas still valid.
 
-    Guards gas against electricity: the electricity mapping was
-    derived from the portal's frontend rather than an observed response, so a
-    wrong guess there must not take the gas price down with it.
+    Guards gas against electricity: they are independent sections of one
+    response, and a scalar/object mix-up on the electricity side must not
+    take the gas price down with it.
     """
     with data_folder.joinpath("test_rate_details.json").open() as f:
         response = json.load(f)
@@ -164,6 +175,43 @@ def account_response_without_profiles(data_folder):
 
 
 @pytest.fixture
+def account_response_supply_ended(data_folder):
+    """Factory: the polled agreement's supply has ended, so rate-details 404s.
+
+    ``dated=False`` drops the move-out and agreement dates, leaving only the
+    ``Past`` status — a real account shape, and the one that must still be
+    recognised as ended even though it cannot say when.
+    """
+
+    def _make(dated: bool = True):
+        with data_folder.joinpath("test_account.json").open() as f:
+            response = json.load(f)
+        address = response["customers"][0]["addresses"][0]
+        address["energySupplyStatus"] = "Past"
+        if dated:
+            address["moveOutDate"] = "2026-03-08"
+            address["agreements"] = [
+                {
+                    "agreementId": 1111,
+                    "subAgreementId": 9001,
+                    "marketSegment": "E",
+                    "startDate": "2024-09-16",
+                    "endDate": "2026-03-08",
+                },
+                {
+                    "agreementId": 1111,
+                    "subAgreementId": 9002,
+                    "marketSegment": "G",
+                    "startDate": "2024-09-16",
+                    "endDate": "2026-03-08",
+                },
+            ]
+        return response
+
+    return _make
+
+
+@pytest.fixture
 def contract_response_callback(contract_response, contract_response_without_gas):
     def _contract_response_callback(url, **kwargs):
         parsed = urlparse(str(url))
@@ -219,6 +267,7 @@ def mock_api(
     rate_details_response_empty,
     rate_details_response_bad_electricity,
     meters_response_without_gas,
+    account_response_supply_ended,
 ):
     with aioresponses() as mocked:
 
@@ -230,6 +279,8 @@ def mock_api(
             has_electricity: bool = True,
             empty_rates: bool = False,
             bad_electricity: bool = False,
+            supply_ended: bool = False,
+            supply_ended_dated: bool = True,
             consumptions: dict | None = None,
         ):
             mocker.patch(
@@ -251,11 +302,16 @@ def mock_api(
                     status=404,
                 )
 
+            account_payload = account_response
+            if not has_profiles:
+                account_payload = account_response_without_profiles
+            if supply_ended:
+                account_payload = account_response_supply_ended(
+                    dated=supply_ended_dated
+                )
             mocked.get(
                 f"{BASE_URL}/api/v2/account",
-                payload=account_response
-                if has_profiles
-                else account_response_without_profiles,
+                payload=account_payload,
                 repeat=True,
             )
 

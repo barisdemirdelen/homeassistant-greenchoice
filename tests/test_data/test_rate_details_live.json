@@ -1,0 +1,110 @@
+{
+  "start": "2025-09-11",
+  "end": "2025-09-12",
+  "electricityRates": {
+    "standardVariableRates": {
+      "deliveryNormal": {
+        "energyTax": 0.10154,
+        "allInRateExcludingVat": 0.16897,
+        "allInRateVat": 0.03548,
+        "allInRateIncludingVat": 0.20445,
+        "vatPercentage": 21.0,
+        "vat": 0.01416,
+        "rateExcludingVat": 0.06743,
+        "rateIncludingVat": 0.08159
+      },
+      "deliveryLow": {
+        "energyTax": 0.10154,
+        "allInRateExcludingVat": 0.14839,
+        "allInRateVat": 0.03116,
+        "allInRateIncludingVat": 0.17955,
+        "vatPercentage": 21.0,
+        "vat": 0.00984,
+        "rateExcludingVat": 0.04685,
+        "rateIncludingVat": 0.05669
+      },
+      "deliverySingle": {
+        "energyTax": 0.10154,
+        "allInRateExcludingVat": 0.15972,
+        "allInRateVat": 0.03354,
+        "allInRateIncludingVat": 0.19326,
+        "vatPercentage": 21.0,
+        "vat": 0.01222,
+        "rateExcludingVat": 0.05818,
+        "rateIncludingVat": 0.0704
+      },
+      "feedInCompensation": 0.08,
+      "feedInCosts": null
+    },
+    "timeOfUseVariableRates": null,
+    "fixedRates": {
+      "fixedChargePerDay": {
+        "vatPercentage": 21.0,
+        "vat": 0.03281,
+        "rateExcludingVat": 0.15622,
+        "rateIncludingVat": 0.18903
+      },
+      "reductionEnergyTaxPerDay": {
+        "vatPercentage": 21.0,
+        "vat": -0.30203,
+        "rateExcludingVat": -1.43822,
+        "rateIncludingVat": -1.74025
+      },
+      "reductionEnergyTaxPerYear": {
+        "vatPercentage": 21.0,
+        "vat": -110.23956,
+        "rateExcludingVat": -524.9503,
+        "rateIncludingVat": -635.18986
+      },
+      "numberOfDaysInYear": 365,
+      "gridOperatorRates": [
+        {
+          "ratePerDay": {
+            "vatPercentage": 21.0,
+            "vat": 0.2167,
+            "rateExcludingVat": 1.0319,
+            "rateIncludingVat": 1.2486
+          },
+          "start": "2025-07-01",
+          "end": "2026-01-01",
+          "physicalCapacity": "3x25A"
+        }
+      ]
+    }
+  },
+  "gasRates": {
+    "variableRates": {
+      "delivery": {
+        "energyTax": 0.57816,
+        "allInRateExcludingVat": 0.7694,
+        "allInRateVat": 0.16157,
+        "allInRateIncludingVat": 0.93097,
+        "vatPercentage": 21.0,
+        "vat": 0.04016,
+        "rateExcludingVat": 0.19124,
+        "rateIncludingVat": 0.2314
+      }
+    },
+    "fixedRates": {
+      "fixedChargePerDay": {
+        "vatPercentage": 21.0,
+        "vat": 0.03281,
+        "rateExcludingVat": 0.15622,
+        "rateIncludingVat": 0.18903
+      },
+      "gridOperatorRates": [
+        {
+          "ratePerDay": {
+            "vatPercentage": 21.0,
+            "vat": 0.08413,
+            "rateExcludingVat": 0.4006,
+            "rateIncludingVat": 0.48473
+          },
+          "start": "2025-07-01",
+          "end": "2026-01-01",
+          "physicalCapacity": "G6"
+        }
+      ]
+    }
+  }
+}

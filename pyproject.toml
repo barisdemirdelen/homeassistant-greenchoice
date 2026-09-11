@@ -27,6 +27,13 @@ dev = [
     "python-dotenv>=1.2.2",
 ]
 
+[tool.ruff]
+# ``requires-python`` describes the dev environment, but the integration is
+# imported by Home Assistant's own interpreter: hacs.json declares HA 2025.4.0,
+# which runs Python 3.13. Without this, ruff rewrites code to 3.14-only syntax
+# (e.g. unparenthesised ``except A, B:``) that is a SyntaxError there.
+target-version = "py313"
+
 [tool.ruff.lint.per-file-ignores]
 # The upstream API reports naive local timestamps, so the models and their
 # expected test values are naive by design.

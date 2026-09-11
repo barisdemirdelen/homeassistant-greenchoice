@@ -10,6 +10,7 @@ from .auth import Auth
 from .model import (
     Account,
     Consumptions,
+    EndedSupply,
     MeterReadings,
     Preferences,
     Profile,
@@ -42,6 +43,16 @@ class ApiError(Exception):
         super().__init__(message)
 
 
+class NotFoundError(Exception):
+    """A 404 the caller asked to see.
+
+    Most endpoints treat 404 as "nothing here" and get an empty response, but
+    for rate-details a 404 is the answer: no agreement covers the requested
+    date. Collapsing it would make an ended contract indistinguishable from a
+    retired endpoint.
+    """
+
+
 class GreenchoiceApi:
     def __init__(
         self,
@@ -65,7 +76,13 @@ class GreenchoiceApi:
         await self._auth.__aexit__(exc_type, exc_val, exc_tb)
 
     async def _authenticated_request(
-        self, method: str, endpoint: str, data=None, json=None, _retry_count=2
+        self,
+        method: str,
+        endpoint: str,
+        data=None,
+        json=None,
+        _retry_count=2,
+        raise_not_found: bool = False,
     ) -> dict:
         """Async authenticated request."""
         _LOGGER.debug(
@@ -95,12 +112,12 @@ class GreenchoiceApi:
                         timeout=aiohttp.ClientTimeout(total=30),
                     ) as retry_response:
                         if retry_response.status == 404:
-                            return {}
+                            return self._on_404(endpoint, raise_not_found)
                         retry_response.raise_for_status()
                         return await retry_response.json()
 
                 if response.status == 404:
-                    return {}
+                    return self._on_404(endpoint, raise_not_found)
 
                 response.raise_for_status()
                 return await response.json()
@@ -112,13 +129,29 @@ class GreenchoiceApi:
 
             _LOGGER.debug("Retrying async request")
             return await self._authenticated_request(
-                method, endpoint, data, json, _retry_count - 1
+                method,
+                endpoint,
+                data,
+                json,
+                _retry_count - 1,
+                raise_not_found=raise_not_found,
             )
 
-    async def request(self, endpoint: str, data=None) -> dict | list:
+    @staticmethod
+    def _on_404(endpoint: str, raise_not_found: bool) -> dict:
+        """Most endpoints read 404 as "nothing here"; rate-details needs to see it."""
+        if raise_not_found:
+            raise NotFoundError(endpoint)
+        return {}
+
+    async def request(
+        self, endpoint: str, data=None, raise_not_found: bool = False
+    ) -> dict | list:
         """Async request method."""
         target_url = BASE_URL + endpoint
-        return await self._authenticated_request("GET", target_url, json=data)
+        return await self._authenticated_request(
+            "GET", target_url, json=data, raise_not_found=raise_not_found
+        )
 
     # ASYNC METHODS (Core implementation)
     async def get_account(self) -> Account:
@@ -168,6 +201,11 @@ class GreenchoiceApi:
         return MeterReadings.model_validate(meter_json)
 
     async def get_rates(self) -> Rates:
+        """Rates in effect today.
+
+        Raises ``NotFoundError`` when no agreement covers today: Greenchoice
+        serves this endpoint per contract period, not per publication date.
+        """
         if not self.customer_number or not self.agreement_id:
             raise ApiError("Can not find customer_number or agreement_id for request")
 
@@ -181,6 +219,7 @@ class GreenchoiceApi:
                 start=today,
                 end=today + timedelta(days=1),
             ).build_url(),
+            raise_not_found=True,
         )
         return Rates.model_validate(pricing_details)
 
@@ -260,12 +299,15 @@ class GreenchoiceApi:
         _LOGGER.debug("Retrieving contract values async")
         try:
             pricing_details = await self.get_rates()
+        except NotFoundError:
+            await self._report_missing_rates()
+            return
         except ValidationError:
             _LOGGER.warning("Could not parse the rate details response")
             return
 
-        # The electricity field names are inferred, not verified — see
-        # StandardVariableElectricityRates. Gas below is verified.
+        # Electricity and gas field names are both verified against live
+        # responses; see StandardVariableElectricityRates.
         if electricity_rates := pricing_details.electricity:
             result.electricity_price_single = _all_in_rate(
                 electricity_rates.delivery_single
@@ -293,6 +335,57 @@ class GreenchoiceApi:
                 "Rate details for %s..%s contain no gas and no electricity rates",
                 pricing_details.start,
                 pricing_details.end,
+            )
+
+    async def _report_missing_rates(self) -> None:
+        """Explain a rate-details 404, which has three very different causes.
+
+        An ended agreement genuinely has no rates for today, and is reported
+        at INFO. A 404 for an agreement the account still supplies is an API
+        problem. So is a 404 we cannot explain because the account itself is
+        unreadable — but the message must not claim the supply is active when
+        nothing established that.
+        """
+        today = datetime.now(SUPPLIER_TZ).date()
+        ended: EndedSupply | None = None
+        known = False
+        if self.customer_number and self.agreement_id:
+            preferences = Preferences(
+                customer_number=self.customer_number,
+                agreement_id=self.agreement_id,
+            )
+            try:
+                account = await self.get_account()
+            except (ApiError, ValidationError):
+                _LOGGER.debug("Could not read the supply status behind a rates 404")
+            else:
+                known = True
+                ended = account.ended_supply(preferences, today)
+
+        if not known:
+            _LOGGER.warning(
+                "No rate details for agreement %s on %s, and its supply status is unknown",
+                self.agreement_id,
+                today,
+            )
+            return
+
+        if ended is None:
+            _LOGGER.warning(
+                "No rate details for agreement %s on %s, but its energy supply is active",
+                self.agreement_id,
+                today,
+            )
+        elif ended.on:
+            _LOGGER.info(
+                "No rates for agreement %s: its energy supply ended on %s",
+                self.agreement_id,
+                ended.on,
+            )
+        else:
+            _LOGGER.info(
+                "No rates for agreement %s: the account reports its energy supply as ended",
+                self.agreement_id,
             )
 
     @staticmethod

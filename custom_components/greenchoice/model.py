@@ -4,6 +4,7 @@ import logging
 import uuid
 from collections.abc import Iterator
 from datetime import date, datetime
+from typing import NamedTuple
 
 from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 from pydantic.alias_generators import to_camel
@@ -58,6 +59,16 @@ class AccountAgreement(CamelCaseModel):
     rate_structure_type: str | None = None
 
 
+class EndedSupply(NamedTuple):
+    """An energy supply the account reports as finished.
+
+    ``on`` is the day it ended, or ``None`` when the account says the supply
+    is over but not when — the distinction matters only to the log message.
+    """
+
+    on: date | None
+
+
 class AccountAddress(CamelCaseModel):
     """One delivery address inside /api/v2/account."""
 
@@ -75,6 +86,26 @@ class AccountAddress(CamelCaseModel):
     has_feed_in: bool | None = None
     energy_supply_status: str | None = None
     agreements: list[AccountAgreement] = []
+
+    def ended_supply(self, day: date) -> EndedSupply | None:
+        """This address's supply if it had finished by ``day``, else ``None``.
+
+        Either signal is enough: the account calling the supply "Past", or a
+        move-out / agreement end date on or before ``day``. A "Past" address
+        with no dates at all still counts as ended — it just cannot say when.
+
+        Greenchoice only serves rates for dates inside an agreement period, so
+        this is what separates "your contract ended" from "the API changed".
+        """
+        candidates = [self.move_out_date.date()] if self.move_out_date else []
+        candidates += [a.end_date for a in self.agreements if a.end_date]
+        # Latest end wins: the agreements list carries the address's whole
+        # history, and only the final one explains today's missing rates.
+        past = max((c for c in candidates if c <= day), default=None)
+
+        if self.energy_supply_status == "Past" or past:
+            return EndedSupply(on=past)
+        return None
 
 
 class AccountCustomer(CamelCaseModel):
@@ -113,12 +144,42 @@ class Account(CamelCaseModel):
         def build_url(self) -> str:
             return self.request_url
 
+    def _resolved_addresses(
+        self,
+    ) -> Iterator[tuple[int, AccountCustomer, AccountAddress]]:
+        """Every address with the customer it hangs off and the number it is polled under.
+
+        An address carries its own customer number, but not always: fall back
+        to the customer's. Both the profile list and the supply-status lookup
+        depend on that rule, so it lives here once.
+        """
+        for customer in self.customers:
+            for address in customer.addresses:
+                yield (
+                    address.customer_number or customer.customer_number,
+                    customer,
+                    address,
+                )
+
+    def ended_supply(self, preferences: Preferences, day: date) -> EndedSupply | None:
+        """The polled agreement's supply if it had finished by ``day``, else ``None``."""
+        address = next(
+            (
+                address
+                for customer_number, _, address in self._resolved_addresses()
+                if customer_number == preferences.customer_number
+                and address.agreement_id == preferences.agreement_id
+            ),
+            None,
+        )
+        return address.ended_supply(day) if address else None
+
     @property
     def profiles(self) -> list[Profile]:
         """Flatten customers/addresses into the profiles the config flow lists."""
         return [
             Profile(
-                customer_number=address.customer_number or customer.customer_number,
+                customer_number=customer_number,
                 agreement_id=address.agreement_id,
                 role_name=customer.role,
                 name=customer.full_name,
@@ -133,8 +194,7 @@ class Account(CamelCaseModel):
                 has_active_gas_supply=address.has_gas_supply,
                 has_active_electricity_supply=address.has_electricity_supply,
             )
-            for customer in self.customers
-            for address in customer.addresses
+            for customer_number, customer, address in self._resolved_addresses()
             # An address without an agreement can't be polled, so don't offer it.
             if address.agreement_id
         ]
@@ -164,20 +224,19 @@ class RateAmount(CamelCaseModel):
 class StandardVariableElectricityRates(CamelCaseModel):
     """Electricity rates for a Standard (non time-of-use) contract.
 
-    ASSUMPTION — these field names are NOT verified against a live response.
-    They were read off the Greenchoice portal's own frontend code, because the
-    account this was developed against has no electricity contract and returned
-    ``electricityRates: null`` every time. The gas equivalents below it are
-    verified; these are not.
-
-    Two specific guesses worth re-checking against a real electricity account:
-      * ``feed_in_compensation`` is a bare number, not a nested rate object —
-        the portal passes it straight to its formatter without reading a field.
-      * the three delivery rates are nested objects, read via
+    VERIFIED against a live in-contract response (see the live rate-details
+    test fixture). These names were originally read off the Greenchoice
+    portal's frontend, because the development account had no electricity
+    contract and returned ``electricityRates: null`` every time; a later
+    capture for a date inside the contract confirmed both guesses:
+      * ``feed_in_compensation`` really is a bare number, not a nested rate
+        object.
+      * the three delivery rates really are nested objects, read via
         ``all_in_rate_including_vat`` like gas.
 
-    If either is wrong the electricity sensors stay ``None`` and a warning names
-    the field; gas is unaffected (see ``Rates._ignore_unparseable_field``).
+    ``feed_in_costs`` may legitimately be ``null``. If the shape changes again
+    the electricity sensors stay ``None`` and a warning names the field; gas is
+    unaffected (see ``Rates._ignore_unparseable_field``).
     """
 
     delivery_single: RateAmount | None = None

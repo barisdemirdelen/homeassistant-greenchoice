@@ -1,8 +1,10 @@
 import datetime
+import logging
 
 import pytest
 
 from custom_components.greenchoice.api import GreenchoiceApi
+from custom_components.greenchoice.model import Rates
 
 
 @pytest.mark.asyncio
@@ -152,6 +154,90 @@ async def test_update_request_rates_without_any_rates_warns(mock_api, caplog):
 
 
 @pytest.mark.asyncio
+async def test_rate_details_404_on_ended_supply_is_not_a_warning(mock_api, caplog):
+    """An ended agreement has no current rates — that is normal, not an anomaly.
+
+    Greenchoice serves rate-details for any date inside a contract period and
+    404s outside one, so a terminated agreement 404s forever. Reporting that as
+    a shape anomaly hides the real one: an endpoint retirement.
+    """
+    caplog.set_level(logging.INFO)
+    mock_api(has_rates=False, supply_ended=True)
+
+    async with GreenchoiceApi("fake_user", "fake_password") as greenchoice_api:
+        result = await greenchoice_api.update()
+
+    assert result.gas_price is None
+    assert result.electricity_price_single is None
+    assert "1111" in caplog.text
+    assert "2026-03-08" in caplog.text
+    assert "contain no gas and no electricity rates" not in caplog.text
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@pytest.mark.asyncio
+async def test_rate_details_404_on_undated_ended_supply_is_not_a_warning(
+    mock_api, caplog
+):
+    """A "Past" supply with no end date is still an ended supply, not an anomaly."""
+    caplog.set_level(logging.INFO)
+    mock_api(has_rates=False, supply_ended=True, supply_ended_dated=False)
+
+    async with GreenchoiceApi("fake_user", "fake_password") as greenchoice_api:
+        result = await greenchoice_api.update()
+
+    assert result.gas_price is None
+    assert "reports its energy supply as ended" in caplog.text
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+
+
+@pytest.mark.asyncio
+async def test_rate_details_404_on_active_supply_still_warns(mock_api, caplog):
+    """A 404 for an agreement the account still supplies is an API problem."""
+    caplog.set_level(logging.INFO)
+    mock_api(has_rates=False)
+
+    async with GreenchoiceApi("fake_user", "fake_password") as greenchoice_api:
+        result = await greenchoice_api.update()
+
+    assert result.gas_price is None
+    assert [r.levelno for r in caplog.records if r.levelno >= logging.WARNING] == [
+        logging.WARNING
+    ]
+    assert "energy supply is active" in caplog.text
+
+
+def test_live_rate_details_response_parses_electricity_and_gas_rates(
+    rate_details_live_response,
+):
+    """Lock the electricity field names against a real Greenchoice response.
+
+    The electricity mapping was originally guessed from the portal's frontend
+    because the development account had no electricity contract. This fixture
+    is an actual in-contract response; the expected numbers below are read off
+    it by hand, so a renamed or re-nested field fails here.
+    """
+
+    rates = Rates.model_validate(rate_details_live_response)
+
+    assert rates.start == datetime.date(2025, 9, 11)
+    electricity = rates.electricity
+    assert electricity is not None
+    assert electricity.delivery_single is not None
+    assert electricity.delivery_single.all_in_rate_including_vat == 0.19326
+    assert electricity.delivery_normal is not None
+    assert electricity.delivery_normal.all_in_rate_including_vat == 0.20445
+    assert electricity.delivery_low is not None
+    assert electricity.delivery_low.all_in_rate_including_vat == 0.17955
+    # A bare number, not a nested rate object — the other original guess.
+    assert electricity.feed_in_compensation == 0.08
+    assert electricity.feed_in_costs is None
+    assert rates.gas is not None
+    assert rates.gas.delivery is not None
+    assert rates.gas.delivery.all_in_rate_including_vat == 0.93097
+
+
+@pytest.mark.asyncio
 async def test_unparseable_electricity_still_reports_gas(mock_api, caplog):
     """A wrong electricity shape must not blank the gas price.
 
@@ -174,8 +260,6 @@ async def test_unparseable_electricity_still_reports_gas(mock_api, caplog):
 @pytest.mark.asyncio
 async def test_unparseable_period_still_reports_rates(mock_api, rate_details_response):
     """start/end only label log lines, so a bad one must not cost us a rate."""
-    from custom_components.greenchoice.model import Rates
-
     payload = dict(rate_details_response, start="not-a-date")
     rates = Rates.model_validate(payload)
 
