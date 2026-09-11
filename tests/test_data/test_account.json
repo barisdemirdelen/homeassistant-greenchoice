@@ -1,0 +1,53 @@
+{
+  "accountId": "93f19075-7113-446e-a406-74ddc68df562",
+  "email": "j.doe@example.com",
+  "accountType": "klant",
+  "firstName": null,
+  "preferences": {
+    "customerNumber": 2222,
+    "agreementId": 1111
+  },
+  "customers": [
+    {
+      "customerNumber": 2222,
+      "fullName": "J Doe",
+      "role": "Customer",
+      "addresses": [
+        {
+          "customerNumber": 2222,
+          "agreementId": 1111,
+          "street": "Address Street",
+          "houseNumber": 1,
+          "addition": null,
+          "postalCode": "1234AB",
+          "city": "City",
+          "moveInDate": "2020-01-01",
+          "moveOutDate": null,
+          "hasGasSupply": true,
+          "hasElectricitySupply": true,
+          "energySupplyStatus": "Active"
+        },
+        {
+          "customerNumber": 2222,
+          "agreementId": 1112,
+          "street": "Address Street 2",
+          "houseNumber": 2,
+          "addition": null,
+          "postalCode": "1234BC",
+          "city": "City 2",
+          "moveInDate": "2020-01-01",
+          "moveOutDate": null,
+          "hasGasSupply": true,
+          "hasElectricitySupply": true,
+          "energySupplyStatus": "Past"
+        }
+      ]
+    },
+    {
+      "customerNumber": 9876,
+      "fullName": null,
+      "role": "Customer",
+      "addresses": []
+    }
+  ]
+}

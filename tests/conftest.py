@@ -68,32 +68,65 @@ def contract_response_without_gas(data_folder):
 
 
 @pytest.fixture
-def contract_response_current(data_folder):
-    with data_folder.joinpath("test_contract_current.json").open() as f:
+def rate_details_response(data_folder):
+    with data_folder.joinpath("test_rate_details.json").open() as f:
         return json.load(f)
 
 
 @pytest.fixture
-def contract_response_current_without_gas(data_folder):
-    with data_folder.joinpath("test_contract_current.json").open() as f:
+def rate_details_response_gas_only(data_folder):
+    """A gas-only agreement: the electricity contract has ended."""
+    with data_folder.joinpath("test_rate_details.json").open() as f:
         response = json.load(f)
-    del response["contracts"][1]
+    response["electricityRates"] = None
     return response
 
 
 @pytest.fixture
-def contract_response_current_without_gas_single(data_folder):
-    with data_folder.joinpath("test_contract_current.json").open() as f:
+def rate_details_response_empty(data_folder):
+    """No gas and no electricity — the shape that silently blanked the sensors."""
+    with data_folder.joinpath("test_rate_details.json").open() as f:
         response = json.load(f)
-    del response["contracts"][1]
+    response["electricityRates"] = None
+    response["gasRates"] = None
+    return response
 
-    rates = response["contracts"][0]["rates"]["usageDependentElectricityRates"]
-    rates["allInDeliveryLowIncludingVat"] = None
-    rates["deliveryLow"] = None
-    rates["allInDeliveryLowVat"] = None
-    rates["allInDeliveryNormalIncludingVat"] = None
+
+@pytest.fixture
+def rate_details_response_bad_electricity(data_folder):
+    """Electricity in a shape the model doesn't expect, gas still valid.
+
+    Guards gas against electricity: the electricity mapping was
+    derived from the portal's frontend rather than an observed response, so a
+    wrong guess there must not take the gas price down with it.
+    """
+    with data_folder.joinpath("test_rate_details.json").open() as f:
+        response = json.load(f)
+    rates = response["electricityRates"]["standardVariableRates"]
+    # A scalar where a rate object is expected, and vice versa.
+    rates["deliverySingle"] = 0.25
+    rates["feedInCompensation"] = {"rateIncludingVat": 0.08}
+    return response
+
+
+@pytest.fixture
+def rate_details_response_without_gas(data_folder):
+    with data_folder.joinpath("test_rate_details.json").open() as f:
+        response = json.load(f)
+    response["gasRates"] = None
+    return response
+
+
+@pytest.fixture
+def rate_details_response_without_gas_single(data_folder):
+    """Electricity-only, single-rate contract: no separate normal/low rates."""
+    with data_folder.joinpath("test_rate_details.json").open() as f:
+        response = json.load(f)
+    response["gasRates"] = None
+
+    rates = response["electricityRates"]["standardVariableRates"]
     rates["deliveryNormal"] = None
-    rates["allInDeliveryNormalVat"] = None
+    rates["deliveryLow"] = None
     return response
 
 
@@ -114,15 +147,20 @@ def meters_response_without_gas(data_folder):
 
 
 @pytest.fixture
-def profiles_response(data_folder):
-    with data_folder.joinpath("test_profiles.json").open() as f:
+def account_response(data_folder):
+    with data_folder.joinpath("test_account.json").open() as f:
         return json.load(f)
 
 
 @pytest.fixture
-def preferences_response(data_folder):
-    with data_folder.joinpath("test_preferences.json").open() as f:
-        return json.load(f)
+def account_response_without_profiles(data_folder):
+    """An account whose customers have no addresses — nothing to poll."""
+    with data_folder.joinpath("test_account.json").open() as f:
+        response = json.load(f)
+    response["preferences"] = None
+    for customer in response["customers"]:
+        customer["addresses"] = []
+    return response
 
 
 @pytest.fixture
@@ -171,12 +209,15 @@ def consumptions_hour_with_gas_response(data_folder):
 def mock_api(
     mocker,
     meters_response,
-    profiles_response,
-    preferences_response,
+    account_response,
+    account_response_without_profiles,
     contract_response_callback,
-    contract_response_current,
-    contract_response_current_without_gas,
-    contract_response_current_without_gas_single,
+    rate_details_response,
+    rate_details_response_without_gas,
+    rate_details_response_without_gas_single,
+    rate_details_response_gas_only,
+    rate_details_response_empty,
+    rate_details_response_bad_electricity,
     meters_response_without_gas,
 ):
     with aioresponses() as mocked:
@@ -186,6 +227,9 @@ def mock_api(
             has_rates: bool = True,
             has_profiles: bool = True,
             double_rate: bool = True,
+            has_electricity: bool = True,
+            empty_rates: bool = False,
+            bad_electricity: bool = False,
             consumptions: dict | None = None,
         ):
             mocker.patch(
@@ -207,17 +251,12 @@ def mock_api(
                     status=404,
                 )
 
-            if has_profiles:
-                mocked.get(
-                    f"{BASE_URL}/api/v2/Profiles/",
-                    payload=profiles_response,
-                )
-            else:
-                mocked.get(f"{BASE_URL}/api/v2/Profiles/", payload=[])
-
             mocked.get(
-                f"{BASE_URL}/api/v2/Preferences/",
-                payload=preferences_response,
+                f"{BASE_URL}/api/v2/account",
+                payload=account_response
+                if has_profiles
+                else account_response_without_profiles,
+                repeat=True,
             )
 
             mocked.get(
@@ -228,22 +267,25 @@ def mock_api(
                 payload=meters_response if has_gas else meters_response_without_gas,
             )
 
+            rate_details_url = re.compile(
+                re.escape(BASE_URL)
+                + r"/api/v3/customers/2222/agreements/1111/rate-details\?.*"
+            )
             if has_rates:
-                payload = contract_response_current
+                payload = rate_details_response
                 if not has_gas:
-                    payload = contract_response_current_without_gas
+                    payload = rate_details_response_without_gas
                 if not has_gas and not double_rate:
-                    payload = contract_response_current_without_gas_single
-                mocked.get(
-                    f"{BASE_URL}/api/v2/customers/2222/agreements/1111/contracts/current",
-                    payload=payload,
-                )
+                    payload = rate_details_response_without_gas_single
+                if not has_electricity:
+                    payload = rate_details_response_gas_only
+                if empty_rates:
+                    payload = rate_details_response_empty
+                if bad_electricity:
+                    payload = rate_details_response_bad_electricity
+                mocked.get(rate_details_url, payload=payload)
             else:
-                mocked.get(
-                    f"{BASE_URL}/api/v2/customers/2222/agreements/1111/contracts/current",
-                    payload={"status": 404},
-                    status=404,
-                )
+                mocked.get(rate_details_url, payload={"status": 404}, status=404)
 
             # Optional: mock hourly consumptions endpoint.
             # consumptions is a dict of {date_str: payload}, e.g. {"2026-03-27": {...}}.

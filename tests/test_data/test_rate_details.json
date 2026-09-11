@@ -1,0 +1,102 @@
+{
+  "start": "2020-01-01",
+  "end": "2020-12-31",
+  "electricityRates": {
+    "standardVariableRates": {
+      "deliverySingle": {
+        "energyTax": 0.1,
+        "allInRateExcludingVat": 0.2,
+        "allInRateVat": 0.05,
+        "allInRateIncludingVat": 0.25,
+        "vatPercentage": 21.0,
+        "vat": 0.04,
+        "rateExcludingVat": 0.1,
+        "rateIncludingVat": 0.14
+      },
+      "deliveryNormal": {
+        "energyTax": 0.1,
+        "allInRateExcludingVat": 0.24,
+        "allInRateVat": 0.06,
+        "allInRateIncludingVat": 0.3,
+        "vatPercentage": 21.0,
+        "vat": 0.05,
+        "rateExcludingVat": 0.14,
+        "rateIncludingVat": 0.19
+      },
+      "deliveryLow": {
+        "energyTax": 0.1,
+        "allInRateExcludingVat": 0.16,
+        "allInRateVat": 0.04,
+        "allInRateIncludingVat": 0.2,
+        "vatPercentage": 21.0,
+        "vat": 0.03,
+        "rateExcludingVat": 0.06,
+        "rateIncludingVat": 0.09
+      },
+      "feedInCompensation": 0.08,
+      "feedInCosts": {
+        "vatPercentage": 21.0,
+        "vat": 0.009,
+        "rateExcludingVat": 0.001,
+        "rateIncludingVat": 0.01
+      }
+    },
+    "timeOfUseVariableRates": null,
+    "fixedRates": {
+      "fixedChargePerDay": {
+        "vatPercentage": 21.0,
+        "vat": 0.02,
+        "rateExcludingVat": 0.1,
+        "rateIncludingVat": 0.12
+      },
+      "gridOperatorRates": [
+        {
+          "ratePerDay": {
+            "vatPercentage": 21.0,
+            "vat": 0.06,
+            "rateExcludingVat": 0.3,
+            "rateIncludingVat": 0.36
+          },
+          "start": "2020-01-01",
+          "end": null,
+          "physicalCapacity": "1x25A"
+        }
+      ]
+    }
+  },
+  "gasRates": {
+    "variableRates": {
+      "delivery": {
+        "energyTax": 0.3,
+        "allInRateExcludingVat": 0.64,
+        "allInRateVat": 0.16,
+        "allInRateIncludingVat": 0.8,
+        "vatPercentage": 21.0,
+        "vat": 0.13,
+        "rateExcludingVat": 0.34,
+        "rateIncludingVat": 0.47
+      }
+    },
+    "fixedRates": {
+      "fixedChargePerDay": {
+        "vatPercentage": 21.0,
+        "vat": 0.02,
+        "rateExcludingVat": 0.1,
+        "rateIncludingVat": 0.12
+      },
+      "gridOperatorRates": [
+        {
+          "ratePerDay": {
+            "vatPercentage": 21.0,
+            "vat": 0.04,
+            "rateExcludingVat": 0.2,
+            "rateIncludingVat": 0.24
+          },
+          "start": "2020-01-01",
+          "end": null,
+          "physicalCapacity": "G4"
+        }
+      ]
+    }
+  }
+}

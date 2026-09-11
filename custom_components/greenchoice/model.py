@@ -1,16 +1,20 @@
 from __future__ import annotations
 
+import logging
 import uuid
 from collections.abc import Iterator
 from datetime import date, datetime
-from functools import cached_property
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 from pydantic.alias_generators import to_camel
+
+_LOGGER = logging.getLogger(__name__)
 
 
 class CamelCaseModel(BaseModel):
-    model_config = ConfigDict(alias_generator=to_camel)
+    # populate_by_name lets these models also be built from field names,
+    # not just the camelCase aliases the API sends.
+    model_config = ConfigDict(alias_generator=to_camel, populate_by_name=True)
 
 
 class Profile(CamelCaseModel):
@@ -33,110 +37,240 @@ class Profile(CamelCaseModel):
 
 
 class Preferences(CamelCaseModel):
-    """/api/v2/preferences"""
+    """The customer/agreement pair the account last selected, from /api/v2/account."""
 
-    account_id: uuid.UUID
     customer_number: int
     agreement_id: int
 
 
+class AccountAgreement(CamelCaseModel):
+    """One (sub)agreement on an address inside /api/v2/account."""
+
+    agreement_id: int | None = None
+    sub_agreement_id: int | None = None
+    name: str | None = None
+    market_segment: str | None = None
+    start_date: date | None = None
+    end_date: date | None = None
+    duration_in_months: int | None = None
+    is_variable: bool | None = None
+    is_revocable: bool | None = None
+    rate_structure_type: str | None = None
+
+
+class AccountAddress(CamelCaseModel):
+    """One delivery address inside /api/v2/account."""
+
+    customer_number: int | None = None
+    agreement_id: int | None = None
+    street: str | None = None
+    house_number: int | None = None
+    addition: int | str | None = None
+    postal_code: str | None = None
+    city: str | None = None
+    move_in_date: datetime | None = None
+    move_out_date: datetime | None = None
+    has_gas_supply: bool | None = None
+    has_electricity_supply: bool | None = None
+    has_feed_in: bool | None = None
+    energy_supply_status: str | None = None
+    agreements: list[AccountAgreement] = []
+
+
+class AccountCustomer(CamelCaseModel):
+    """One customer inside /api/v2/account."""
+
+    customer_number: int
+    full_name: str | None = None
+    given_name: str | None = None
+    surname: str | None = None
+    email: str | None = None
+    status: str | None = None
+    customer_type: str | None = None
+    role: str | None = None
+    addresses: list[AccountAddress] = []
+
+
 class Account(CamelCaseModel):
-    """/api/v2/accounts"""
+    """/api/v2/account
+
+    Replaces the removed ``/api/v2/Preferences/`` (now PUT-only) and
+    ``/api/v2/Profiles/`` (now ``/api/v2/profiles/search``) endpoints: this one
+    response carries both the preferred customer/agreement and the full list of
+    addresses to choose from.
+    """
 
     account_id: uuid.UUID
     email: str | None = None
     account_type: str | None = None
     first_name: str | None = None
-    email_modified_on_utc: datetime | None = None
-    account_type_modified_on_utc: datetime | None = None
-    first_name_modified_on_utc: datetime | None = None
-
-
-class UsageDependentElectricityRates(CamelCaseModel):
-    all_in_delivery_single_including_vat: float
-    delivery_single: float
-    all_in_delivery_single_vat: float
-    all_in_delivery_low_including_vat: float
-    delivery_low: float
-    all_in_delivery_low_vat: float
-    all_in_delivery_normal_including_vat: float
-    delivery_normal: float
-    all_in_delivery_normal_vat: float
-    energy_tax: float
-    sustainable_energy_surcharge: float | None = None
-    feed_in_compensation: float | None = None
-    feed_in_volume_limit_in_kwh: float | None = None
-    feed_in_cost_including_vat: float | None = None
-    feed_in_cost_excluding_vat: float | None = None
-    feed_in_cost_vat: float | None = None
-
-
-class UsageDependentGasRates(CamelCaseModel):
-    all_in_delivery_including_vat: float
-    delivery: float
-    all_in_delivery_vat: float
-    energy_tax: float
-    sustainable_energy_surcharge: float | None = None
-
-
-class UsageIndependentRates(CamelCaseModel):
-    fixed_charge_per_day_including_vat: float
-    fixed_charge_per_day_excluding_vat: float
-    fixed_charge_per_day_vat: float
-    reduction_energy_tax_including_vat_per_day: float
-    grid_operator_rate_per_day_including_vat: float
-    grid_operator_rate_per_day_excluding_vat: float
-    grid_operator_rate_per_day_vat: float
-
-
-class ContractRates(CamelCaseModel):
-    vat_percentage: float
-    usage_dependent_electricity_rates: UsageDependentElectricityRates | None = None
-    usage_dependent_gas_rates: UsageDependentGasRates | None = None
-    usage_independent_rates: UsageIndependentRates | None = None
-
-
-class Contract(CamelCaseModel):
-    type: str
-    display_name: str
-    begin_date: date
-    end_date: date | None = None
-    cancellation_date: date | None = None
-    duration_in_months: int | None = None
-    product_type: str
-    physical_capacity: str
-    rates: ContractRates
-    rate_type: str
-    sub_agreement_id: int
-
-
-class Rates(BaseModel):
-    id: int
-    contracts: list[Contract]
+    preferences: Preferences | None = None
+    customers: list[AccountCustomer] = []
 
     class Request(BaseModel):
-        request_url: str = "/api/v2/customers/{customer_number}/agreements/{agreement_id}/contracts/current"
+        request_url: str = "/api/v2/account"
+
+        def build_url(self) -> str:
+            return self.request_url
+
+    @property
+    def profiles(self) -> list[Profile]:
+        """Flatten customers/addresses into the profiles the config flow lists."""
+        return [
+            Profile(
+                customer_number=address.customer_number or customer.customer_number,
+                agreement_id=address.agreement_id,
+                role_name=customer.role,
+                name=customer.full_name,
+                street=address.street,
+                house_number=address.house_number,
+                house_number_addition=address.addition,
+                postal_code=address.postal_code,
+                city=address.city,
+                energy_supply_status=address.energy_supply_status,
+                move_in_date=address.move_in_date,
+                move_out_date=address.move_out_date,
+                has_active_gas_supply=address.has_gas_supply,
+                has_active_electricity_supply=address.has_electricity_supply,
+            )
+            for customer in self.customers
+            for address in customer.addresses
+            # An address without an agreement can't be polled, so don't offer it.
+            if address.agreement_id
+        ]
+
+
+class RateAmount(CamelCaseModel):
+    """A single rate with its energy-tax/VAT breakdown.
+
+    ``all_in_rate_including_vat`` is delivery + energy tax + VAT — the number the
+    Greenchoice portal shows as the headline tariff, and what the price sensors
+    report.
+
+    VERIFIED against a live gas response: the value here matched the portal's
+    displayed gas tariff exactly.
+    """
+
+    energy_tax: float | None = None
+    all_in_rate_excluding_vat: float | None = None
+    all_in_rate_vat: float | None = None
+    all_in_rate_including_vat: float | None = None
+    vat_percentage: float | None = None
+    vat: float | None = None
+    rate_excluding_vat: float | None = None
+    rate_including_vat: float | None = None
+
+
+class StandardVariableElectricityRates(CamelCaseModel):
+    """Electricity rates for a Standard (non time-of-use) contract.
+
+    ASSUMPTION — these field names are NOT verified against a live response.
+    They were read off the Greenchoice portal's own frontend code, because the
+    account this was developed against has no electricity contract and returned
+    ``electricityRates: null`` every time. The gas equivalents below it are
+    verified; these are not.
+
+    Two specific guesses worth re-checking against a real electricity account:
+      * ``feed_in_compensation`` is a bare number, not a nested rate object —
+        the portal passes it straight to its formatter without reading a field.
+      * the three delivery rates are nested objects, read via
+        ``all_in_rate_including_vat`` like gas.
+
+    If either is wrong the electricity sensors stay ``None`` and a warning names
+    the field; gas is unaffected (see ``Rates._ignore_unparseable_field``).
+    """
+
+    delivery_single: RateAmount | None = None
+    delivery_normal: RateAmount | None = None
+    delivery_low: RateAmount | None = None
+    feed_in_compensation: float | None = None
+    feed_in_costs: RateAmount | None = None
+
+
+class ElectricityRates(CamelCaseModel):
+    """Electricity section of /rate-details.
+
+    NOT IMPLEMENTED: time-of-use contracts report per-time-slot rates under
+    ``timeOfUseVariableRates`` instead. There is no single value the current
+    price sensors could hold, so it is deliberately left unmapped — such an
+    account gets the "no gas and no electricity rates" warning rather than a
+    wrong number.
+    """
+
+    standard_variable_rates: StandardVariableElectricityRates | None = None
+
+
+class GasVariableRates(CamelCaseModel):
+    """Gas rates. VERIFIED against a live response."""
+
+    delivery: RateAmount | None = None
+
+
+class GasRates(CamelCaseModel):
+    """Gas section of /rate-details."""
+
+    variable_rates: GasVariableRates | None = None
+
+
+class Rates(CamelCaseModel):
+    """/api/v3/customers/{customer_number}/agreements/{agreement_id}/rate-details
+
+    Replaces the removed v2 ``/contracts/current``. The v3 ``/contracts/current``
+    also exists but carries only bare delivery rates (no feed-in), so the rate
+    details are what the sensors are built from.
+    """
+
+    start: date | None = None
+    end: date | None = None
+    electricity_rates: ElectricityRates | None = None
+    gas_rates: GasRates | None = None
+
+    @field_validator("start", "end", "electricity_rates", "gas_rates", mode="wrap")
+    @classmethod
+    def _ignore_unparseable_field(cls, value, handler, info):
+        """Keep one field's shape change from blanking the rest of the response.
+
+        Gas and electricity are independent sections of the same response, so
+        validating them together would let an unexpected electricity shape
+        discard a perfectly good gas rate, and the other way round. start/end
+        only label log messages, so they must never cost us a rate either.
+        """
+        try:
+            return handler(value)
+        except ValidationError as err:
+            _LOGGER.warning("Ignoring unparseable %s: %s", info.field_name, err)
+            return None
+
+    class Request(BaseModel):
+        request_url: str = (
+            "/api/v3/customers/{customer_number}/agreements/{agreement_id}/rate-details"
+        )
 
         customer_number: int
         agreement_id: int
+        start: date
+        end: date
 
         def build_url(self) -> str:
-            return self.request_url.format(
-                customer_number=self.customer_number, agreement_id=self.agreement_id
+            # Greenchoice expects capitalised Start/End dates (YYYY-MM-DD) here.
+            return (
+                self.request_url.format(
+                    customer_number=self.customer_number,
+                    agreement_id=self.agreement_id,
+                )
+                + f"?Start={self.start.isoformat()}&End={self.end.isoformat()}"
             )
 
-    @cached_property
-    def electricity(self) -> Contract | None:
-        for contract in self.contracts:
-            if contract.product_type.upper() == "E":
-                return contract
+    @property
+    def electricity(self) -> StandardVariableElectricityRates | None:
+        if self.electricity_rates:
+            return self.electricity_rates.standard_variable_rates
         return None
 
-    @cached_property
-    def gas(self) -> Contract | None:
-        for contract in self.contracts:
-            if contract.product_type.upper() == "G":
-                return contract
+    @property
+    def gas(self) -> GasVariableRates | None:
+        if self.gas_rates:
+            return self.gas_rates.variable_rates
         return None
 
 

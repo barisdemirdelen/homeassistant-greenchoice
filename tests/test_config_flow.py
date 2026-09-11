@@ -6,7 +6,6 @@ import pytest
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.data_entry_flow import FlowResultType
 
-from custom_components.greenchoice import GreenchoiceApi
 from custom_components.greenchoice.api import ApiError
 from custom_components.greenchoice.config_flow import GreenchoiceConfigFlow
 from custom_components.greenchoice.const import (
@@ -14,12 +13,12 @@ from custom_components.greenchoice.const import (
     CONF_CUSTOMER_NUMBER,
     CONF_PROFILE,
 )
-from custom_components.greenchoice.model import Profile
+from custom_components.greenchoice.model import Account
 
 
 @pytest.fixture
-def mock_profiles(profiles_response):
-    return GreenchoiceApi.validate_list(Profile, profiles_response, ignore_invalid=True)
+def mock_profiles(account_response):
+    return Account.model_validate(account_response).profiles
 
 
 @pytest.fixture

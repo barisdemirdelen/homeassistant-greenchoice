@@ -1,16 +1,19 @@
 import logging
 from datetime import UTC, date, datetime, timedelta
 from typing import TypeVar
+from zoneinfo import ZoneInfo
 
 import aiohttp
 from pydantic import BaseModel, ValidationError
 
 from .auth import Auth
 from .model import (
+    Account,
     Consumptions,
     MeterReadings,
     Preferences,
     Profile,
+    RateAmount,
     Rates,
     Reading,
     SensorUpdate,
@@ -20,7 +23,17 @@ _LOGGER = logging.getLogger(__name__)
 
 BASE_URL = "https://mijn.greenchoice.nl"
 
+# Rates change on Dutch calendar days, so "today" must be local to the
+# supplier: between midnight and 01:00/02:00 CET/CEST, UTC is still yesterday
+# and would return the previous day's rate on a tariff-change date.
+SUPPLIER_TZ = ZoneInfo("Europe/Amsterdam")
+
 T = TypeVar("T", bound=BaseModel)
+
+
+def _all_in_rate(rate: RateAmount | None) -> float | None:
+    """The all-in (delivery + energy tax + VAT) price the sensors report."""
+    return rate.all_in_rate_including_vat if rate else None
 
 
 class ApiError(Exception):
@@ -82,11 +95,13 @@ class GreenchoiceApi:
                         timeout=aiohttp.ClientTimeout(total=30),
                     ) as retry_response:
                         if retry_response.status == 404:
+                            _LOGGER.warning("Endpoint not found: %s", endpoint)
                             return {}
                         retry_response.raise_for_status()
                         return await retry_response.json()
 
                 if response.status == 404:
+                    _LOGGER.warning("Endpoint not found: %s", endpoint)
                     return {}
 
                 response.raise_for_status()
@@ -108,20 +123,37 @@ class GreenchoiceApi:
         return await self._authenticated_request("GET", target_url, json=data)
 
     # ASYNC METHODS (Core implementation)
-    async def get_preferences(self) -> Preferences:
-        preferences_json = await self.request("/api/v2/Preferences/")
-        return Preferences.model_validate(preferences_json)
+    async def get_account(self) -> Account:
+        account_json = await self.request(Account.Request().build_url())
+        return Account.model_validate(account_json)
+
+    async def get_preferences(self) -> Preferences | None:
+        """The account's preferred customer/agreement, if it has picked one."""
+        account = await self.get_account()
+        return account.preferences
 
     async def get_profiles(self) -> list[Profile]:
-        profiles_json = await self.request("/api/v2/Profiles/")
-        return self.validate_list(Profile, profiles_json, ignore_invalid=True)
+        return (await self.get_account()).profiles
 
     async def _ensure_credentials(self) -> None:
         """Fetch and cache customer_number / agreement_id if not already set."""
-        if not self.customer_number or not self.agreement_id:
-            prefs = await self.get_preferences()
-            self.customer_number = prefs.customer_number
-            self.agreement_id = prefs.agreement_id
+        if self.customer_number and self.agreement_id:
+            return
+
+        account = await self.get_account()
+        # Mirror the portal: use the preferred agreement, else the first address.
+        preferences = account.preferences
+        if not preferences:
+            profiles = account.profiles
+            if not profiles:
+                raise ApiError("Account has no agreement to read data for")
+            preferences = Preferences(
+                customer_number=profiles[0].customer_number,
+                agreement_id=profiles[0].agreement_id,
+            )
+
+        self.customer_number = preferences.customer_number
+        self.agreement_id = preferences.agreement_id
 
     async def get_meter_readings(self) -> MeterReadings:
 
@@ -141,10 +173,15 @@ class GreenchoiceApi:
         if not self.customer_number or not self.agreement_id:
             raise ApiError("Can not find customer_number or agreement_id for request")
 
+        # A range starting today returns the rates in effect today, so a
+        # contract that renews later in the range doesn't shadow them.
+        today = datetime.now(SUPPLIER_TZ).date()
         pricing_details = await self.request(
             Rates.Request(
                 customer_number=self.customer_number,
                 agreement_id=self.agreement_id,
+                start=today,
+                end=today + timedelta(days=1),
             ).build_url(),
         )
         return Rates.model_validate(pricing_details)
@@ -226,33 +263,39 @@ class GreenchoiceApi:
         try:
             pricing_details = await self.get_rates()
         except ValidationError:
+            _LOGGER.warning("Could not parse the rate details response")
             return
 
-        if electricity_details := pricing_details.electricity:
-            electricity_usage = (
-                electricity_details.rates.usage_dependent_electricity_rates
+        # The electricity field names are inferred, not verified — see
+        # StandardVariableElectricityRates. Gas below is verified.
+        if electricity_rates := pricing_details.electricity:
+            result.electricity_price_single = _all_in_rate(
+                electricity_rates.delivery_single
             )
-            if electricity_usage:
-                result.electricity_price_single = (
-                    electricity_usage.all_in_delivery_single_including_vat
-                )
-                result.electricity_price_off_peak = (
-                    electricity_usage.all_in_delivery_low_including_vat
-                )
-                result.electricity_price_normal = (
-                    electricity_usage.all_in_delivery_normal_including_vat
-                )
-                result.electricity_feed_in_compensation = (
-                    electricity_usage.feed_in_compensation
-                )
+            result.electricity_price_off_peak = _all_in_rate(
+                electricity_rates.delivery_low
+            )
+            result.electricity_price_normal = _all_in_rate(
+                electricity_rates.delivery_normal
+            )
+            result.electricity_feed_in_compensation = (
+                electricity_rates.feed_in_compensation
+            )
+            if electricity_rates.feed_in_costs:
                 result.electricity_feed_in_cost = (
-                    electricity_usage.feed_in_cost_including_vat
+                    electricity_rates.feed_in_costs.rate_including_vat
                 )
 
-        if (gas_details := pricing_details.gas) and (
-            gas_rates := gas_details.rates.usage_dependent_gas_rates
-        ):
-            result.gas_price = gas_rates.all_in_delivery_including_vat
+        if gas_rates := pricing_details.gas:
+            result.gas_price = _all_in_rate(gas_rates.delivery)
+
+        if not pricing_details.electricity and not pricing_details.gas:
+            # Don't let a shape change leave the price sensors silently unknown.
+            _LOGGER.warning(
+                "Rate details for %s..%s contain no gas and no electricity rates",
+                pricing_details.start,
+                pricing_details.end,
+            )
 
     @staticmethod
     def validate_list(
