@@ -342,10 +342,22 @@ class Reading(CamelCaseModel):
     gas: float | None = None
 
     @property
-    def is_gas(self) -> bool:
+    def has_electricity(self) -> bool:
+        # A reading can carry electricity and gas together, so neither
+        # implies the absence of the other.
+        return any(
+            value is not None
+            for value in (
+                self.normal_consumption,
+                self.off_peak_consumption,
+                self.normal_feed_in,
+                self.off_peak_feed_in,
+            )
+        )
+
+    @property
+    def has_gas(self) -> bool:
         return self.gas is not None
-
-
 
 
 class MeterMonth(BaseModel):
@@ -390,7 +402,7 @@ class MeterReadings(CamelCaseModel):
             reading
             for month in self.months
             for reading in month.readings
-            if reading.is_gas == is_gas
+            if (reading.has_gas if is_gas else reading.has_electricity)
         ]
         yield from sorted(readings, key=lambda r: r.reading_date, reverse=True)
 

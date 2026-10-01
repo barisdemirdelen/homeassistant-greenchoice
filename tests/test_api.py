@@ -5,7 +5,7 @@ import re
 import pytest
 
 from custom_components.greenchoice.api import GreenchoiceApi
-from custom_components.greenchoice.model import Rates
+from custom_components.greenchoice.model import MeterReadings, Rates
 
 
 @pytest.mark.asyncio
@@ -290,3 +290,33 @@ async def test_consumptions_404_is_an_empty_day(mock_api):
     assert consumptions.start == datetime.date(2026, 9, 29)
     assert consumptions.end == datetime.date(2026, 9, 30)
 
+
+def test_combined_meter_readings_yield_electricity_and_gas():
+    """Greenchoice now sends electricity and gas together in one reading."""
+    readings = MeterReadings.model_validate(
+        {
+            "year": 2026,
+            "hasElectricity": True,
+            "hasGas": True,
+            "months": [
+                {
+                    "month": 9,
+                    "readings": [
+                        {
+                            "readingDate": "2026-09-30T00:00:00",
+                            "normalConsumption": 12365,
+                            "offPeakConsumption": 11542,
+                            "normalFeedIn": 0,
+                            "offPeakFeedIn": 0,
+                            "gas": 2612,
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+
+    assert readings.last_electricity_reading is not None
+    assert readings.last_electricity_reading.normal_consumption == 12365
+    assert readings.last_gas_reading is not None
+    assert readings.last_gas_reading.gas == 2612
