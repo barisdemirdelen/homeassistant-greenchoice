@@ -232,15 +232,20 @@ class GreenchoiceApi:
         # API only supports 1-day intervals, so end is always start + 1 day
         end = start + timedelta(days=1)
 
-        consumptions_json = await self.request(
-            Consumptions.Request(
-                customer_number=self.customer_number,
-                agreement_id=self.agreement_id,
-                interval=interval,
-                start=start,
-                end=end,
-            ).build_url()
-        )
+        try:
+            consumptions_json = await self.request(
+                Consumptions.Request(
+                    customer_number=self.customer_number,
+                    agreement_id=self.agreement_id,
+                    interval=interval,
+                    start=start,
+                    end=end,
+                ).build_url(),
+                raise_not_found=True,
+            )
+        except NotFoundError:
+            # No data published for this range (yet): same as an empty response.
+            return Consumptions(interval=interval, start=start, end=end)
 
         return Consumptions.model_validate(consumptions_json)
 

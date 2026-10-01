@@ -359,16 +359,16 @@ def mock_api(
                     return CallbackResult(
                         payload={
                             "interval": "Hour",
-                            "start": f"{start}T00:00:00",
-                            "end": f"{end}T00:00:00",
-                            "consumptionCosts": [],
+                            "start": start,
+                            "end": end,
+                            "periods": [],
                         }
                     )
 
                 mocked.get(
                     re.compile(
                         re.escape(BASE_URL)
-                        + r"/api/v2/customers/\d+/agreements/\d+/consumptions"
+                        + r"/api/v3/customers/\d+/agreements/\d+/consumptions"
                     ),
                     callback=_consumptions_cb,
                     repeat=True,
@@ -488,25 +488,29 @@ def make_consumptions_payload(
 ) -> dict:
     """Build a single-point hourly consumptions API response for the given date."""
     end_str = (date.fromisoformat(date_str) + timedelta(days=1)).isoformat()
-    item: dict = {
-        "consumedOn": f"{date_str}T00:00:00",
-        "electricity": {
-            "totalDeliveryConsumption": total_delivery,
-            "totalFeedInConsumption": total_feed_in,
-            "hasConsumption": True,
-        },
-        "hasConsumption": True,
-    }
-    if gas_delivery is not None:
-        item["gas"] = {
-            "totalDeliveryConsumption": gas_delivery,
-            "hasConsumption": True,
+    products: list[dict] = [
+        {
+            "type": "Electricity",
+            "unit": "Kwh",
+            "totals": {
+                "consumptionQuantity": total_delivery,
+                "feedInQuantity": total_feed_in,
+            },
         }
+    ]
+    if gas_delivery is not None:
+        products.append(
+            {
+                "type": "Gas",
+                "unit": "M3",
+                "totals": {"consumptionQuantity": gas_delivery},
+            }
+        )
     return {
         "interval": "Hour",
-        "start": f"{date_str}T00:00:00",
-        "end": f"{end_str}T00:00:00",
-        "consumptionCosts": [item],
+        "start": date_str,
+        "end": end_str,
+        "periods": [{"consumedOn": f"{date_str}T00:00:00", "products": products}],
     }
 
 

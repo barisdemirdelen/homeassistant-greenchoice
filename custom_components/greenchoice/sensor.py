@@ -164,7 +164,7 @@ class GreenchoiceDataUpdateCoordinator(
         electricity_stats, gas_stats = _make_statistics(self.config_entry, config_name)
 
         consumptions = await self.api.get_consumptions(interval="Hour", start=day)
-        items = sorted(consumptions.consumption_costs, key=lambda x: x.consumed_on)
+        items = sorted(consumptions.periods, key=lambda x: x.consumed_on)
         electricity_items = [item for item in items if item.electricity]
         gas_items = [item for item in items if item.gas]
 

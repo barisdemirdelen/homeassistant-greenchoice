@@ -1,5 +1,6 @@
 import datetime
 import logging
+import re
 
 import pytest
 
@@ -267,3 +268,25 @@ async def test_unparseable_period_still_reports_rates(mock_api, rate_details_res
     assert rates.gas is not None
     assert rates.gas.delivery is not None
     assert rates.gas.delivery.all_in_rate_including_vat == 0.8
+
+
+@pytest.mark.asyncio
+async def test_consumptions_404_is_an_empty_day(mock_api):
+    """A 404 means no data for that range: empty periods, not a validation error."""
+    mocked = mock_api()
+    mocked.get(
+        re.compile(r".*/api/v3/customers/\d+/agreements/\d+/consumptions.*"),
+        status=404,
+    )
+
+    async with GreenchoiceApi(
+        "fake_user", "fake_password", customer_number=2222, agreement_id=1111
+    ) as greenchoice_api:
+        consumptions = await greenchoice_api.get_consumptions(
+            interval="Hour", start=datetime.date(2026, 9, 29)
+        )
+
+    assert consumptions.periods == []
+    assert consumptions.start == datetime.date(2026, 9, 29)
+    assert consumptions.end == datetime.date(2026, 9, 30)
+
