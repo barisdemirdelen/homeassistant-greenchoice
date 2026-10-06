@@ -48,8 +48,9 @@ class NotFoundError(Exception):
 
     Most endpoints treat 404 as "nothing here" and get an empty response, but
     for rate-details a 404 is the answer: no agreement covers the requested
-    date. Collapsing it would make an ended contract indistinguishable from a
-    retired endpoint.
+    date. For consumptions, empty days are a 200, so a 404 is worth seeing.
+    Collapsing either would make the case indistinguishable from a retired
+    endpoint.
     """
 
 
@@ -139,7 +140,7 @@ class GreenchoiceApi:
 
     @staticmethod
     def _on_404(endpoint: str, raise_not_found: bool) -> dict:
-        """Most endpoints read 404 as "nothing here"; rate-details needs to see it."""
+        """Most endpoints read 404 as "nothing here"; some callers need to see it."""
         if raise_not_found:
             raise NotFoundError(endpoint)
         return {}
@@ -224,7 +225,11 @@ class GreenchoiceApi:
         return Rates.model_validate(pricing_details)
 
     async def get_consumptions(self, *, interval: str, start: date) -> Consumptions:
-        """Fetch consumptions for a given interval and date range."""
+        """Fetch consumptions for a given interval and date range.
+
+        Days without data come back as 200 with empty products. A 404 raises
+        ``NotFoundError`` so a retired endpoint can't pass for an empty day.
+        """
         await self._ensure_credentials()
         if not self.customer_number or not self.agreement_id:
             raise ApiError("Can not find customer_number or agreement_id for request")
@@ -232,20 +237,16 @@ class GreenchoiceApi:
         # API only supports 1-day intervals, so end is always start + 1 day
         end = start + timedelta(days=1)
 
-        try:
-            consumptions_json = await self.request(
-                Consumptions.Request(
-                    customer_number=self.customer_number,
-                    agreement_id=self.agreement_id,
-                    interval=interval,
-                    start=start,
-                    end=end,
-                ).build_url(),
-                raise_not_found=True,
-            )
-        except NotFoundError:
-            # No data published for this range (yet): same as an empty response.
-            return Consumptions(interval=interval, start=start, end=end)
+        consumptions_json = await self.request(
+            Consumptions.Request(
+                customer_number=self.customer_number,
+                agreement_id=self.agreement_id,
+                interval=interval,
+                start=start,
+                end=end,
+            ).build_url(),
+            raise_not_found=True,
+        )
 
         return Consumptions.model_validate(consumptions_json)
 

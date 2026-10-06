@@ -254,6 +254,13 @@ def consumptions_hour_with_gas_response(data_folder):
 
 
 @pytest.fixture
+def consumptions_hour_live_response(data_folder):
+    """A real v3 hourly response (2026-03-05) with feed-in and feed-in costs."""
+    with data_folder.joinpath("test_consumptions_hour_live.json").open() as f:
+        return json.load(f)
+
+
+@pytest.fixture
 def mock_api(
     mocker,
     meters_response,
@@ -347,6 +354,7 @@ def mock_api(
             # consumptions is a dict of {date_str: payload}, e.g. {"2026-03-27": {...}}.
             # Any date not in the dict automatically returns an empty consumptions
             # response, so tests only need to list dates that should carry data.
+            # A None payload answers that date with a 404.
             if consumptions is not None:
                 _specific = consumptions
 
@@ -355,6 +363,8 @@ def mock_api(
                     start = params.get("start", ["2000-01-01"])[0]
                     end = params.get("end", ["2000-01-02"])[0]
                     if start in _specific:
+                        if _specific[start] is None:
+                            return CallbackResult(status=404)
                         return CallbackResult(payload=_specific[start])
                     return CallbackResult(
                         payload={

@@ -1,10 +1,9 @@
 import datetime
 import logging
-import re
 
 import pytest
 
-from custom_components.greenchoice.api import GreenchoiceApi
+from custom_components.greenchoice.api import GreenchoiceApi, NotFoundError
 from custom_components.greenchoice.model import MeterReadings, Rates
 
 
@@ -271,24 +270,21 @@ async def test_unparseable_period_still_reports_rates(mock_api, rate_details_res
 
 
 @pytest.mark.asyncio
-async def test_consumptions_404_is_an_empty_day(mock_api):
-    """A 404 means no data for that range: empty periods, not a validation error."""
-    mocked = mock_api()
-    mocked.get(
-        re.compile(r".*/api/v3/customers/\d+/agreements/\d+/consumptions.*"),
-        status=404,
-    )
+async def test_consumptions_404_raises_not_found(mock_api):
+    """A 404 is reported to the caller, not dressed up as an empty day.
+
+    Days without data come back as 200 with empty products; collapsing a 404
+    into that hid the v2 endpoint's retirement behind validation errors.
+    """
+    mock_api(consumptions={"2026-09-29": None})
 
     async with GreenchoiceApi(
         "fake_user", "fake_password", customer_number=2222, agreement_id=1111
     ) as greenchoice_api:
-        consumptions = await greenchoice_api.get_consumptions(
-            interval="Hour", start=datetime.date(2026, 9, 29)
-        )
-
-    assert consumptions.periods == []
-    assert consumptions.start == datetime.date(2026, 9, 29)
-    assert consumptions.end == datetime.date(2026, 9, 30)
+        with pytest.raises(NotFoundError):
+            await greenchoice_api.get_consumptions(
+                interval="Hour", start=datetime.date(2026, 9, 29)
+            )
 
 
 def test_combined_meter_readings_yield_electricity_and_gas():

@@ -129,7 +129,7 @@
             "feedInQuantity": -0.007,
             "feedInCompensation": -0.00149,
             "fixedCost": -0.00462,
-            "variableCost": null,
+            "variableCost": 0.00094,
             "totalCost": null
           }
         }
@@ -148,7 +148,7 @@
             "feedInQuantity": -0.301,
             "feedInCompensation": -0.06409,
             "fixedCost": -0.00462,
-            "variableCost": null,
+            "variableCost": 0.04029,
             "totalCost": null
           }
         }
@@ -167,7 +167,7 @@
             "feedInQuantity": -0.006,
             "feedInCompensation": -0.00128,
             "fixedCost": -0.00462,
-            "variableCost": null,
+            "variableCost": 0.0008,
             "totalCost": null
           }
         }
@@ -205,7 +205,7 @@
             "feedInQuantity": -0.193,
             "feedInCompensation": -0.04109,
             "fixedCost": -0.00462,
-            "variableCost": null,
+            "variableCost": 0.02583,
             "totalCost": null
           }
         }
@@ -224,7 +224,7 @@
             "feedInQuantity": -0.457,
             "feedInCompensation": -0.09731,
             "fixedCost": -0.00462,
-            "variableCost": null,
+            "variableCost": 0.06117,
             "totalCost": null
           }
         }
@@ -243,7 +243,7 @@
             "feedInQuantity": -1.18,
             "feedInCompensation": -0.25125,
             "fixedCost": -0.00462,
-            "variableCost": null,
+            "variableCost": 0.15794,
             "totalCost": null
           }
         }
@@ -262,7 +262,7 @@
             "feedInQuantity": -0.946,
             "feedInCompensation": -0.20143,
             "fixedCost": -0.00462,
-            "variableCost": null,
+            "variableCost": 0.12662,
             "totalCost": null
           }
         }
@@ -281,7 +281,7 @@
             "feedInQuantity": -0.072,
             "feedInCompensation": -0.01533,
             "fixedCost": -0.00462,
-            "variableCost": null,
+            "variableCost": 0.00964,
             "totalCost": null
           }
         }
@@ -300,7 +300,7 @@
             "feedInQuantity": -0.234,
             "feedInCompensation": -0.04982,
             "fixedCost": -0.00462,
-            "variableCost": null,
+            "variableCost": 0.03132,
             "totalCost": null
           }
         }
@@ -319,7 +319,7 @@
             "feedInQuantity": -0.085,
             "feedInCompensation": -0.0181,
             "fixedCost": -0.00462,
-            "variableCost": null,
+            "variableCost": 0.01138,
             "totalCost": null
           }
         }

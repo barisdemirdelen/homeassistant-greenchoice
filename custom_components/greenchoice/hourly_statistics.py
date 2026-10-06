@@ -86,7 +86,14 @@ def _make_statistics(
             "Electricity feed-in compensation (hourly)",
             CURRENCY_EURO,
             None,
-            lambda item: -float(item.electricity.totals.feed_in_compensation or 0.0),
+            # variableCost carries the feed-in costs ("VariableFeedIn"), which
+            # reduce what the household actually receives for feeding in.
+            lambda item: (
+                -(
+                    float(item.electricity.totals.feed_in_compensation or 0.0)
+                    + float(item.electricity.totals.variable_cost or 0.0)
+                )
+            ),
         ),
     ]
 

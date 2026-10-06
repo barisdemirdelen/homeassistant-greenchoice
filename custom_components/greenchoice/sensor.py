@@ -30,7 +30,7 @@ from custom_components.greenchoice.ha_external_statistics.statistics_mixin impor
     StatisticsLoopMixin,
 )
 
-from .api import ApiError, GreenchoiceApi
+from .api import ApiError, GreenchoiceApi, NotFoundError
 from .auth import LoginError
 from .const import DEFAULT_NAME, DOMAIN
 from .hourly_statistics import _day_start_utc, _make_statistics
@@ -163,7 +163,13 @@ class GreenchoiceDataUpdateCoordinator(
         ) or DOMAIN
         electricity_stats, gas_stats = _make_statistics(self.config_entry, config_name)
 
-        consumptions = await self.api.get_consumptions(interval="Hour", start=day)
+        try:
+            consumptions = await self.api.get_consumptions(interval="Hour", start=day)
+        except NotFoundError:
+            # Retried on every update, so a warning here would repeat each time.
+            _LOGGER.debug("Hourly data for %s not found — will retry", day)
+            return None
+
         items = sorted(consumptions.periods, key=lambda x: x.consumed_on)
         electricity_items = [item for item in items if item.electricity]
         gas_items = [item for item in items if item.gas]
