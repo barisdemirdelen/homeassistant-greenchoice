@@ -1,0 +1,3931 @@
+{
+  "interval": "Hour",
+  "start": "2026-03-05",
+  "end": "2026-03-06",
+  "periods": [
+    {
+      "consumedOn": "2026-03-05T00:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.425,
+              "cost": 0.11356
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.425,
+            "consumptionCost": 0.11356,
+            "feedInQuantity": 0,
+            "feedInCompensation": 0.0,
+            "fixedCost": -0.00379,
+            "variableCost": 0.0,
+            "totalCost": 0.10977
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.0,
+            "consumptionCost": 0.0,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04199
+          }
+        }
+      ],
+      "totalCost": 0.15176
+    },
+    {
+      "consumedOn": "2026-03-05T01:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.416,
+              "cost": 0.11116
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.416,
+            "consumptionCost": 0.11116,
+            "feedInQuantity": 0,
+            "feedInCompensation": 0.0,
+            "fixedCost": -0.00379,
+            "variableCost": 0.0,
+            "totalCost": 0.10737
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.0,
+            "consumptionCost": 0.0,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04199
+          }
+        }
+      ],
+      "totalCost": 0.14936
+    },
+    {
+      "consumedOn": "2026-03-05T02:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.418,
+              "cost": 0.11169
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.418,
+            "consumptionCost": 0.11169,
+            "feedInQuantity": 0,
+            "feedInCompensation": 0.0,
+            "fixedCost": -0.00379,
+            "variableCost": 0.0,
+            "totalCost": 0.1079
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.006,
+              "cost": 0.00784
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.006,
+            "consumptionCost": 0.00784,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04983
+          }
+        }
+      ],
+      "totalCost": 0.15773
+    },
+    {
+      "consumedOn": "2026-03-05T03:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.412,
+              "cost": 0.11009
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.412,
+            "consumptionCost": 0.11009,
+            "feedInQuantity": 0,
+            "feedInCompensation": 0.0,
+            "fixedCost": -0.00379,
+            "variableCost": 0.0,
+            "totalCost": 0.1063
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.002,
+              "cost": 0.00261
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.002,
+            "consumptionCost": 0.00261,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.0446
+          }
+        }
+      ],
+      "totalCost": 0.1509
+    },
+    {
+      "consumedOn": "2026-03-05T04:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.417,
+              "cost": 0.11143
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.417,
+            "consumptionCost": 0.11143,
+            "feedInQuantity": 0,
+            "feedInCompensation": 0.0,
+            "fixedCost": -0.00379,
+            "variableCost": 0.0,
+            "totalCost": 0.10764
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.004,
+              "cost": 0.00523
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.004,
+            "consumptionCost": 0.00523,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04722
+          }
+        }
+      ],
+      "totalCost": 0.15486
+    },
+    {
+      "consumedOn": "2026-03-05T05:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.42,
+              "cost": 0.11223
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.42,
+            "consumptionCost": 0.11223,
+            "feedInQuantity": 0,
+            "feedInCompensation": 0.0,
+            "fixedCost": -0.00379,
+            "variableCost": 0.0,
+            "totalCost": 0.10844
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.07,
+              "cost": 0.09145
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.07,
+            "consumptionCost": 0.09145,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.13344
+          }
+        }
+      ],
+      "totalCost": 0.24188
+    },
+    {
+      "consumedOn": "2026-03-05T06:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.419,
+              "cost": 0.11196
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.419,
+            "consumptionCost": 0.11196,
+            "feedInQuantity": 0,
+            "feedInCompensation": 0.0,
+            "fixedCost": -0.00379,
+            "variableCost": 0.0,
+            "totalCost": 0.10817
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.06,
+              "cost": 0.07838
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.06,
+            "consumptionCost": 0.07838,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.12037
+          }
+        }
+      ],
+      "totalCost": 0.22854
+    },
+    {
+      "consumedOn": "2026-03-05T07:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.427,
+              "cost": 0.1141
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.427,
+            "consumptionCost": 0.1141,
+            "feedInQuantity": 0,
+            "feedInCompensation": 0.0,
+            "fixedCost": -0.00379,
+            "variableCost": 0.0,
+            "totalCost": 0.11031
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.022,
+              "cost": 0.02874
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.022,
+            "consumptionCost": 0.02874,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.07073
+          }
+        }
+      ],
+      "totalCost": 0.18104
+    },
+    {
+      "consumedOn": "2026-03-05T08:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.119,
+              "cost": 0.0318
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.007,
+              "cost": -0.00187
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.007,
+              "cost": 0.00098
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.119,
+            "consumptionCost": 0.0318,
+            "feedInQuantity": -0.007,
+            "feedInCompensation": -0.00187,
+            "fixedCost": -0.00379,
+            "variableCost": 0.00098,
+            "totalCost": 0.02712
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.057,
+              "cost": 0.07446
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.057,
+            "consumptionCost": 0.07446,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.11645
+          }
+        }
+      ],
+      "totalCost": 0.14357
+    },
+    {
+      "consumedOn": "2026-03-05T09:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.001,
+              "cost": 0.00027
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.004,
+              "cost": -0.00107
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.004,
+              "cost": 0.00056
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.001,
+            "consumptionCost": 0.00027,
+            "feedInQuantity": -0.004,
+            "feedInCompensation": -0.00107,
+            "fixedCost": -0.00379,
+            "variableCost": 0.00056,
+            "totalCost": -0.00403
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.011,
+              "cost": 0.01437
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.011,
+            "consumptionCost": 0.01437,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.05636
+          }
+        }
+      ],
+      "totalCost": 0.05233
+    },
+    {
+      "consumedOn": "2026-03-05T10:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.003,
+              "cost": 0.0008
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.002,
+              "cost": -0.00053
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.002,
+              "cost": 0.00028
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.003,
+            "consumptionCost": 0.0008,
+            "feedInQuantity": -0.002,
+            "feedInCompensation": -0.00053,
+            "fixedCost": -0.00379,
+            "variableCost": 0.00028,
+            "totalCost": -0.00324
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.004,
+              "cost": 0.00523
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.004,
+            "consumptionCost": 0.00523,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04722
+          }
+        }
+      ],
+      "totalCost": 0.04398
+    },
+    {
+      "consumedOn": "2026-03-05T11:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.006,
+              "cost": 0.0016
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.008,
+              "cost": -0.00214
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.008,
+              "cost": 0.00113
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.006,
+            "consumptionCost": 0.0016,
+            "feedInQuantity": -0.008,
+            "feedInCompensation": -0.00214,
+            "fixedCost": -0.00379,
+            "variableCost": 0.00113,
+            "totalCost": -0.0032
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.025,
+              "cost": 0.03266
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.025,
+            "consumptionCost": 0.03266,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.07465
+          }
+        }
+      ],
+      "totalCost": 0.07145
+    },
+    {
+      "consumedOn": "2026-03-05T12:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.003,
+              "cost": 0.0008
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.003,
+              "cost": -0.0008
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.003,
+              "cost": 0.00042
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.003,
+            "consumptionCost": 0.0008,
+            "feedInQuantity": -0.003,
+            "feedInCompensation": -0.0008,
+            "fixedCost": -0.00379,
+            "variableCost": 0.00042,
+            "totalCost": -0.00337
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.003,
+              "cost": 0.00392
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.003,
+            "consumptionCost": 0.00392,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04591
+          }
+        }
+      ],
+      "totalCost": 0.04254
+    },
+    {
+      "consumedOn": "2026-03-05T13:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.001,
+              "cost": 0.00027
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.314,
+              "cost": -0.0839
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.314,
+              "cost": 0.04418
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.001,
+            "consumptionCost": 0.00027,
+            "feedInQuantity": -0.314,
+            "feedInCompensation": -0.0839,
+            "fixedCost": -0.00379,
+            "variableCost": 0.04418,
+            "totalCost": -0.04324
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.0,
+            "consumptionCost": 0.0,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04199
+          }
+        }
+      ],
+      "totalCost": -0.00125
+    },
+    {
+      "consumedOn": "2026-03-05T14:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.916,
+              "cost": -0.24476
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.916,
+              "cost": 0.12888
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0,
+            "consumptionCost": 0.0,
+            "feedInQuantity": -0.916,
+            "feedInCompensation": -0.24476,
+            "fixedCost": -0.00379,
+            "variableCost": 0.12888,
+            "totalCost": -0.11967
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.002,
+              "cost": 0.00261
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.002,
+            "consumptionCost": 0.00261,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.0446
+          }
+        }
+      ],
+      "totalCost": -0.07507
+    },
+    {
+      "consumedOn": "2026-03-05T15:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.004,
+              "cost": 0.00107
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.335,
+              "cost": -0.08952
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.335,
+              "cost": 0.04713
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.004,
+            "consumptionCost": 0.00107,
+            "feedInQuantity": -0.335,
+            "feedInCompensation": -0.08952,
+            "fixedCost": -0.00379,
+            "variableCost": 0.04713,
+            "totalCost": -0.04511
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.004,
+              "cost": 0.00523
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.004,
+            "consumptionCost": 0.00523,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04722
+          }
+        }
+      ],
+      "totalCost": 0.00211
+    },
+    {
+      "consumedOn": "2026-03-05T16:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.007,
+              "cost": 0.00187
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.006,
+              "cost": -0.0016
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.006,
+              "cost": 0.00084
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.007,
+            "consumptionCost": 0.00187,
+            "feedInQuantity": -0.006,
+            "feedInCompensation": -0.0016,
+            "fixedCost": -0.00379,
+            "variableCost": 0.00084,
+            "totalCost": -0.00268
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.005,
+              "cost": 0.00653
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.005,
+            "consumptionCost": 0.00653,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04852
+          }
+        }
+      ],
+      "totalCost": 0.04584
+    },
+    {
+      "consumedOn": "2026-03-05T17:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.006,
+              "cost": 0.0016
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.008,
+              "cost": -0.00214
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.008,
+              "cost": 0.00113
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.006,
+            "consumptionCost": 0.0016,
+            "feedInQuantity": -0.008,
+            "feedInCompensation": -0.00214,
+            "fixedCost": -0.00379,
+            "variableCost": 0.00113,
+            "totalCost": -0.0032
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.0,
+            "consumptionCost": 0.0,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04199
+          }
+        }
+      ],
+      "totalCost": 0.03879
+    },
+    {
+      "consumedOn": "2026-03-05T18:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.001,
+              "cost": 0.00027
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.005,
+              "cost": -0.00134
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.005,
+              "cost": 0.0007
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.001,
+            "consumptionCost": 0.00027,
+            "feedInQuantity": -0.005,
+            "feedInCompensation": -0.00134,
+            "fixedCost": -0.00379,
+            "variableCost": 0.0007,
+            "totalCost": -0.00416
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.005,
+              "cost": 0.00653
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.005,
+            "consumptionCost": 0.00653,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04852
+          }
+        }
+      ],
+      "totalCost": 0.04436
+    },
+    {
+      "consumedOn": "2026-03-05T19:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.002,
+              "cost": 0.00053
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.002,
+              "cost": -0.00053
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.002,
+              "cost": 0.00028
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.002,
+            "consumptionCost": 0.00053,
+            "feedInQuantity": -0.002,
+            "feedInCompensation": -0.00053,
+            "fixedCost": -0.00379,
+            "variableCost": 0.00028,
+            "totalCost": -0.00351
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.005,
+              "cost": 0.00653
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.005,
+            "consumptionCost": 0.00653,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04852
+          }
+        }
+      ],
+      "totalCost": 0.04501
+    },
+    {
+      "consumedOn": "2026-03-05T20:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.003,
+              "cost": 0.0008
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.003,
+              "cost": -0.0008
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.003,
+              "cost": 0.00042
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.003,
+            "consumptionCost": 0.0008,
+            "feedInQuantity": -0.003,
+            "feedInCompensation": -0.0008,
+            "fixedCost": -0.00379,
+            "variableCost": 0.00042,
+            "totalCost": -0.00337
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.0,
+            "consumptionCost": 0.0,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04199
+          }
+        }
+      ],
+      "totalCost": 0.03862
+    },
+    {
+      "consumedOn": "2026-03-05T21:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.003,
+              "cost": -0.0008
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.003,
+              "cost": 0.00042
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0,
+            "consumptionCost": 0.0,
+            "feedInQuantity": -0.003,
+            "feedInCompensation": -0.0008,
+            "fixedCost": -0.00379,
+            "variableCost": 0.00042,
+            "totalCost": -0.00417
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.029,
+              "cost": 0.03789
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.029,
+            "consumptionCost": 0.03789,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.07988
+          }
+        }
+      ],
+      "totalCost": 0.07571
+    },
+    {
+      "consumedOn": "2026-03-05T22:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.002,
+              "cost": 0.00053
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.003,
+              "cost": -0.0008
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.003,
+              "cost": 0.00042
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.002,
+            "consumptionCost": 0.00053,
+            "feedInQuantity": -0.003,
+            "feedInCompensation": -0.0008,
+            "fixedCost": -0.00379,
+            "variableCost": 0.00042,
+            "totalCost": -0.00364
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.0,
+              "cost": 0.0
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.0,
+            "consumptionCost": 0.0,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04199
+          }
+        }
+      ],
+      "totalCost": 0.03835
+    },
+    {
+      "consumedOn": "2026-03-05T23:00:00+01:00",
+      "products": [
+        {
+          "type": "Electricity",
+          "unit": "Kwh",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Normal",
+              "timeSlotType": null,
+              "quantity": 0.051,
+              "cost": 0.01363
+            },
+            {
+              "kind": "FeedIn",
+              "registerType": "FeedInNormal",
+              "timeSlotType": null,
+              "quantity": -0.002,
+              "cost": -0.00053
+            },
+            {
+              "kind": "VariableFeedIn",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.002,
+              "cost": 0.00028
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01344
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.05457
+            },
+            {
+              "kind": "ReductionEnergyTax",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": -0.0718
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.051,
+            "consumptionCost": 0.01363,
+            "feedInQuantity": -0.002,
+            "feedInCompensation": -0.00053,
+            "fixedCost": -0.00379,
+            "variableCost": 0.00028,
+            "totalCost": 0.00959
+          }
+        },
+        {
+          "type": "Gas",
+          "unit": "M3",
+          "costs": [
+            {
+              "kind": "Consumption",
+              "registerType": "Gas",
+              "timeSlotType": null,
+              "quantity": 0.004,
+              "cost": 0.00523
+            },
+            {
+              "kind": "FixedDelivery",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.01155
+            },
+            {
+              "kind": "GridOperator",
+              "registerType": null,
+              "timeSlotType": null,
+              "quantity": 0.041666666666666664,
+              "cost": 0.03044
+            }
+          ],
+          "totals": {
+            "consumptionQuantity": 0.004,
+            "consumptionCost": 0.00523,
+            "feedInQuantity": null,
+            "feedInCompensation": null,
+            "fixedCost": 0.04199,
+            "variableCost": null,
+            "totalCost": 0.04722
+          }
+        }
+      ],
+      "totalCost": 0.05681
+    }
+  ],
+  "total": {
+    "products": [
+      {
+        "type": "Electricity",
+        "unit": "Kwh",
+        "costs": [
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.425,
+            "cost": 0.11356
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.416,
+            "cost": 0.11116
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.418,
+            "cost": 0.11169
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.412,
+            "cost": 0.11009
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.417,
+            "cost": 0.11143
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.42,
+            "cost": 0.11223
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.419,
+            "cost": 0.11196
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.427,
+            "cost": 0.1141
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.119,
+            "cost": 0.0318
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.007,
+            "cost": -0.00187
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.007,
+            "cost": 0.00098
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.001,
+            "cost": 0.00027
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.004,
+            "cost": -0.00107
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.004,
+            "cost": 0.00056
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.003,
+            "cost": 0.0008
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.002,
+            "cost": -0.00053
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.002,
+            "cost": 0.00028
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.006,
+            "cost": 0.0016
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.008,
+            "cost": -0.00214
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.008,
+            "cost": 0.00113
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.003,
+            "cost": 0.0008
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.003,
+            "cost": -0.0008
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.003,
+            "cost": 0.00042
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.001,
+            "cost": 0.00027
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.314,
+            "cost": -0.0839
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.314,
+            "cost": 0.04418
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.916,
+            "cost": -0.24476
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.916,
+            "cost": 0.12888
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.004,
+            "cost": 0.00107
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.335,
+            "cost": -0.08952
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.335,
+            "cost": 0.04713
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.007,
+            "cost": 0.00187
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.006,
+            "cost": -0.0016
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.006,
+            "cost": 0.00084
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.006,
+            "cost": 0.0016
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.008,
+            "cost": -0.00214
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.008,
+            "cost": 0.00113
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.001,
+            "cost": 0.00027
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.005,
+            "cost": -0.00134
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.005,
+            "cost": 0.0007
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.002,
+            "cost": 0.00053
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.002,
+            "cost": -0.00053
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.002,
+            "cost": 0.00028
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.003,
+            "cost": 0.0008
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.003,
+            "cost": -0.0008
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.003,
+            "cost": 0.00042
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.003,
+            "cost": -0.0008
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.003,
+            "cost": 0.00042
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.002,
+            "cost": 0.00053
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.003,
+            "cost": -0.0008
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.003,
+            "cost": 0.00042
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Normal",
+            "timeSlotType": null,
+            "quantity": 0.051,
+            "cost": 0.01363
+          },
+          {
+            "kind": "FeedIn",
+            "registerType": "FeedInNormal",
+            "timeSlotType": null,
+            "quantity": -0.002,
+            "cost": -0.00053
+          },
+          {
+            "kind": "VariableFeedIn",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.002,
+            "cost": 0.00028
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01344
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.05457
+          },
+          {
+            "kind": "ReductionEnergyTax",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": -0.0718
+          }
+        ],
+        "totals": {
+          "consumptionQuantity": 3.563,
+          "consumptionCost": 0.95206,
+          "feedInQuantity": -1.621,
+          "feedInCompensation": -0.43313,
+          "fixedCost": -0.09096,
+          "variableCost": 0.22805,
+          "totalCost": 0.65602
+        }
+      },
+      {
+        "type": "Gas",
+        "unit": "M3",
+        "costs": [
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.006,
+            "cost": 0.00784
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.002,
+            "cost": 0.00261
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.004,
+            "cost": 0.00523
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.07,
+            "cost": 0.09145
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.06,
+            "cost": 0.07838
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.022,
+            "cost": 0.02874
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.057,
+            "cost": 0.07446
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.011,
+            "cost": 0.01437
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.004,
+            "cost": 0.00523
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.025,
+            "cost": 0.03266
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.003,
+            "cost": 0.00392
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.002,
+            "cost": 0.00261
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.004,
+            "cost": 0.00523
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.005,
+            "cost": 0.00653
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.005,
+            "cost": 0.00653
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.005,
+            "cost": 0.00653
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.029,
+            "cost": 0.03789
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.0,
+            "cost": 0.0
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          },
+          {
+            "kind": "Consumption",
+            "registerType": "Gas",
+            "timeSlotType": null,
+            "quantity": 0.004,
+            "cost": 0.00523
+          },
+          {
+            "kind": "FixedDelivery",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.01155
+          },
+          {
+            "kind": "GridOperator",
+            "registerType": null,
+            "timeSlotType": null,
+            "quantity": 0.041666666666666664,
+            "cost": 0.03044
+          }
+        ],
+        "totals": {
+          "consumptionQuantity": 0.318,
+          "consumptionCost": 0.41544,
+          "feedInQuantity": null,
+          "feedInCompensation": null,
+          "fixedCost": 1.00776,
+          "variableCost": null,
+          "totalCost": 1.4232
+        }
+      }
+    ]
+  },
+  "totalCost": 2.07922,
+  "timeSlots": null
+}

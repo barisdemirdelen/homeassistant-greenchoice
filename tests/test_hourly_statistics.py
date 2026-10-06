@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import logging
 from datetime import UTC, date, datetime
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -176,6 +177,36 @@ async def test_import_empty_api_response(
 
 
 @pytest.mark.asyncio
+async def test_import_404_day_is_skipped_without_warning(
+    hass,
+    mock_api,
+    mock_import_statistics,
+    patch_today,
+    patch_recorder_days,
+    entry_factory,
+    caplog,
+):
+    """A day the API 404s is retried later, without a warning on every update."""
+    hass.config.components.add("recorder")
+    entry = entry_factory("abc123_404")
+    mock_api(
+        consumptions={
+            "2026-03-26": make_consumptions_payload("2026-03-26", 2.0),
+            "2026-03-27": None,
+        }
+    )
+
+    with patch_today(_TODAY), patch_recorder_days({}):
+        await _run_update(hass, entry)
+
+    assert not [r for r in caplog.records if r.levelno >= logging.WARNING]
+    # consumption + feed-in + elec_cost + feed_in_comp, all from 2026-03-26 only
+    assert mock_import_statistics.call_count == 4
+    consumption_stats = mock_import_statistics.call_args_list[0].args[2]
+    assert stat_sum(consumption_stats[-1]) == pytest.approx(2.0)
+
+
+@pytest.mark.asyncio
 async def test_import_with_gas(
     hass,
     mock_api,
@@ -232,6 +263,34 @@ async def test_import_feed_in_is_positive(
 
     feed_in_stats = mock_import_statistics.call_args_list[1].args[2]
     assert stat_sum(feed_in_stats[0]) == pytest.approx(3.0)
+
+
+@pytest.mark.asyncio
+async def test_import_feed_in_compensation_is_net_of_feed_in_costs(
+    hass,
+    mock_api,
+    consumptions_hour_live_response,
+    mock_import_statistics,
+    patch_today,
+    patch_recorder_days,
+    entry_factory,
+):
+    """Feed-in costs (terugleverkosten) reduce the compensation actually received.
+
+    On 2026-03-05 Greenchoice paid 0.43313 for 1.621 kWh fed in and charged
+    0.22805 in feed-in costs, so the household received 0.20508.
+    """
+    hass.config.components.add("recorder")
+    entry = entry_factory("abc123_feed_in_costs")
+    mock_api(consumptions={"2026-03-05": consumptions_hour_live_response})
+
+    with patch_today(date(2026, 3, 6)), patch_recorder_days({}):
+        await _run_update(hass, entry)
+
+    feed_in_stats = mock_import_statistics.call_args_list[1].args[2]
+    feed_in_comp_stats = mock_import_statistics.call_args_list[3].args[2]
+    assert stat_sum(feed_in_stats[-1]) == pytest.approx(1.621)
+    assert stat_sum(feed_in_comp_stats[-1]) == pytest.approx(0.20508)
 
 
 @pytest.mark.asyncio

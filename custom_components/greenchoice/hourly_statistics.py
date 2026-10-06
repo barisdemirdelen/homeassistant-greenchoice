@@ -14,7 +14,7 @@ from custom_components.greenchoice.ha_external_statistics.external_statistic imp
 )
 
 from .const import DOMAIN
-from .model import ConsumptionCostsItem
+from .model import ConsumptionPeriod
 
 
 def _day_start_utc(day: date) -> datetime:
@@ -34,8 +34,8 @@ def _make_statistics(
     entry: ConfigEntry,
     config_name: str,
 ) -> tuple[
-    list[ExternalStatistic[ConsumptionCostsItem]],
-    list[ExternalStatistic[ConsumptionCostsItem]],
+    list[ExternalStatistic[ConsumptionPeriod]],
+    list[ExternalStatistic[ConsumptionPeriod]],
 ]:
     """Return ``(electricity_stats, gas_stats)`` ExternalStatistic lists.
 
@@ -62,14 +62,14 @@ def _make_statistics(
             "Electricity consumption (hourly)",
             UnitOfEnergy.KILO_WATT_HOUR,
             "energy",
-            lambda item: float(item.electricity.total_delivery_consumption or 0.0),
+            lambda item: float(item.electricity.totals.consumption_quantity or 0.0),
         ),
         _stat(
             "electricity_feed_in",
             "Electricity feed-in (hourly)",
             UnitOfEnergy.KILO_WATT_HOUR,
             "energy",
-            lambda item: -float(item.electricity.total_feed_in_consumption or 0.0),
+            lambda item: -float(item.electricity.totals.feed_in_quantity or 0.0),
         ),
         _stat(
             "electricity_consumption_cost",
@@ -77,8 +77,8 @@ def _make_statistics(
             CURRENCY_EURO,
             None,
             lambda item: (
-                float(item.electricity.total_delivery_costs or 0.0)
-                + float(item.electricity.total_fixed_costs or 0.0)
+                float(item.electricity.totals.consumption_cost or 0.0)
+                + float(item.electricity.totals.fixed_cost or 0.0)
             ),
         ),
         _stat(
@@ -86,10 +86,12 @@ def _make_statistics(
             "Electricity feed-in compensation (hourly)",
             CURRENCY_EURO,
             None,
+            # variableCost carries the feed-in costs ("VariableFeedIn"), which
+            # reduce what the household actually receives for feeding in.
             lambda item: (
                 -(
-                    float(item.electricity.total_feed_in_compensation or 0.0)
-                    + float(item.electricity.total_feed_in_costs or 0.0)
+                    float(item.electricity.totals.feed_in_compensation or 0.0)
+                    + float(item.electricity.totals.variable_cost or 0.0)
                 )
             ),
         ),
@@ -101,7 +103,7 @@ def _make_statistics(
             "Gas consumption (hourly)",
             UnitOfVolume.CUBIC_METERS,
             "volume",
-            lambda item: float(item.gas.total_delivery_consumption or 0.0),
+            lambda item: float(item.gas.totals.consumption_quantity or 0.0),
         ),
         _stat(
             "gas_consumption_cost",
@@ -109,8 +111,8 @@ def _make_statistics(
             CURRENCY_EURO,
             None,
             lambda item: (
-                float(item.gas.total_delivery_costs or 0.0)
-                + float(item.gas.total_fixed_costs or 0.0)
+                float(item.gas.totals.consumption_cost or 0.0)
+                + float(item.gas.totals.fixed_cost or 0.0)
             ),
         ),
     ]

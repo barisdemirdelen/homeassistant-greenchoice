@@ -254,6 +254,13 @@ def consumptions_hour_with_gas_response(data_folder):
 
 
 @pytest.fixture
+def consumptions_hour_live_response(data_folder):
+    """A real v3 hourly response (2026-03-05) with feed-in and feed-in costs."""
+    with data_folder.joinpath("test_consumptions_hour_live.json").open() as f:
+        return json.load(f)
+
+
+@pytest.fixture
 def mock_api(
     mocker,
     meters_response,
@@ -347,6 +354,7 @@ def mock_api(
             # consumptions is a dict of {date_str: payload}, e.g. {"2026-03-27": {...}}.
             # Any date not in the dict automatically returns an empty consumptions
             # response, so tests only need to list dates that should carry data.
+            # A None payload answers that date with a 404.
             if consumptions is not None:
                 _specific = consumptions
 
@@ -355,20 +363,22 @@ def mock_api(
                     start = params.get("start", ["2000-01-01"])[0]
                     end = params.get("end", ["2000-01-02"])[0]
                     if start in _specific:
+                        if _specific[start] is None:
+                            return CallbackResult(status=404)
                         return CallbackResult(payload=_specific[start])
                     return CallbackResult(
                         payload={
                             "interval": "Hour",
-                            "start": f"{start}T00:00:00",
-                            "end": f"{end}T00:00:00",
-                            "consumptionCosts": [],
+                            "start": start,
+                            "end": end,
+                            "periods": [],
                         }
                     )
 
                 mocked.get(
                     re.compile(
                         re.escape(BASE_URL)
-                        + r"/api/v2/customers/\d+/agreements/\d+/consumptions"
+                        + r"/api/v3/customers/\d+/agreements/\d+/consumptions"
                     ),
                     callback=_consumptions_cb,
                     repeat=True,
@@ -488,25 +498,29 @@ def make_consumptions_payload(
 ) -> dict:
     """Build a single-point hourly consumptions API response for the given date."""
     end_str = (date.fromisoformat(date_str) + timedelta(days=1)).isoformat()
-    item: dict = {
-        "consumedOn": f"{date_str}T00:00:00",
-        "electricity": {
-            "totalDeliveryConsumption": total_delivery,
-            "totalFeedInConsumption": total_feed_in,
-            "hasConsumption": True,
-        },
-        "hasConsumption": True,
-    }
-    if gas_delivery is not None:
-        item["gas"] = {
-            "totalDeliveryConsumption": gas_delivery,
-            "hasConsumption": True,
+    products: list[dict] = [
+        {
+            "type": "Electricity",
+            "unit": "Kwh",
+            "totals": {
+                "consumptionQuantity": total_delivery,
+                "feedInQuantity": total_feed_in,
+            },
         }
+    ]
+    if gas_delivery is not None:
+        products.append(
+            {
+                "type": "Gas",
+                "unit": "M3",
+                "totals": {"consumptionQuantity": gas_delivery},
+            }
+        )
     return {
         "interval": "Hour",
-        "start": f"{date_str}T00:00:00",
-        "end": f"{end_str}T00:00:00",
-        "consumptionCosts": [item],
+        "start": date_str,
+        "end": end_str,
+        "periods": [{"consumedOn": f"{date_str}T00:00:00", "products": products}],
     }
 
 
