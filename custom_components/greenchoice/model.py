@@ -342,7 +342,21 @@ class Reading(CamelCaseModel):
     gas: float | None = None
 
     @property
-    def is_gas(self) -> bool:
+    def has_electricity(self) -> bool:
+        # A reading can carry electricity and gas together, so neither
+        # implies the absence of the other.
+        return any(
+            value is not None
+            for value in (
+                self.normal_consumption,
+                self.off_peak_consumption,
+                self.normal_feed_in,
+                self.off_peak_feed_in,
+            )
+        )
+
+    @property
+    def has_gas(self) -> bool:
         return self.gas is not None
 
 
@@ -388,7 +402,7 @@ class MeterReadings(CamelCaseModel):
             reading
             for month in self.months
             for reading in month.readings
-            if reading.is_gas == is_gas
+            if (reading.has_gas if is_gas else reading.has_electricity)
         ]
         yield from sorted(readings, key=lambda r: r.reading_date, reverse=True)
 
@@ -413,76 +427,61 @@ class SensorUpdate(BaseModel):
     gas_price: float | None = None
 
 
-class ConsumptionCostsElectricity(CamelCaseModel):
-    """Electricity details inside /consumptions response."""
+class ConsumptionTotals(CamelCaseModel):
+    """Per-product totals inside a /consumptions period."""
 
-    delivery_low_consumption: float | None = None
-    delivery_low_costs: float | None = None
-    delivery_normal_consumption: float | None = None
-    delivery_normal_costs: float | None = None
-    feed_in_low_consumption: float | None = None
-    feed_in_low_compensation: float | None = None
-    feed_in_normal_consumption: float | None = None
-    feed_in_normal_compensation: float | None = None
-    variable_feed_in_costs: float | None = None
-    fixed_delivery_costs: float | None = None
-    grid_operator_costs: float | None = None
-    reduction_energy_tax: float | None = None
-
-    total_delivery_consumption: float | None = None
-    total_delivery_costs: float | None = None
-    total_feed_in_consumption: float | None = None
-    total_feed_in_compensation: float | None = None
-    total_feed_in_costs: float | None = None
-    total_fixed_costs: float | None = None
-    has_consumption: bool | None = None
+    consumption_quantity: float | None = None
+    consumption_cost: float | None = None
+    feed_in_quantity: float | None = None
+    feed_in_compensation: float | None = None
+    fixed_cost: float | None = None
+    variable_cost: float | None = None
+    total_cost: float | None = None
 
 
-class ConsumptionCostsGas(CamelCaseModel):
-    """Gas details inside /consumptions response."""
+class ConsumptionProduct(CamelCaseModel):
+    """One product (electricity or gas) inside a /consumptions period.
 
-    delivery_consumption: float | None = None
-    delivery_costs: float | None = None
-    fixed_delivery_costs: float | None = None
-    grid_operator_costs: float | None = None
+    The per-kind ``costs`` breakdown is ignored: the totals carry everything
+    the statistics need.
+    """
 
-    total_delivery_consumption: float | None = None
-    total_delivery_costs: float | None = None
-    total_fixed_costs: float | None = None
-    has_consumption: bool | None = None
+    type: str
+    unit: str | None = None
+    totals: ConsumptionTotals = ConsumptionTotals()
 
 
-class ConsumptionCostsNet(CamelCaseModel):
-    """Net electricity/cost summary inside /consumptions response."""
-
-    net_electricity_consumption: float | None = None
-    net_electricity_costs: float | None = None
-    net_costs: float | None = None
-
-
-class ConsumptionCostsItem(CamelCaseModel):
-    """An hourly consumptionCosts item."""
+class ConsumptionPeriod(CamelCaseModel):
+    """One interval (hour or day) of a /consumptions response."""
 
     consumed_on: datetime
-    electricity: ConsumptionCostsElectricity | None = None
-    gas: ConsumptionCostsGas | None = None
-    net: ConsumptionCostsNet | None = None
-    has_consumption: bool | None = None
+    products: list[ConsumptionProduct] = []
+    total_cost: float | None = None
+
+    def _product(self, product_type: str) -> ConsumptionProduct | None:
+        return next((p for p in self.products if p.type == product_type), None)
+
+    @property
+    def electricity(self) -> ConsumptionProduct | None:
+        return self._product("Electricity")
+
+    @property
+    def gas(self) -> ConsumptionProduct | None:
+        return self._product("Gas")
 
 
 class Consumptions(CamelCaseModel):
-    """/api/v2/customers/{customer_number}/agreements/{agreement_id}/consumptions"""
+    """/api/v3/customers/{customer_number}/agreements/{agreement_id}/consumptions"""
 
     interval: str
-    start: datetime
-    end: datetime
-    consumption_costs: list[ConsumptionCostsItem] = []
-    total: ConsumptionCostsItem | None = None
-    has_consumption: bool | None = None
+    start: date
+    end: date
+    periods: list[ConsumptionPeriod] = []
+    total_cost: float | None = None
 
     class Request(BaseModel):
         request_url: str = (
-            "/api/v2/customers/{customer_number}/agreements/{agreement_id}/consumptions"
+            "/api/v3/customers/{customer_number}/agreements/{agreement_id}/consumptions"
         )
 
         customer_number: int

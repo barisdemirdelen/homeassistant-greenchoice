@@ -3,8 +3,8 @@ import logging
 
 import pytest
 
-from custom_components.greenchoice.api import GreenchoiceApi
-from custom_components.greenchoice.model import Rates
+from custom_components.greenchoice.api import GreenchoiceApi, NotFoundError
+from custom_components.greenchoice.model import MeterReadings, Rates
 
 
 @pytest.mark.asyncio
@@ -267,3 +267,52 @@ async def test_unparseable_period_still_reports_rates(mock_api, rate_details_res
     assert rates.gas is not None
     assert rates.gas.delivery is not None
     assert rates.gas.delivery.all_in_rate_including_vat == 0.8
+
+
+@pytest.mark.asyncio
+async def test_consumptions_404_raises_not_found(mock_api):
+    """A 404 is reported to the caller, not dressed up as an empty day.
+
+    Days without data come back as 200 with empty products; collapsing a 404
+    into that hid the v2 endpoint's retirement behind validation errors.
+    """
+    mock_api(consumptions={"2026-09-29": None})
+
+    async with GreenchoiceApi(
+        "fake_user", "fake_password", customer_number=2222, agreement_id=1111
+    ) as greenchoice_api:
+        with pytest.raises(NotFoundError):
+            await greenchoice_api.get_consumptions(
+                interval="Hour", start=datetime.date(2026, 9, 29)
+            )
+
+
+def test_combined_meter_readings_yield_electricity_and_gas():
+    """Greenchoice now sends electricity and gas together in one reading."""
+    readings = MeterReadings.model_validate(
+        {
+            "year": 2026,
+            "hasElectricity": True,
+            "hasGas": True,
+            "months": [
+                {
+                    "month": 9,
+                    "readings": [
+                        {
+                            "readingDate": "2026-09-30T00:00:00",
+                            "normalConsumption": 12365,
+                            "offPeakConsumption": 11542,
+                            "normalFeedIn": 0,
+                            "offPeakFeedIn": 0,
+                            "gas": 2612,
+                        }
+                    ],
+                }
+            ],
+        }
+    )
+
+    assert readings.last_electricity_reading is not None
+    assert readings.last_electricity_reading.normal_consumption == 12365
+    assert readings.last_gas_reading is not None
+    assert readings.last_gas_reading.gas == 2612
