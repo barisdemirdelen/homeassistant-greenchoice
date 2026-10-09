@@ -279,6 +279,11 @@ class GreenchoiceApi:
         electricity_reading: Reading | None = meter_readings.last_electricity_reading
         gas_reading: Reading | None = meter_readings.last_gas_reading
 
+        # Which fuels the agreement has, straight from the response; the
+        # sensor platform creates its entities on it.
+        result.has_electricity = meter_readings.has_electricity
+        result.has_gas = meter_readings.has_gas
+
         if electricity_reading:
             result.electricity_consumption_off_peak = (
                 electricity_reading.off_peak_consumption

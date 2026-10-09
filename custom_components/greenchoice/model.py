@@ -426,6 +426,13 @@ class SensorUpdate(BaseModel):
     gas_reading_date: datetime | None = None
     gas_price: float | None = None
 
+    # Which fuels the agreement actually supplies, as the meter readings
+    # response reports them. ``None`` means the response has not said yet,
+    # and every sensor is created: a missing flag must never silently
+    # remove an entity.
+    has_electricity: bool | None = None
+    has_gas: bool | None = None
+
 
 class ConsumptionTotals(CamelCaseModel):
     """Per-product totals inside a /consumptions period."""
