@@ -7,6 +7,14 @@ from datetime import UTC, date, datetime, timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from homeassistant.components.recorder.statistics import (
+    StatisticData,
+    async_add_external_statistics,
+    statistics_during_period,
+)
+from pytest_homeassistant_custom_component.components.recorder.common import (
+    async_wait_recording_done,
+)
 
 from custom_components.greenchoice.ha_external_statistics import (
     external_statistic as _ext_stat_mod,
@@ -23,7 +31,6 @@ from custom_components.greenchoice.ha_external_statistics.recorder import (
 )
 
 _GET_INSTANCE_PATH = f"{_recorder_mod.__name__}.get_instance"
-_SDP_PATH = f"{_recorder_mod.__name__}.statistics_during_period"
 _ADD_STAT_PATH = f"{_ext_stat_mod.__name__}.async_add_external_statistics"
 
 
@@ -78,8 +85,7 @@ class TestAsyncGetLastSum:
 
     @pytest.mark.asyncio
     async def test_returns_last_sum(self):
-        entries = [{"sum": 10.0}, {"sum": 20.0}, {"sum": 30.0}]
-        hass, recorder = self._mock_hass({"dom:stat": entries})
+        hass, recorder = self._mock_hass({"change": 30.0})
 
         with patch(_GET_INSTANCE_PATH, return_value=recorder):
             result = await async_get_last_sum(hass, "dom:stat", _DAY_START)
@@ -97,50 +103,12 @@ class TestAsyncGetLastSum:
 
     @pytest.mark.asyncio
     async def test_returns_zero_when_sum_is_none(self):
-        hass, recorder = self._mock_hass({"dom:stat": [{"sum": None}]})
+        hass, recorder = self._mock_hass({"change": None})
 
         with patch(_GET_INSTANCE_PATH, return_value=recorder):
             result = await async_get_last_sum(hass, "dom:stat", _DAY_START)
 
         assert result == pytest.approx(0.0)
-
-    @pytest.mark.asyncio
-    async def test_query_window_uses_lookback_hours(self):
-        hass = MagicMock()
-        before_dt = datetime(2024, 3, 15, 0, 0, tzinfo=UTC)
-        recorder_instance = MagicMock()
-        # Invoke the lambda so statistics_during_period is actually called
-        recorder_instance.async_add_executor_job = AsyncMock(
-            side_effect=lambda fn: fn()
-        )
-
-        with (
-            patch(_GET_INSTANCE_PATH, return_value=recorder_instance),
-            patch(_SDP_PATH) as mock_sdp,
-        ):
-            mock_sdp.return_value = {}
-            await async_get_last_sum(hass, "dom:stat", before_dt, lookback_hours=10)
-
-        assert mock_sdp.call_args[0][1] == before_dt - timedelta(hours=10)
-        assert mock_sdp.call_args[0][2] == before_dt
-
-    @pytest.mark.asyncio
-    async def test_default_lookback_is_25_hours(self):
-        hass = MagicMock()
-        before_dt = datetime(2024, 3, 15, 0, 0, tzinfo=UTC)
-        recorder_instance = MagicMock()
-        recorder_instance.async_add_executor_job = AsyncMock(
-            side_effect=lambda fn: fn()
-        )
-
-        with (
-            patch(_GET_INSTANCE_PATH, return_value=recorder_instance),
-            patch(_SDP_PATH) as mock_sdp,
-        ):
-            mock_sdp.return_value = {}
-            await async_get_last_sum(hass, "dom:stat", before_dt)
-
-        assert mock_sdp.call_args[0][1] == before_dt - timedelta(hours=25)
 
 
 # ---------------------------------------------------------------------------
@@ -171,7 +139,7 @@ class TestAsyncInjectDay:
 
         recorder_instance = MagicMock()
         recorder_instance.async_add_executor_job = AsyncMock(
-            return_value={"dom:a": [{"sum": 50.0}]}
+            return_value={"change": 50.0}
         )
 
         with (
@@ -228,7 +196,7 @@ class TestAsyncInjectDay:
         recorder_instance = MagicMock()
         # Only "dom:b" should be queried
         recorder_instance.async_add_executor_job = AsyncMock(
-            return_value={"dom:b": [{"sum": 7.0}]}
+            return_value={"change": 7.0}
         )
 
         with (
@@ -247,3 +215,114 @@ class TestAsyncInjectDay:
         assert result["dom:b"] == pytest.approx(9.0)
         # DB was queried exactly once (for dom:b)
         assert recorder_instance.async_add_executor_job.call_count == 1
+
+
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    ("rows", "expected"),
+    [
+        ([(-720, 100.0), (-168, 120.0)], 120.0),
+        ([(-1, 40.0)], 40.0),
+        ([], 0.0),
+        ([(-720, 100.0), (-168, 0.0)], 0.0),
+        ([(-168, -20.0)], -20.0),
+        ([(-1, 40.0), (0, 900.0), (1, 1000.0)], 40.0),
+        ([(0, 900.0), (1, 1000.0)], 0.0),
+    ],
+    ids=[
+        "long-gap",
+        "adjacent",
+        "empty",
+        "zero",
+        "negative",
+        "exclusive-bound",
+        "future-only",
+    ],
+)
+async def test_seed_from_recorded_history(hass, rows, expected):
+    """The latest sum strictly before the import survives any gap."""
+    stat = _make_stat()
+    if rows:
+        async_add_external_statistics(
+            hass,
+            stat.metadata,
+            [
+                StatisticData(start=_DAY_START + timedelta(hours=hours), sum=value)
+                for hours, value in rows
+            ],
+        )
+        await async_wait_recording_done(hass)
+
+    assert await async_get_last_sum(hass, stat.statistic_id, _DAY_START) == expected
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_historical_reimports_do_not_double_count(hass):
+    """Reimported hours use their predecessor, even with later data present."""
+    stat = _make_stat()
+    async_add_external_statistics(
+        hass,
+        stat.metadata,
+        [
+            StatisticData(start=_DAY_START - timedelta(days=30), sum=100.0),
+            StatisticData(start=_DAY_START + timedelta(days=2), sum=900.0),
+        ],
+    )
+    await async_wait_recording_done(hass)
+
+    for _ in range(2):
+        sums = await async_inject_day(
+            hass, [(stat, [Entry(0, 2.0), Entry(1, 3.0)])], _DATE, _DAY_START
+        )
+        assert sums == {stat.statistic_id: 105.0}
+        await async_wait_recording_done(hass)
+        sums = await async_inject_day(
+            hass,
+            [(stat, [Entry(0, 4.0)])],
+            _DATE + timedelta(days=1),
+            _DAY_START + timedelta(days=1),
+            sums,
+        )
+        assert sums == {stat.statistic_id: 109.0}
+        await async_wait_recording_done(hass)
+
+    recorded = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        _DAY_START,
+        _DAY_START + timedelta(days=3),
+        {stat.statistic_id},
+        "hour",
+        None,
+        {"sum"},
+    )
+    assert [row["sum"] for row in recorded[stat.statistic_id]] == [
+        102.0,
+        105.0,
+        109.0,
+        900.0,
+    ]
+
+
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    "offset",
+    [timedelta(minutes=30), timedelta(seconds=1), timedelta(microseconds=1)],
+)
+async def test_seed_before_partial_hour_boundary(hass, offset):
+    """An hourly row starting before the boundary must still be included."""
+    stat = _make_stat()
+    async_add_external_statistics(
+        hass,
+        stat.metadata,
+        [
+            StatisticData(start=_DAY_START - timedelta(hours=1), sum=30.0),
+            StatisticData(start=_DAY_START, sum=40.0),
+            StatisticData(start=_DAY_START + timedelta(hours=1), sum=50.0),
+        ],
+    )
+    await async_wait_recording_done(hass)
+
+    assert (
+        await async_get_last_sum(hass, stat.statistic_id, _DAY_START + offset) == 40.0
+    )

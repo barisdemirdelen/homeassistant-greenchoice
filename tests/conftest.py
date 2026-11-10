@@ -25,7 +25,7 @@ from custom_components.greenchoice.ha_external_statistics import (
 
 _PATCH_ADD_STAT = f"{_ext_stat_mod.__name__}.async_add_external_statistics"
 _PATCH_GET_INSTANCE = f"{_recorder_mod.__name__}.get_instance"
-_PATCH_SDP = f"{_recorder_mod.__name__}.statistics_during_period"
+_PATCH_STATISTIC = f"{_recorder_mod.__name__}.statistic_during_period"
 
 # source https://github.com/pnuckowski/aioresponses/pull/288
 # todo Delete when aioresponses updates its compatibility with aiohttp
@@ -420,37 +420,28 @@ def patch_today():
 def patch_recorder_days():
     """Factory: returns a context manager that stubs the HA recorder statistics API.
 
-    Patches ``get_instance`` and ``statistics_during_period`` in recorder.py —
+    Patches ``get_instance`` and ``statistic_during_period`` in recorder.py —
     the recorder boundary our code crosses — so tests remain independent of
     internal HA implementation.
 
     Pass a ``{date: sum}`` dict to represent end-of-day cumulative sums already
-    present in the recorder.  When ``async_get_last_sum`` queries a 25-hour window
-    the fixture returns the latest entry whose 23:00 UTC timestamp falls inside
-    the queried range.
+    present in the recorder. The fixture returns the latest cumulative sum
+    whose 23:00 UTC timestamp precedes the import boundary.
     """
 
     def _patch(day_sums: dict[date, float] | None = None):
         if not day_sums:
             day_sums = {}
 
-        def _fake_statistics_during_period(
-            _hass, _start, _end, statistic_ids, _period, _units, _types
+        def _fake_statistic_during_period(
+            _hass, _start, _end, _statistic_id, _types, _units
         ):
-            if not statistic_ids:
-                return {}
-            sid = next(iter(statistic_ids))
-            rows = [
-                {
-                    "start": datetime.datetime.combine(d, time(23, 0), tzinfo=UTC),
-                    "sum": s,
-                }
+            sums = [
+                s
                 for d, s in sorted(day_sums.items())
-                if _start
-                <= datetime.datetime.combine(d, time(23, 0), tzinfo=UTC)
-                < _end
+                if datetime.datetime.combine(d, time(23, 0), tzinfo=UTC) < _end
             ]
-            return {sid: rows} if rows else {}
+            return {"change": sums[-1] if sums else None}
 
         mock_recorder_instance = Mock()
         mock_recorder_instance.async_add_executor_job = AsyncMock(
@@ -461,7 +452,7 @@ def patch_recorder_days():
         def _ctx():
             with (
                 patch(_PATCH_GET_INSTANCE, return_value=mock_recorder_instance),
-                patch(_PATCH_SDP, side_effect=_fake_statistics_during_period),
+                patch(_PATCH_STATISTIC, side_effect=_fake_statistic_during_period),
             ):
                 yield
 
