@@ -15,6 +15,7 @@ from homeassistant.const import (
     UnitOfVolume,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -229,6 +230,20 @@ class GreenchoiceSensor(
         self._attr_state_class = SensorStateClass.TOTAL
         self._attr_device_class = sensor_info.device_class
         self._attr_native_unit_of_measurement = sensor_info.unit
+
+        # Group the sensors of one agreement under a single device. Without
+        # this the entities are never attached to a device, so they show up
+        # ungrouped in the entity list and the integration has no device page.
+        # One config entry is one agreement, so entry_id identifies the device.
+        entry = coordinator.config_entry
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=entry.title,
+            manufacturer="Greenchoice",
+            model="Energy agreement",
+            entry_type=DeviceEntryType.SERVICE,
+            configuration_url="https://mijn.greenchoice.nl/",
+        )
 
     @property
     def native_value(self):
