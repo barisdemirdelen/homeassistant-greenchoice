@@ -86,6 +86,31 @@ sensor_infos = {
 }
 
 
+def supplied_sensors(data: SensorUpdate | None) -> list[str]:
+    """The sensor names the agreement actually supplies.
+
+    The meter readings response states which fuels the connection has, so an
+    electricity-only agreement is not handed a gas sensor that can never have
+    a value. Either flag being unset keeps every sensor, so a response that
+    has not answered yet cannot silently remove an entity.
+
+    The choice is made once, at setup: a contract that later gains or loses a
+    fuel is picked up on the next reload.
+    """
+    if data is None:
+        return list(sensor_infos)
+
+    supplied = {
+        "electricity": data.has_electricity is not False,
+        "gas": data.has_gas is not False,
+    }
+    return [
+        name
+        for name in sensor_infos
+        if supplied["gas" if name.startswith("gas_") else "electricity"]
+    ]
+
+
 async def async_setup_entry(
     hass: HomeAssistant, entry: ConfigEntry, async_add_entities: AddEntitiesCallback
 ) -> None:
@@ -93,7 +118,8 @@ async def async_setup_entry(
     coordinator = hass.data[DOMAIN][entry.entry_id]
 
     sensors: list[SensorEntity] = [
-        GreenchoiceSensor(coordinator, sensor_name) for sensor_name in sensor_infos
+        GreenchoiceSensor(coordinator, sensor_name)
+        for sensor_name in supplied_sensors(coordinator.data)
     ]
     async_add_entities(sensors)
 
