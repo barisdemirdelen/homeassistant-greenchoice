@@ -1,5 +1,5 @@
 import logging
-from datetime import UTC, date, datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import TypeVar
 from zoneinfo import ZoneInfo
 
@@ -196,7 +196,7 @@ class GreenchoiceApi:
             MeterReadings.Request(
                 customer_number=self.customer_number,
                 agreement_id=self.agreement_id,
-                year=datetime.now(UTC).year,
+                year=datetime.now(SUPPLIER_TZ).year,
             ).build_url(),
         )
         return MeterReadings.model_validate(meter_json)
