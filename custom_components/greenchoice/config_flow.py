@@ -1,9 +1,13 @@
 """Config flow for Greenchoice integration."""
 
 import logging
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
-import voluptuous as vol
+if TYPE_CHECKING:
+    import probatio as vol
+else:
+    # Home Assistant 2026.9+ aliases voluptuous to probatio; older releases run voluptuous.
+    import voluptuous as vol
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD

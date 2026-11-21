@@ -10,7 +10,7 @@ Home Assistant custom integration for the Greenchoice customer portal API (`cust
 
 ## Checks
 
-CI runs none of these; run all before committing:
+CI (`.github/workflows/checks.yaml`) runs these on every push and pull request; run them before committing:
 
 ```bash
 uv run ruff check .

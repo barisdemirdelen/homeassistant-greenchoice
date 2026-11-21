@@ -14,7 +14,7 @@ from homeassistant.const import (
     UnitOfEnergy,
     UnitOfVolume,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import (
     CoordinatorEntity,
@@ -229,29 +229,23 @@ class GreenchoiceSensor(
         self._attr_state_class = SensorStateClass.TOTAL
         self._attr_device_class = sensor_info.device_class
         self._attr_native_unit_of_measurement = sensor_info.unit
+        self._update_from_coordinator()
 
-    @property
-    def native_value(self):
-        """Return the state of the sensor."""
-        if not self.coordinator.data:
-            return None
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Take this sensor's values from the new coordinator data."""
+        self._update_from_coordinator()
+        super()._handle_coordinator_update()
 
-        if not hasattr(self.coordinator.data, self._measurement_type):
-            return None
+    def _update_from_coordinator(self) -> None:
+        """Copy the measurement and its reading date from the coordinator data."""
+        data = self.coordinator.data
+        if not data:
+            self._attr_native_value = None
+            self._attr_extra_state_attributes = {}
+            return
 
-        return getattr(self.coordinator.data, self._measurement_type)
-
-    @property
-    def extra_state_attributes(self):
-        """Return the state attributes."""
-        if not self.coordinator.data:
-            return None
-
-        if not hasattr(self.coordinator.data, self._measurement_date_key):
-            return None
-
-        return {
-            "measurement_date": getattr(
-                self.coordinator.data, self._measurement_date_key
-            )
+        self._attr_native_value = getattr(data, self._measurement_type, None)
+        self._attr_extra_state_attributes = {
+            "measurement_date": getattr(data, self._measurement_date_key, None)
         }

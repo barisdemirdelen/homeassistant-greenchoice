@@ -1,8 +1,13 @@
 """The Greenchoice integration."""
 
 import logging
+from typing import TYPE_CHECKING
 
-import voluptuous as vol
+if TYPE_CHECKING:
+    import probatio as vol
+else:
+    # Home Assistant 2026.9+ aliases voluptuous to probatio; older releases run voluptuous.
+    import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EMAIL,
