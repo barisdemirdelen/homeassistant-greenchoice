@@ -35,4 +35,4 @@ uv run pytest -q
 ## Tests
 
 - Fixtures live in `tests/test_data/`. `*_live.json` fixtures are real captures from the live API; new API response fixtures are captured the same way.
-- `mock_api` in `tests/conftest.py` mocks every endpoint; `consumptions={date: payload}` per day, `None` for a 404.
+- `mock_api` in `tests/conftest.py` mocks every endpoint; `consumptions={date: payload}` per day, `None` for a 404, an int for that HTTP status.

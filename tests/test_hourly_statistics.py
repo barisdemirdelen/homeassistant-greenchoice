@@ -1,9 +1,19 @@
 from __future__ import annotations
 
+import asyncio
 import logging
-from datetime import date
+import threading
+from contextlib import asynccontextmanager
+from dataclasses import dataclass
+from datetime import UTC, date, datetime
 
 import pytest
+from homeassistant.components.recorder import Recorder, get_instance
+from homeassistant.components.recorder.statistics import statistics_during_period
+from homeassistant.components.recorder.tasks import RecorderTask
+from pytest_homeassistant_custom_component.components.recorder.common import (
+    async_wait_recording_done,
+)
 
 from custom_components.greenchoice.api import GreenchoiceApi
 from custom_components.greenchoice.sensor import GreenchoiceDataUpdateCoordinator
@@ -376,3 +386,106 @@ async def test_reimport_ignores_today_or_future(
         await _run_reimport(hass, entry, start_date=_TODAY)
 
     assert mock_import_statistics.call_count == 0
+
+
+@dataclass
+class _HoldQueueTask(RecorderTask):
+    """Recorder task that blocks the recorder thread until released."""
+
+    held: asyncio.Event
+    release: threading.Event
+
+    def run(self, instance: Recorder) -> None:
+        instance.hass.loop.call_soon_threadsafe(self.held.set)
+        self.release.wait()
+
+
+@asynccontextmanager
+async def _recorder_queue_held(hass):
+    """Keep new writes queued, as the recorder does until Home Assistant has started."""
+    held, release = asyncio.Event(), threading.Event()
+    get_instance(hass).queue_task(_HoldQueueTask(held, release))
+    await held.wait()
+    try:
+        yield
+    finally:
+        release.set()
+
+
+async def _recorded_sums(hass, stat_id: str) -> list[float]:
+    """Return every recorded hourly sum of *stat_id*."""
+    await async_wait_recording_done(hass)
+    rows = await hass.async_add_executor_job(
+        statistics_during_period,
+        hass,
+        datetime(2000, 1, 1, tzinfo=UTC),
+        None,
+        {stat_id},
+        "hour",
+        None,
+        {"sum"},
+    )
+    return [row["sum"] for row in rows[stat_id]]
+
+
+@pytest.mark.usefixtures("recorder_mock")
+@pytest.mark.parametrize(
+    "skipped_day",
+    [{"2026-03-26": 500}, {}],
+    ids=["failed", "empty"],
+)
+async def test_skipped_day_continues_from_previous_day(
+    hass, mock_api, patch_today, entry_factory, skipped_day
+):
+    """A skipped day counts as zero, even while earlier writes are still queued."""
+    hass.config.components.add("recorder")
+    entry = entry_factory("abc123_skipped_day")
+    mock_api(
+        consumptions={
+            "2026-03-24": make_consumptions_payload("2026-03-24", 1.0),
+            "2026-03-25": make_consumptions_payload("2026-03-25", 2.0),
+            **skipped_day,
+            "2026-03-27": make_consumptions_payload("2026-03-27", 4.0),
+        }
+    )
+
+    with patch_today(_TODAY):
+        async with _recorder_queue_held(hass):
+            await _run_update(hass, entry, first_run=True)
+
+    assert await _recorded_sums(
+        hass, "greenchoice:my_home_electricity_consumption"
+    ) == [1.0, 3.0, 7.0]
+
+
+@pytest.mark.usefixtures("recorder_mock")
+async def test_day_without_gas_continues_gas_sum(
+    hass, mock_api, patch_today, entry_factory
+):
+    """A day without gas counts as zero gas, even while earlier writes are queued."""
+    hass.config.components.add("recorder")
+    entry = entry_factory("abc123_day_without_gas")
+    mock_api(
+        consumptions={
+            "2026-03-24": make_consumptions_payload(
+                "2026-03-24", 1.0, gas_delivery=1.0
+            ),
+            "2026-03-25": make_consumptions_payload(
+                "2026-03-25", 1.0, gas_delivery=2.0
+            ),
+            "2026-03-26": make_consumptions_payload("2026-03-26", 1.0),
+            "2026-03-27": make_consumptions_payload(
+                "2026-03-27", 1.0, gas_delivery=4.0
+            ),
+        }
+    )
+
+    with patch_today(_TODAY):
+        async with _recorder_queue_held(hass):
+            await _run_update(hass, entry, first_run=True)
+
+    assert await _recorded_sums(hass, "greenchoice:my_home_gas_consumption") == [
+        1.0,
+        3.0,
+        7.0,
+    ]

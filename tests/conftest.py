@@ -354,7 +354,7 @@ def mock_api(
             # consumptions is a dict of {date_str: payload}, e.g. {"2026-03-27": {...}}.
             # Any date not in the dict automatically returns an empty consumptions
             # response, so tests only need to list dates that should carry data.
-            # A None payload answers that date with a 404.
+            # A None payload answers that date with a 404, an int with that HTTP status.
             if consumptions is not None:
                 _specific = consumptions
 
@@ -363,9 +363,12 @@ def mock_api(
                     start = params.get("start", ["2000-01-01"])[0]
                     end = params.get("end", ["2000-01-02"])[0]
                     if start in _specific:
-                        if _specific[start] is None:
+                        answer = _specific[start]
+                        if answer is None:
                             return CallbackResult(status=404)
-                        return CallbackResult(payload=_specific[start])
+                        if isinstance(answer, int):
+                            return CallbackResult(status=answer)
+                        return CallbackResult(payload=answer)
                     return CallbackResult(
                         payload={
                             "interval": "Hour",

@@ -79,10 +79,9 @@ class TestProcessDayRange:
     async def test_seed_preserved_after_failure(self):
         """Seed sums must be preserved after a failure (failed day = zero consumption).
 
-        Resetting the seed to None causes the next day to re-query the DB with a
-        stale baseline, which produces a large negative spike in the statistics graph.
-        Instead the last-successful seed should be forwarded unchanged so the
-        cumulative sum continues from the correct value.
+        Resetting the seed to None would make the next day read the recorder,
+        which misses this run's still-queued writes and restarts the cumulative
+        sum from an older value.
         """
         mixin = _FakeMixin()
         seeds_received: dict[date, object] = {}
