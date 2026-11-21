@@ -13,7 +13,7 @@ from typing import Any
 
 from homeassistant.components.recorder import get_instance
 from homeassistant.components.recorder.statistics import (
-    statistics_during_period,
+    statistic_during_period,
 )
 from homeassistant.core import HomeAssistant
 
@@ -24,15 +24,12 @@ async def async_get_last_sum(
     hass: HomeAssistant,
     stat_id: str,
     before_dt: datetime,
-    *,
-    lookback_hours: int = 25,
 ) -> float:
     """
     Return the last recorded cumulative sum for *stat_id* strictly before
     *before_dt*.
 
-    A *lookback_hours* window (default **25 h**) is used so that DST
-    transition days (which can be 23 or 25 hours long) are always covered.
+    Searches all prior history, including gaps between imports.
     Returns ``0.0`` when no prior statistics exist.
 
     Parameters
@@ -44,30 +41,24 @@ async def async_get_last_sum(
     before_dt:
         Upper bound (exclusive) for the query — typically the UTC start of the
         day you are about to inject.
-    lookback_hours:
-        How far back to search for an existing sum.  25 hours covers every
-        real-world DST transition.
     """
-    query_start = before_dt - timedelta(hours=lookback_hours)
+    # Keep partial-hour bounds on hourly statistics rather than HA's short-term table.
+    query_end = before_dt.replace(minute=0, second=0, microsecond=0)
+    if query_end < before_dt:
+        query_end += timedelta(hours=1)
+
+    # With no start, HA computes change from zero using the latest prior sum.
     result = await get_instance(hass).async_add_executor_job(
-        lambda: statistics_during_period(
+        lambda: statistic_during_period(
             hass,
-            query_start,
-            before_dt,
-            {stat_id},
-            "hour",
             None,
-            {"sum"},
+            query_end,
+            stat_id,
+            {"change"},
+            None,
         ),
     )
-    entries = result.get(stat_id, [])
-    if entries:
-        last = entries[-1]
-        raw_sum = (
-            last.get("sum") if isinstance(last, dict) else getattr(last, "sum", None)
-        )
-        return float(raw_sum or 0.0)
-    return 0.0
+    return float(result.get("change") or 0.0)
 
 
 async def async_inject_day(

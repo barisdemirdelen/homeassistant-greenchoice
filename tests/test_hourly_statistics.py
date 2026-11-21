@@ -1,27 +1,17 @@
 from __future__ import annotations
 
 import logging
-from datetime import UTC, date, datetime
-from unittest.mock import AsyncMock, Mock, patch
+from datetime import date
 
 import pytest
 
 from custom_components.greenchoice.api import GreenchoiceApi
-from custom_components.greenchoice.ha_external_statistics import (
-    recorder as _recorder_mod,
-)
-from custom_components.greenchoice.ha_external_statistics.recorder import (
-    async_get_last_sum,
-)
 from custom_components.greenchoice.sensor import GreenchoiceDataUpdateCoordinator
 from tests.conftest import make_consumptions_payload, stat_sum
 
 # Anchor "today" to a fixed date so API mocks with hardcoded dates are stable.
 _TODAY = date(2026, 3, 28)
 _YESTERDAY = date(2026, 3, 27)
-
-
-_PATCH_GET_INSTANCE = f"{_recorder_mod.__name__}.get_instance"
 
 
 def _make_coordinator(hass, entry):
@@ -330,29 +320,6 @@ async def test_import_cost_stats(
         == "greenchoice:my_home_electricity_feed_in_compensation"
     )
     assert _stat_id(gas_cost_meta) == "greenchoice:my_home_gas_consumption_cost"
-
-
-@pytest.mark.asyncio
-async def test_async_get_last_sum_handles_dict_with_float_start(hass):
-    """Regression: recorder may return 'start' as a Unix timestamp (float).
-
-    async_get_last_sum must extract 'sum' correctly regardless of 'start' type.
-    """
-
-    statistic_id = "greenchoice:my_home_electricity_consumption"
-    march_27_23_utc = datetime(2026, 3, 27, 23, 0, tzinfo=UTC)
-    fake_stats = {statistic_id: [{"start": march_27_23_utc.timestamp(), "sum": 16.414}]}
-
-    with patch(_PATCH_GET_INSTANCE) as mock_get_instance:
-        mock_instance = Mock()
-        mock_instance.async_add_executor_job = AsyncMock(return_value=fake_stats)
-        mock_get_instance.return_value = mock_instance
-
-        result = await async_get_last_sum(
-            hass, statistic_id, datetime(2026, 3, 28, 0, 0, tzinfo=UTC)
-        )
-
-    assert result == pytest.approx(16.414)
 
 
 @pytest.mark.asyncio
