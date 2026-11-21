@@ -1,13 +1,8 @@
 """The Greenchoice integration."""
 
 import logging
-from typing import TYPE_CHECKING
 
-if TYPE_CHECKING:
-    import probatio as vol
-else:
-    # Home Assistant 2026.9+ aliases voluptuous to probatio; older releases run voluptuous.
-    import voluptuous as vol
+import probatio
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EMAIL,
@@ -86,10 +81,10 @@ def _register_services(hass: HomeAssistant) -> None:
         DOMAIN,
         SERVICE_REIMPORT_HOURLY_STATISTICS,
         handle_reimport_hourly_statistics,
-        schema=vol.Schema(
+        schema=probatio.Schema(
             {
-                vol.Required("start_date"): cv.date,
-                vol.Optional("config_entry_id"): cv.string,
+                probatio.Required("start_date"): cv.date,
+                probatio.Optional("config_entry_id"): cv.string,
             }
         ),
     )

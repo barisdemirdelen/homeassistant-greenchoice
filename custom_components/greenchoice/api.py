@@ -362,7 +362,7 @@ class GreenchoiceApi:
             )
             try:
                 account = await self.get_account()
-            except (ApiError, ValidationError):
+            except ApiError, ValidationError:
                 _LOGGER.debug("Could not read the supply status behind a rates 404")
             else:
                 known = True

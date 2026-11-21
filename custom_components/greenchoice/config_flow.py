@@ -1,13 +1,9 @@
 """Config flow for Greenchoice integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import Any
 
-if TYPE_CHECKING:
-    import probatio as vol
-else:
-    # Home Assistant 2026.9+ aliases voluptuous to probatio; older releases run voluptuous.
-    import voluptuous as vol
+import probatio
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_EMAIL, CONF_NAME, CONF_PASSWORD
@@ -65,10 +61,10 @@ class GreenchoiceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_EMAIL): str,
-                    vol.Required(CONF_PASSWORD): str,
+                    probatio.Required(CONF_EMAIL): str,
+                    probatio.Required(CONF_PASSWORD): str,
                 }
             ),
             errors=errors,
@@ -126,10 +122,10 @@ class GreenchoiceConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="profile",
-            data_schema=vol.Schema(
+            data_schema=probatio.Schema(
                 {
-                    vol.Required(CONF_PROFILE): vol.In(profile_options),
-                    vol.Optional(
+                    probatio.Required(CONF_PROFILE): probatio.In(profile_options),
+                    probatio.Optional(
                         "name", description="Custom name for this integration"
                     ): str,
                 }
