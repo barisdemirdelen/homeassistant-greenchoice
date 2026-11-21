@@ -32,6 +32,12 @@ uv run pytest -q
 - Meter readings: one object per day carries electricity and gas fields together.
 - Rate-details returns 404 for any date no agreement covers, e.g. after the supply ended. The integration logs that at INFO.
 
+## Recorder statistics
+
+- `async_add_external_statistics` queues the write on the recorder thread; seed reads (`statistic_during_period`) see only committed rows.
+- The recorder holds its queue until Home Assistant has started, and the first backfill runs inside `async_setup_entry`. Within a run, seeds chain in memory; the recorder is read only for statistics the run has not written yet. Awaiting the recorder (`async_block_till_done`) from setup stalls bootstrap until its 300 s stage timeout.
+- Test `hass` is already started; real-recorder tests reproduce startup by holding the queue (`_recorder_queue_held` in `tests/test_hourly_statistics.py`).
+
 ## Tests
 
 - Fixtures live in `tests/test_data/`. `*_live.json` fixtures are real captures from the live API; new API response fixtures are captured the same way.
