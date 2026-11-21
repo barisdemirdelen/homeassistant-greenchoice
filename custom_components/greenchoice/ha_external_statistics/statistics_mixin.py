@@ -58,10 +58,10 @@ class StatisticsLoopMixin(ABC):
         """
         Fetch and inject statistics for *day*.
 
-        Return a seed-sums dict on success — it is passed unchanged to the
-        next consecutive day's call, avoiding redundant DB queries.
+        Return a seed-sums dict on success — it is merged into the seed passed
+        to the following days, avoiding recorder queries mid-run.
         Return ``None`` when the API has no data yet for this day (pending /
-        empty) — the next day will re-query the DB for its own seed.
+        empty) — the next day continues from the same seed.
         Raise on unrecoverable errors.
         """
 
@@ -99,11 +99,13 @@ class StatisticsLoopMixin(ABC):
         """
         Iterate *days* (oldest first), calling ``_process_day`` for each.
 
-        Seed sums are chained across consecutive successful days.  When
-        ``_process_day`` returns ``None`` (empty day) the seed is reset so the
-        next day re-queries the DB for a safe baseline.  When ``_process_day``
-        raises, the last-successful seed is preserved — the failed day is
-        treated as zero consumption — so the cumulative sum does not spike.
+        Seed sums are chained from day to day in memory.  A day for which
+        ``_process_day`` returns ``None`` (empty) or raises is skipped and
+        counts as zero consumption, as does a day that lacks one statistic:
+        the next day continues from the last seed of each statistic.
+        Re-reading the recorder instead would miss this run's earlier days,
+        whose writes stay queued until the recorder processes them; at
+        startup it holds its queue until Home Assistant has started.
 
         When *raise_if_all_fail* is ``True`` and every attempt raised an
         exception, the last exception is re-raised.
@@ -114,19 +116,16 @@ class StatisticsLoopMixin(ABC):
 
         for day in days:
             try:
-                seed_sums = await self._process_day(day, seed_sums)
-                any_success = True
-                # None return → empty day; seed stays None → next day hits DB.
+                day_sums = await self._process_day(day, seed_sums)
             except Exception as exc:
                 _LOGGER.warning(
                     "Failed to fetch data for %s, skipping.", day, exc_info=True
                 )
-                # Do NOT reset seed_sums here.  Resetting to None would cause
-                # the next day to re-query the DB with a stale baseline and
-                # produce a large negative spike in the statistics graph.
-                # Preserving the last-successful seed is equivalent to treating
-                # the failed day as having zero consumption.
                 last_exc = exc
+            else:
+                any_success = True
+                if day_sums is not None:
+                    seed_sums = {**(seed_sums or {}), **day_sums}
 
         if raise_if_all_fail and not any_success and last_exc is not None:
             raise last_exc

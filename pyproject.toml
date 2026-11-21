@@ -1,16 +1,16 @@
 [project]
 name = "homeassistant-greenchoice"
-version = "3.3.8"
+version = "3.4.0"
 description = "Integration to connect Greenchoice.nl with Home Assistant"
 authors = [{ name = "Baris Demirdelen", email = "barisdemirdelen@gmail.com" }]
 readme = "README.md"
-requires-python = ">=3.14"
+requires-python = ">=3.14.2"
 dependencies = [
-    "homeassistant>=2024.12.5",
+    "homeassistant>=2026.9.0",
     "aiohttp>=3.12.15",
     "beautifulsoup4>=4.12.3",
+    "probatio>=0.11.4",
     "pydantic>=2.12.2",
-    "voluptuous>=0.15.2",
 ]
 
 [dependency-groups]
@@ -26,13 +26,6 @@ dev = [
     "ty>=0.0.39",
     "python-dotenv>=1.2.2",
 ]
-
-[tool.ruff]
-# ``requires-python`` describes the dev environment, but the integration is
-# imported by Home Assistant's own interpreter: hacs.json declares HA 2025.4.0,
-# which runs Python 3.13. Without this, ruff rewrites code to 3.14-only syntax
-# (e.g. unparenthesised ``except A, B:``) that is a SyntaxError there.
-target-version = "py313"
 
 [tool.ruff.lint.per-file-ignores]
 # The upstream API reports naive local timestamps, so the models and their
